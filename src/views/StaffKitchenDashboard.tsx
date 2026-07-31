@@ -9,7 +9,6 @@ import {
   QrCode,
   Flame,
   Search,
-  RotateCcw,
   Sliders,
 } from 'lucide-react';
 import { Order, OrderStatus, FoodItem } from '../types';
@@ -19,6 +18,7 @@ interface StaffKitchenDashboardProps {
   foods: FoodItem[];
   onUpdateOrderStatus: (orderId: string, status: OrderStatus, notes?: string) => void;
   onUpdateStock: (foodId: string, isAvailable: boolean, stockQuantity?: number) => void;
+  onLogOut: () => void;
 }
 
 export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
@@ -26,6 +26,7 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
   foods,
   onUpdateOrderStatus,
   onUpdateStock,
+  onLogOut,
 }) => {
   const [activeTab, setActiveTab] = useState<'queue' | 'inventory'>('queue');
   const [chimeEnabled, setChimeEnabled] = useState(true);
@@ -49,12 +50,12 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black text-white">Kitchen Display System (KDS)</h1>
+              <h1 className="text-2xl font-black text-white">GUB Kitchen Display System (KDS)</h1>
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-xs border border-emerald-500/40">
-                LIVE KITCHEN
+                LIVE GUB KITCHEN
               </span>
             </div>
-            <p className="text-xs text-stone-400">Order Bump Bar & Real-time Counter Pickup Queue</p>
+            <p className="text-xs text-stone-400">Order Bump Bar & Real-time Counter Pickup Queue • Green University Of Bangladesh</p>
           </div>
         </div>
 
@@ -69,7 +70,7 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
             }`}
           >
             {chimeEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            <span>{chimeEnabled ? 'Kitchen Sound On' : 'Muted'}</span>
+            <span>{chimeEnabled ? 'Chime On' : 'Muted'}</span>
           </button>
 
           <button
@@ -78,7 +79,7 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
               activeTab === 'queue' ? 'bg-amber-500 text-stone-950' : 'bg-stone-800 text-stone-300'
             }`}
           >
-            Order Bump Bar ({orders.filter((o) => o.orderStatus !== 'completed').length})
+            Bump Bar ({orders.filter((o) => o.orderStatus !== 'completed').length})
           </button>
 
           <button
@@ -88,6 +89,13 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
             }`}
           >
             Stock Toggles
+          </button>
+
+          <button
+            onClick={onLogOut}
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-red-950 text-red-400 border border-red-900/30 hover:bg-red-900/50"
+          >
+            Log Out
           </button>
         </div>
       </div>
@@ -199,7 +207,7 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
                       className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl transition-all shadow flex items-center justify-center gap-1.5"
                     >
                       <CheckCircle2 className="w-4 h-4" />
-                      <span>Mark Ready at Pickup Counter 1</span>
+                      <span>Mark Ready at Express Counter 1</span>
                     </button>
                   </div>
                 ))
@@ -263,7 +271,7 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
             <div>
               <h2 className="text-lg font-bold text-white">Kitchen Menu Availability Switcher</h2>
               <p className="text-xs text-stone-400">
-                Mark items "Sold Out" instantly during lunch rush to prevent student pre-orders.
+                Mark items "Sold Out" instantly during GUB lunch rush to prevent student pre-orders.
               </p>
             </div>
 

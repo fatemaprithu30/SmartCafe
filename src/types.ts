@@ -18,6 +18,8 @@ export interface UserProfile {
     isGlutenFree: boolean;
     dailyCalorieTarget: number;
   };
+  isActive?: boolean;
+  createdAt?: string;
 }
 
 export interface FoodCategory {

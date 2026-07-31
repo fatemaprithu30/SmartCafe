@@ -45,11 +45,21 @@ import {
 } from './data/mockData';
 
 export default function App() {
-  // State
-  const [currentUser, setCurrentUser] = useState<UserProfile>(INITIAL_USERS[0]);
+  // Navigation / Routing path state
+  const [currentPath, setCurrentPath] = useState<string>(window.location.pathname);
+
+  // Auth & Roles State
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [activeRole, setActiveRole] = useState<UserRole>('student');
   const [activeTab, setActiveTab] = useState<string>('home');
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string | undefined>(undefined);
+
+  // Login credentials state for specialized portals
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [kitchenEmail, setKitchenEmail] = useState('');
+  const [kitchenPassword, setKitchenPassword] = useState('');
+  const [portalError, setPortalError] = useState('');
 
   // Data
   const [foods, setFoods] = useState<FoodItem[]>(INITIAL_FOODS);
@@ -61,6 +71,9 @@ export default function App() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
   const [settings, setSettings] = useState<CafeteriaSettings>(DEFAULT_CAFETERIA_SETTINGS);
 
+  // Database Users for Administrator registration and student approvals
+  const [dbUsers, setDbUsers] = useState<UserProfile[]>([]);
+
   // Cart State
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedPickupSlot, setSelectedPickupSlot] = useState<string>('12:10 PM - 12:20 PM');
@@ -71,6 +84,15 @@ export default function App() {
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [studentDashboardTab, setStudentDashboardTab] = useState<'orders' | 'favorites' | 'reviews' | 'profile'>('orders');
+
+  // Sync route on popstate manually
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
 
   // Fetch initial data using migrated live database services
   const fetchBackendData = async () => {
@@ -91,12 +113,106 @@ export default function App() {
     }
   };
 
+  // Load registered users directory for Admin panel approvals
+  const fetchUsersDirectory = async () => {
+    try {
+      const { supabase } = await import('./supabaseClient');
+      const { data, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      if (data) {
+        const mappedUsers: UserProfile[] = data.map((profile: any) => ({
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          role: profile.role,
+          studentId: profile.student_id,
+          phone: profile.phone,
+          department: profile.department,
+          walletBalance: profile.wallet_balance || 0,
+          isActive: profile.is_active,
+          createdAt: profile.created_at,
+          dietaryPreferences: profile.dietary_preferences || {
+            allergens: [],
+            isHalal: true,
+            isVegan: false,
+            isVegetarian: false,
+            isGlutenFree: false,
+            dailyCalorieTarget: 2000
+          }
+        }));
+        setDbUsers(mappedUsers);
+      }
+    } catch (err) {
+      // Local Fallback list
+      setDbUsers(INITIAL_USERS);
+    }
+  };
+
   useEffect(() => {
     fetchBackendData();
+    fetchUsersDirectory();
+
+    // Check active Supabase Auth session on load
+    const checkSession = async () => {
+      try {
+        const { supabase } = await import('./supabaseClient');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profile) {
+            const mappedUser: UserProfile = {
+              id: profile.id,
+              name: profile.name,
+              email: profile.email,
+              role: profile.role,
+              studentId: profile.student_id,
+              phone: profile.phone,
+              department: profile.department,
+              walletBalance: profile.wallet_balance || 0,
+              isActive: profile.is_active,
+              dietaryPreferences: profile.dietary_preferences || {
+                allergens: [],
+                isHalal: true,
+                isVegan: false,
+                isVegetarian: false,
+                isGlutenFree: false,
+                dailyCalorieTarget: 2000
+              }
+            };
+
+            // Double check portal protection match
+            if (window.location.pathname === '/admin' && profile.role !== 'admin') {
+              await supabase.auth.signOut();
+              return;
+            }
+            if (window.location.pathname === '/kitchenstuff' && profile.role !== 'staff') {
+              await supabase.auth.signOut();
+              return;
+            }
+            if (window.location.pathname === '/' && profile.role !== 'student') {
+              await supabase.auth.signOut();
+              return;
+            }
+
+            setCurrentUser(mappedUser);
+            setActiveRole(profile.role);
+          }
+        }
+      } catch (err) {
+        console.log('Session restore bypassed...');
+      }
+    };
+    checkSession();
 
     // Wire up real-time status subscription from Supabase Realtime channel
     let orderSubscription: any;
     const initializeRealtime = async () => {
+      if (!currentUser) return;
       const { supabase } = await import('./supabaseClient');
       orderSubscription = supabase
         .channel('order-status-bumps')
@@ -128,12 +244,16 @@ export default function App() {
     };
   }, [currentUser]);
 
-  // Sync role change
-  const handleRoleChange = (newRole: UserRole) => {
-    const roleMap = newRole === 'super_admin' ? 'admin' : newRole;
-    setActiveRole(roleMap);
-    const matchUser = INITIAL_USERS.find((u) => u.role === roleMap) || currentUser;
-    setCurrentUser(matchUser);
+  // Handle generalized Portal Logouts
+  const handleLogOut = async () => {
+    try {
+      const { supabase } = await import('./supabaseClient');
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.log('Bypassed signOut...');
+    }
+    setCurrentUser(null);
+    setCartItems([]);
   };
 
   // Add Item to Cart Tray
@@ -238,25 +358,6 @@ export default function App() {
     setIsCartOpen(true);
   };
 
-  // Top Up Wallet
-  const handleTopUpWallet = async (amount: number) => {
-    try {
-      const res = await fetch(`/api/users/${currentUser.id}/wallet`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amountToAdd: amount }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setCurrentUser(updated);
-      } else {
-        setCurrentUser((prev) => ({ ...prev, walletBalance: prev.walletBalance + amount }));
-      }
-    } catch (err) {
-      setCurrentUser((prev) => ({ ...prev, walletBalance: prev.walletBalance + amount }));
-    }
-  };
-
   // Kitchen Bump Bar Status Shift
   const handleUpdateOrderStatus = async (orderId: string, status: OrderStatus, notes?: string) => {
     try {
@@ -278,7 +379,7 @@ export default function App() {
       setFoods((prev) => prev.map((f) => (f.id === foodId ? updated : f)));
     } catch (err) {
       setFoods((prev) =>
-        prev.map((f) => (f.id === foodId ? { ...f, isAvailable } : f))
+        prev.map((f) => (f.id === foodId ? { ...f, isAvailable, stockQuantity: stockQuantity !== undefined ? stockQuantity : f.stockQuantity } : f))
       );
     }
   };
@@ -291,6 +392,42 @@ export default function App() {
       setFoods((prev) => [created, ...prev]);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleEditFood = async (foodId: string, updatedFields: Partial<FoodItem>) => {
+    try {
+      const { supabase } = await import('./supabaseClient');
+      const { dbService } = await import('./services/dbService');
+      const dbPayload = {
+        name: updatedFields.name,
+        category_id: updatedFields.categoryId,
+        category_name: updatedFields.categoryName,
+        description: updatedFields.description,
+        price: updatedFields.price,
+        prep_time_minutes: updatedFields.prepTimeMinutes,
+        image_url: updatedFields.imageUrl,
+        nutrition: updatedFields.nutrition,
+        stock_quantity: updatedFields.stockQuantity,
+        min_stock_alert: updatedFields.minStockAlert,
+      };
+
+      const { data, error } = await supabase
+        .from('menu_items')
+        .update(dbPayload)
+        .eq('id', foodId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        const camelFood = await dbService.getFoods();
+        setFoods(camelFood);
+      }
+    } catch (err) {
+      setFoods((prev) =>
+        prev.map((f) => (f.id === foodId ? { ...f, ...updatedFields } : f))
+      );
     }
   };
 
@@ -319,6 +456,7 @@ export default function App() {
     try {
       const { supabase } = await import('./supabaseClient');
       await supabase.from('profiles').update({ role }).eq('id', userId);
+      fetchUsersDirectory();
     } catch (err) {
       console.error(err);
     }
@@ -334,13 +472,285 @@ export default function App() {
     }
   };
 
+  // Student registration approvals
+  const handleApproveStudent = async (userId: string) => {
+    try {
+      const { supabase } = await import('./supabaseClient');
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_active: true })
+        .eq('id', userId);
+
+      if (error) throw error;
+      alert('Student registration approved successfully!');
+      fetchUsersDirectory();
+    } catch (err: any) {
+      alert(err.message || 'Error occurred during student approval.');
+    }
+  };
+
+  const handleRejectStudent = async (userId: string) => {
+    try {
+      const { supabase } = await import('./supabaseClient');
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+      alert('Student registration rejected.');
+      fetchUsersDirectory();
+    } catch (err: any) {
+      alert(err.message || 'Error occurred rejecting student registration.');
+    }
+  };
+
+  // Direct Stock editor tracker
+  const handleUpdateStockQuantity = async (foodId: string, stockQuantity: number) => {
+    await handleUpdateStock(foodId, stockQuantity > 0, stockQuantity);
+  };
+
+  // Portal specialized logins
+  const handleAdminPortalLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPortalError('');
+    try {
+      const { supabase } = await import('./supabaseClient');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: adminEmail,
+        password: adminPassword,
+      });
+      if (error) throw error;
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile?.role === 'admin') {
+          setCurrentUser({
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            role: profile.role,
+            walletBalance: profile.wallet_balance || 0,
+            dietaryPreferences: profile.dietary_preferences || {
+              allergens: [],
+              isHalal: true,
+              isVegan: false,
+              isVegetarian: false,
+              isGlutenFree: false,
+              dailyCalorieTarget: 2000
+            }
+          });
+          setActiveRole('admin');
+        } else {
+          await supabase.auth.signOut();
+          setPortalError('Access Denied. Only registered GUB administrators can log in here.');
+        }
+      }
+    } catch (err: any) {
+      setPortalError(err.message || 'Error executing portal sign in.');
+    }
+  };
+
+  const handleKitchenPortalLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPortalError('');
+    try {
+      const { supabase } = await import('./supabaseClient');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: kitchenEmail,
+        password: kitchenPassword,
+      });
+      if (error) throw error;
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile?.role === 'staff') {
+          setCurrentUser({
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            role: profile.role,
+            walletBalance: profile.wallet_balance || 0,
+            dietaryPreferences: profile.dietary_preferences || {
+              allergens: [],
+              isHalal: true,
+              isVegan: false,
+              isVegetarian: false,
+              isGlutenFree: false,
+              dailyCalorieTarget: 2000
+            }
+          });
+          setActiveRole('staff');
+        } else {
+          await supabase.auth.signOut();
+          setPortalError('Access Denied. Only registered GUB kitchen staff can log in here.');
+        }
+      }
+    } catch (err: any) {
+      setPortalError(err.message || 'Error executing portal sign in.');
+    }
+  };
+
+  // Path Routing Rendering router switch
+  if (currentPath === '/admin') {
+    return (
+      <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
+        {currentUser && activeRole === 'admin' ? (
+          <AdminDashboard
+            foods={foods}
+            categories={categories}
+            coupons={coupons}
+            auditLogs={auditLogs}
+            users={dbUsers}
+            orders={orders}
+            settings={settings}
+            onAddFood={handleAddFood}
+            onEditFood={handleEditFood}
+            onDeleteFood={handleDeleteFood}
+            onAddCoupon={handleAddCoupon}
+            onUpdateUserRole={handleUpdateUserRole}
+            onCreditWallet={() => {}}
+            onUpdateSettings={handleUpdateSettings}
+            onApproveStudent={handleApproveStudent}
+            onRejectStudent={handleRejectStudent}
+            onUpdateStock={handleUpdateStockQuantity}
+            onLogOut={handleLogOut}
+          />
+        ) : (
+          <div className="flex-1 flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-stone-900 border border-stone-800 rounded-2xl p-6 space-y-6">
+              <div className="text-center space-y-1">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center mx-auto text-white font-black shadow-lg">
+                  GUB
+                </div>
+                <h2 className="text-xl font-bold text-white">GUB Director Admin Portal</h2>
+                <p className="text-xs text-stone-400">Campus Dining Operations & Menu Control Directory</p>
+              </div>
+
+              {portalError && (
+                <div className="p-3 bg-red-950 border border-red-800 text-red-300 text-xs rounded-xl">
+                  {portalError}
+                </div>
+              )}
+
+              <form onSubmit={handleAdminPortalLogin} className="space-y-4 text-xs">
+                <div>
+                  <label className="block text-stone-300 font-semibold mb-1">Director Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={adminEmail}
+                    onChange={(e) => setAdminEmail(e.target.value)}
+                    placeholder="director@green.edu.bd"
+                    className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-stone-300 font-semibold mb-1">Security Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition-colors shadow-lg"
+                >
+                  Verify Credentials & Enter Panel
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (currentPath === '/kitchenstuff') {
+    return (
+      <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
+        {currentUser && activeRole === 'staff' ? (
+          <StaffKitchenDashboard
+            orders={orders}
+            foods={foods}
+            onUpdateOrderStatus={handleUpdateOrderStatus}
+            onUpdateStock={handleUpdateStock}
+            onLogOut={handleLogOut}
+          />
+        ) : (
+          <div className="flex-1 flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-stone-900 border border-stone-800 rounded-2xl p-6 space-y-6">
+              <div className="text-center space-y-1">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center mx-auto text-white font-black shadow-lg">
+                  KDS
+                </div>
+                <h2 className="text-xl font-bold text-white">GUB Kitchen Display System</h2>
+                <p className="text-xs text-stone-400">Order Bump Bar & Express Prep Operations Queue</p>
+              </div>
+
+              {portalError && (
+                <div className="p-3 bg-red-950 border border-red-800 text-red-300 text-xs rounded-xl">
+                  {portalError}
+                </div>
+              )}
+
+              <form onSubmit={handleKitchenPortalLogin} className="space-y-4 text-xs">
+                <div>
+                  <label className="block text-stone-300 font-semibold mb-1">Staff Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={kitchenEmail}
+                    onChange={(e) => setKitchenEmail(e.target.value)}
+                    placeholder="kitchen@green.edu.bd"
+                    className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-stone-300 font-semibold mb-1">Kitchen PIN/Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={kitchenPassword}
+                    onChange={(e) => setKitchenPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-colors shadow-lg"
+                >
+                  Verify Credentials & Enter Screen
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Fallback to '/' Student Portal (Primary Website)
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
       {/* Sticky Top Navbar */}
       <Navbar
         currentUser={currentUser}
         activeRole={activeRole}
-        onRoleChange={handleRoleChange}
+        onRoleChange={setActiveRole}
         activeTab={activeTab}
         setActiveTab={(tab) => {
           setActiveTab(tab);
@@ -352,6 +762,7 @@ export default function App() {
         notifications={notifications}
         orders={orders}
         onOpenAuth={() => setIsAuthOpen(true)}
+        onLogOut={handleLogOut}
         announcementText={settings.announcementBanner}
       />
 
@@ -390,7 +801,7 @@ export default function App() {
 
         {activeTab === 'checkout' && (
           <CheckoutView
-            currentUser={currentUser}
+            currentUser={currentUser || INITIAL_USERS[0]}
             cartItems={cartItems}
             selectedPickupSlot={selectedPickupSlot}
             onSelectPickupSlot={setSelectedPickupSlot}
@@ -402,40 +813,13 @@ export default function App() {
 
         {activeTab === 'student-orders' && (
           <StudentDashboard
-            currentUser={currentUser}
+            currentUser={currentUser || INITIAL_USERS[0]}
             orders={orders}
             onRefreshOrders={fetchBackendData}
             onReOrder={handleReOrder}
-            onTopUpWallet={handleTopUpWallet}
+            onTopUpWallet={() => {}}
             activeTabSub={studentDashboardTab}
             setActiveTabSub={setStudentDashboardTab}
-          />
-        )}
-
-        {activeTab === 'staff-kitchen' && (
-          <StaffKitchenDashboard
-            orders={orders}
-            foods={foods}
-            onUpdateOrderStatus={handleUpdateOrderStatus}
-            onUpdateStock={handleUpdateStock}
-          />
-        )}
-
-        {activeTab === 'admin-dashboard' && (
-          <AdminDashboard
-            foods={foods}
-            categories={categories}
-            coupons={coupons}
-            auditLogs={auditLogs}
-            users={INITIAL_USERS}
-            orders={orders}
-            settings={settings}
-            onAddFood={handleAddFood}
-            onDeleteFood={handleDeleteFood}
-            onAddCoupon={handleAddCoupon}
-            onUpdateUserRole={handleUpdateUserRole}
-            onCreditWallet={handleTopUpWallet}
-            onUpdateSettings={handleUpdateSettings}
           />
         )}
       </div>
@@ -465,22 +849,18 @@ export default function App() {
         onApplyCoupon={handleApplyCoupon}
         onRemoveCoupon={handleRemoveCoupon}
         onProceedToCheckout={() => setActiveTab('checkout')}
+        dailyCalorieTarget={currentUser?.dietaryPreferences?.dailyCalorieTarget || 2000}
       />
 
-      {/* Gemini AI Meal Concierge Modal disabled as requested */}
-
-      {/* Auth / Demo Role Switcher Modal */}
+      {/* Auth Modal */}
       <AuthModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         currentUser={currentUser}
         onSelectUser={(user) => {
-          const userRole = user.role === 'super_admin' ? 'admin' : user.role;
-          setCurrentUser({ ...user, role: userRole });
-          setActiveRole(userRole);
-          if (userRole === 'staff') setActiveTab('staff-kitchen');
-          else if (userRole === 'admin') setActiveTab('admin-dashboard');
-          else setActiveTab('home');
+          setCurrentUser(user);
+          setActiveRole('student');
+          setActiveTab('home');
         }}
       />
     </div>

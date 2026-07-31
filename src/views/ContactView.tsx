@@ -15,9 +15,9 @@ export const ContactView: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
       <div className="text-center space-y-2">
-        <h1 className="text-3xl sm:text-4xl font-black text-slate-900">Campus Cafeteria Help & Feedback</h1>
+        <h1 className="text-3xl sm:text-4xl font-black text-slate-900">Green University Of Bangladesh Cafe</h1>
         <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto">
-          Have questions about your pre-orders, dietary restrictions, or Student ID wallet refunds? Reach out below.
+          Have questions about your GUB pre-orders, dietary restrictions, or payment confirmation? Reach out below.
         </p>
       </div>
 
@@ -32,8 +32,8 @@ export const ContactView: React.FC = () => {
                 <MapPin className="w-5 h-5" />
               </div>
               <div>
-                <span className="font-bold text-slate-900 block text-sm">Location</span>
-                <span>Student Center Building 2, Ground Floor Main Dining Hall</span>
+                <span className="font-bold text-slate-900 block text-sm">GUB Location</span>
+                <span>Green University of Bangladesh Campus Cafeteria, Ground Floor</span>
               </div>
             </div>
 
@@ -42,8 +42,8 @@ export const ContactView: React.FC = () => {
                 <Phone className="w-5 h-5" />
               </div>
               <div>
-                <span className="font-bold text-slate-900 block text-sm">Phone Hotline</span>
-                <span>+1 (555) 019-2834 (Express Counter Manager)</span>
+                <span className="font-bold text-slate-900 block text-sm">GUB Cafe hotline</span>
+                <span>+880 1711223344 (Cafeteria Manager)</span>
               </div>
             </div>
 
@@ -53,7 +53,7 @@ export const ContactView: React.FC = () => {
               </div>
               <div>
                 <span className="font-bold text-slate-900 block text-sm">Email Support</span>
-                <span>dining-support@univ.edu</span>
+                <span>cafe-support@green.edu.bd</span>
               </div>
             </div>
 
@@ -62,7 +62,7 @@ export const ContactView: React.FC = () => {
                 <Clock className="w-5 h-5" />
               </div>
               <div>
-                <span className="font-bold text-slate-900 block text-sm">Cafeteria Operating Window</span>
+                <span className="font-bold text-slate-900 block text-sm">GUB Cafe operating window</span>
                 <span>Sunday - Saturday: 07:30 AM to 08:30 PM</span>
               </div>
             </div>
@@ -74,7 +74,7 @@ export const ContactView: React.FC = () => {
           {submitted ? (
             <div className="text-center py-12 space-y-3">
               <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
-              <h3 className="font-bold text-slate-900 text-base">Message Sent to Cafeteria Staff</h3>
+              <h3 className="font-bold text-slate-900 text-base">Message Sent to GUB Cafeteria Staff</h3>
               <p className="text-xs text-slate-500">
                 Thank you, {name}! Our cafeteria manager will review your feedback shortly.
               </p>
@@ -96,13 +96,13 @@ export const ContactView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-700 font-semibold mb-1">University Email</label>
+                <label className="block text-slate-700 font-semibold mb-1">GUB University Email</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="student@univ.edu"
+                  placeholder="student@green.edu.bd"
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
                 />
               </div>

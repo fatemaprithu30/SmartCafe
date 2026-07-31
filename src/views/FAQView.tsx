@@ -6,12 +6,12 @@ export const FAQView: React.FC = () => {
 
   const faqs = [
     {
-      q: 'How does pre-ordering work at the university cafeteria?',
-      a: 'Select your meals on Smart Café, choose a 10-minute pickup slot (e.g., 12:10 PM - 12:20 PM), and pay online or via Student ID balance. When your slot arrives, visit Express Counter 1 and scan your live QR code to pick up your packaged meal without waiting in line.',
+      q: 'How does pre-ordering work at the Green University of Bangladesh cafeteria?',
+      a: 'Select your meals on GUB Smart Café, choose a 10-minute pickup slot (e.g., 12:10 PM - 12:20 PM), and pay via bKash, Nagad, Rocket, or credit card. When your slot arrives, visit Express Counter 1 and scan your live QR code to pick up your packaged meal without waiting in line.',
     },
     {
-      q: 'Can I pay using my Student ID Card balance?',
-      a: 'Yes! Select "Student ID Card Balance" at checkout. Your campus wallet will be deducted automatically, and your remaining balance will update in your profile.',
+      q: 'Which payment methods are accepted?',
+      a: 'We support manual MFS payments (bKash, Nagad, and Rocket) as well as secure Credit/Debit cards through SSLCommerz.',
     },
     {
       q: 'What happens if I miss my chosen 10-minute pickup slot?',
@@ -23,12 +23,8 @@ export const FAQView: React.FC = () => {
     },
     {
       q: 'Can I cancel or modify my pre-order after placing it?',
-      a: 'You can cancel your pre-order for a 100% full wallet refund as long as the kitchen status is "Pending". Once the status shifts to "Preparing", cancellation is locked as ingredients are already cooking.',
-    },
-    {
-      q: 'How does the Gemini AI Meal Assistant help?',
-      a: 'Click "AI Meal Helper" in the navbar, enter your target calorie limit (e.g. 600 kcal) and budget (e.g. $6.00). Gemini AI instantly constructs a balanced combo from available menu items that meets your criteria.',
-    },
+      a: 'You can cancel your pre-order for a refund as long as the kitchen status is "Pending". Once the status shifts to "Preparing", cancellation is locked as ingredients are already cooking.',
+    }
   ];
 
   return (
@@ -40,7 +36,7 @@ export const FAQView: React.FC = () => {
         </div>
         <h1 className="text-3xl sm:text-4xl font-black text-slate-900">Pre-Ordering & Express Pickup FAQ</h1>
         <p className="text-xs sm:text-sm text-slate-500">
-          Everything you need to know about campus dining pre-orders, QR scanning, and wallet payments.
+          Everything you need to know about GUB campus dining pre-orders, QR scanning, and MFS payments.
         </p>
       </div>
 
