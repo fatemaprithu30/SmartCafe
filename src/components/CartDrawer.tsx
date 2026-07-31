@@ -152,7 +152,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                       {item.selectedOptions && item.selectedOptions.length > 0 && (
                         <p className="text-[10px] text-stone-400 line-clamp-1 mt-0.5">
-                          {item.selectedOptions.map((o) => `${o.optionName} (+$${o.price})`).join(', ')}
+                          {item.selectedOptions.map((o) => `${o.optionName} (+৳${o.price})`).join(', ')}
                         </p>
                       )}
 
@@ -164,7 +164,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
                       <div className="flex items-center justify-between mt-2">
                         <span className="font-extrabold text-amber-400 text-xs">
-                          ${item.totalPrice.toFixed(2)}
+                          ৳{item.totalPrice.toFixed(2)}
                         </span>
 
                         <div className="flex items-center border border-stone-800 bg-stone-900 rounded-lg">
@@ -199,7 +199,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 p-2 rounded-lg text-xs">
                     <span className="text-emerald-300 font-bold flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      Code: {appliedCoupon.code} (-${appliedCoupon.discountAmount.toFixed(2)})
+                      Code: {appliedCoupon.code} (-৳{appliedCoupon.discountAmount.toFixed(2)})
                     </span>
                     <button
                       onClick={onRemoveCoupon}
@@ -240,17 +240,17 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             <div className="space-y-1.5 text-xs">
               <div className="flex justify-between text-stone-400">
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>৳{subtotal.toFixed(2)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-emerald-400 font-semibold">
                   <span>Student Coupon Discount</span>
-                  <span>-${discount.toFixed(2)}</span>
+                  <span>-৳{discount.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-stone-100 font-black text-base pt-2 border-t border-stone-800">
                 <span>Total Pre-Order</span>
-                <span className="text-amber-400">${total.toFixed(2)}</span>
+                <span className="text-amber-400">৳{total.toFixed(2)}</span>
               </div>
             </div>
 

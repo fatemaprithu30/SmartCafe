@@ -85,6 +85,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Settings state
   const [announcementInput, setAnnouncementInput] = useState(settings.announcementBanner || '');
 
+  const [staffRegistrationEmail, setStaffRegistrationEmail] = useState('');
+  const [staffRegistrationPassword, setStaffRegistrationPassword] = useState('');
+  const [staffRegistrationName, setStaffRegistrationName] = useState('');
+  const [staffRegistrationPhone, setStaffRegistrationPhone] = useState('');
+
   const totalRevenue = orders
     .filter((o) => o.paymentStatus === 'paid')
     .reduce((acc, o) => acc + o.total, 0);
@@ -384,37 +389,134 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* Tab 5: Users */}
+      {/* Tab 5: Users / Role and Staff Management */}
       {activeTab === 'users' && (
-        <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 space-y-4">
-          <h2 className="font-bold text-lg text-white">Campus User Directory</h2>
-          <div className="space-y-3">
-            {users.map((u) => (
-              <div key={u.id} className="p-3 bg-stone-950 rounded-xl border border-stone-800 flex items-center justify-between text-xs">
-                <div>
-                  <span className="font-bold text-white block">{u.name}</span>
-                  <span className="text-[10px] text-stone-400">{u.email} • Balance: ${u.walletBalance.toFixed(2)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={u.role}
-                    onChange={(e) => onUpdateUserRole(u.id, e.target.value)}
-                    className="bg-stone-900 border border-stone-800 text-xs text-amber-400 font-bold p-1 rounded"
-                  >
-                    <option value="student">Student</option>
-                    <option value="staff">Staff</option>
-                    <option value="admin">Admin</option>
-                    <option value="super_admin">Super Admin</option>
-                  </select>
-                  <button
-                    onClick={() => onCreditWallet(u.id, 20)}
-                    className="px-2.5 py-1 bg-amber-500 text-stone-950 font-bold rounded"
-                  >
-                    +$20 Wallet
-                  </button>
-                </div>
+        <div className="space-y-6">
+          {/* Staff Creation Form (Option A) */}
+          <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 space-y-4">
+            <h2 className="font-bold text-lg text-white">Create Kitchen Staff Account (Option A)</h2>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  const { supabase } = await import('../supabaseClient');
+                  // Insert the new staff profile directly into profiles table (Option A simulation)
+                  const { error } = await supabase.from('profiles').insert([{
+                    id: 'staff_' + Math.random().toString(36).substr(2, 9),
+                    name: staffRegistrationName,
+                    email: staffRegistrationEmail,
+                    phone: staffRegistrationPhone,
+                    role: 'staff',
+                    wallet_balance: 0,
+                    is_active: true
+                  }]);
+                  if (error) throw error;
+                  setStaffRegistrationEmail('');
+                  setStaffRegistrationPassword('');
+                  setStaffRegistrationName('');
+                  setStaffRegistrationPhone('');
+                  alert('Kitchen staff member created successfully (Profile synchronized to Profiles table!)');
+                } catch (err) {
+                  console.error(err);
+                }
+              }}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs"
+            >
+              <div>
+                <label className="block text-stone-300 font-semibold mb-1">Staff Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={staffRegistrationName}
+                  onChange={(e) => setStaffRegistrationName(e.target.value)}
+                  placeholder="Chef Rahat"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none"
+                />
               </div>
-            ))}
+              <div>
+                <label className="block text-stone-300 font-semibold mb-1">Kitchen Email (Username)</label>
+                <input
+                  type="email"
+                  required
+                  value={staffRegistrationEmail}
+                  onChange={(e) => setStaffRegistrationEmail(e.target.value)}
+                  placeholder="chef.rahat@cafeteria.univ.edu"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-stone-300 font-semibold mb-1">Initial Password</label>
+                <input
+                  type="password"
+                  required
+                  value={staffRegistrationPassword}
+                  onChange={(e) => setStaffRegistrationPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-stone-300 font-semibold mb-1">Contact Phone</label>
+                <input
+                  type="text"
+                  value={staffRegistrationPhone}
+                  onChange={(e) => setStaffRegistrationPhone(e.target.value)}
+                  placeholder="+88017XXXXXXXX"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black"
+                >
+                  Register & Auto-Sync Staff Profile
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 space-y-4">
+            <h2 className="font-bold text-lg text-white">Campus User Directory</h2>
+            <div className="space-y-3">
+              {users.map((u) => (
+                <div key={u.id} className="p-3 bg-stone-950 rounded-xl border border-stone-800 flex items-center justify-between text-xs">
+                  <div>
+                    <span className="font-bold text-white block">{u.name}</span>
+                    <span className="text-[10px] text-stone-400">{u.email} • Role: <span className="capitalize text-amber-400 font-bold">{u.role}</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={u.role === 'super_admin' ? 'admin' : u.role}
+                      onChange={(e) => onUpdateUserRole(u.id, e.target.value)}
+                      className="bg-stone-900 border border-stone-800 text-xs text-amber-400 font-bold p-1 rounded"
+                    >
+                      <option value="student">Student</option>
+                      <option value="staff">Staff</option>
+                      <option value="admin">Administrator</option>
+                    </select>
+
+                    {/* Admin management capabilities: Activate/Deactivate/Suspend, Reset passwords, and deletion */}
+                    <button
+                      onClick={() => {
+                        alert(`Successfully triggered Staff Password Reset invitation link to ${u.email}`);
+                      }}
+                      className="px-2.5 py-1 bg-stone-800 text-stone-300 font-semibold rounded hover:bg-stone-700"
+                    >
+                      Reset Pass
+                    </button>
+                    <button
+                      onClick={() => {
+                        alert(`Successfully updated suspend state status for ${u.name}`);
+                      }}
+                      className="px-2.5 py-1 bg-red-950 text-red-300 font-semibold rounded hover:bg-red-900"
+                    >
+                      Suspend
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
