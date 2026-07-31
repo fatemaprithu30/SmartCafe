@@ -44,7 +44,7 @@ export const FoodDetailModal: React.FC<FoodDetailModalProps> = ({ food, onClose,
   };
 
   // Calculate total unit price including options
-  const optionsPrice = Object.values(selectedOptions).reduce((sum, opt) => sum + opt.price, 0);
+  const optionsPrice = Object.values(selectedOptions).reduce((sum: number, opt: any) => sum + opt.price, 0);
   const unitPrice = food.price + optionsPrice;
   const totalPrice = unitPrice * quantity;
 
@@ -184,7 +184,7 @@ export const FoodDetailModal: React.FC<FoodDetailModalProps> = ({ food, onClose,
                             <span>{option.name}</span>
                           </div>
                           <span className="font-bold">
-                            {option.price > 0 ? `+$${option.price.toFixed(2)}` : 'Free'}
+                            {option.price > 0 ? `+৳${option.price.toFixed(2)}` : 'Free'}
                           </span>
                         </button>
                       );
@@ -236,7 +236,7 @@ export const FoodDetailModal: React.FC<FoodDetailModalProps> = ({ food, onClose,
             className="flex-1 py-3 px-6 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-extrabold text-sm transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
           >
             <ShoppingBag className="w-4 h-4" />
-            <span>Add Pre-Order • ${totalPrice.toFixed(2)}</span>
+            <span>Add Pre-Order • ৳{totalPrice.toFixed(2)}</span>
           </button>
         </div>
       </div>

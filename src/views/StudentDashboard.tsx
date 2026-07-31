@@ -86,18 +86,16 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
     if (!reviewModalOrder) return;
 
     try {
-      await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          foodId: reviewModalOrder.items[0]?.foodId || 'food_1',
-          foodName: reviewModalOrder.items[0]?.foodName || 'Campus Meal',
-          studentId: currentUser.id,
-          studentName: currentUser.name,
-          rating: ratingInput,
-          comment: reviewComment,
-        }),
-      });
+      const { supabase } = await import('../supabaseClient');
+      const { error } = await supabase.from('reviews').insert([{
+        food_id: reviewModalOrder.items[0]?.foodId || null,
+        food_name: reviewModalOrder.items[0]?.foodName || 'Campus Meal',
+        student_id: currentUser.id,
+        student_name: currentUser.name,
+        rating: ratingInput,
+        comment: reviewComment
+      }]);
+      if (error) throw error;
       setReviewModalOrder(null);
       setReviewComment('');
     } catch (err) {
@@ -124,21 +122,14 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
           </div>
         </div>
 
-        {/* Student Wallet Quick Card */}
-        <div className="bg-stone-950 p-4 rounded-2xl border border-stone-800 flex items-center gap-4 w-full md:w-auto shrink-0">
+        {/* Student Wallet info hidden / disabled as requested */}
+        <div className="bg-stone-950 p-4 rounded-2xl border border-stone-800 flex items-center gap-4 w-full md:w-auto shrink-0 hidden">
           <div>
             <span className="text-[10px] text-stone-400 uppercase font-semibold block">
               Student ID Wallet Balance
             </span>
-            <span className="text-2xl font-black text-amber-400">${currentUser.walletBalance.toFixed(2)}</span>
+            <span className="text-2xl font-black text-amber-400">৳{currentUser.walletBalance.toFixed(2)}</span>
           </div>
-          <button
-            onClick={() => onTopUpWallet(20)}
-            className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs rounded-xl transition-colors flex items-center gap-1"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            <span>Top Up $20</span>
-          </button>
         </div>
       </div>
 
@@ -303,13 +294,13 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                             <span className="text-[10px] text-stone-500">({it.selectedOptionsText})</span>
                           )}
                         </div>
-                        <span className="font-bold text-amber-400">${it.totalPrice.toFixed(2)}</span>
+                        <span className="font-bold text-amber-400">৳{it.totalPrice.toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
 
                   <div className="flex items-center justify-between pt-2 border-t border-stone-800/80 text-xs">
-                    <span className="text-stone-400">Total Paid: <strong className="text-white">${ord.total.toFixed(2)}</strong> ({ord.paymentMethod.replace('_', ' ')})</span>
+                    <span className="text-stone-400">Total Paid: <strong className="text-white">৳{ord.total.toFixed(2)}</strong> ({ord.paymentMethod.replace('_', ' ')})</span>
                     <button
                       onClick={() => onReOrder(ord.items)}
                       className="text-amber-400 hover:underline font-semibold flex items-center gap-1"

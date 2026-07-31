@@ -4,7 +4,6 @@ import { Footer } from './components/Footer';
 import { FoodCard } from './components/FoodCard';
 import { FoodDetailModal } from './components/FoodDetailModal';
 import { CartDrawer } from './components/CartDrawer';
-import { AiMealAssistantModal } from './components/AiMealAssistantModal';
 import { AuthModal } from './components/AuthModal';
 
 import { HomeView } from './views/HomeView';
@@ -70,44 +69,70 @@ export default function App() {
   // Modal Toggles
   const [selectedFoodForDetail, setSelectedFoodForDetail] = useState<FoodItem | null>(null);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
-  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState<boolean>(false);
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [studentDashboardTab, setStudentDashboardTab] = useState<'orders' | 'favorites' | 'reviews' | 'profile'>('orders');
 
-  // Fetch initial data from Express backend API
+  // Fetch initial data using migrated live database services
   const fetchBackendData = async () => {
     try {
-      const [fRes, cRes, oRes, setRes, notifRes] = await Promise.all([
-        fetch('/api/foods'),
-        fetch('/api/categories'),
-        fetch('/api/orders'),
-        fetch('/api/settings'),
-        fetch('/api/notifications'),
+      const { dbService } = await import('./services/dbService');
+      const [f, c, o, set] = await Promise.all([
+        dbService.getFoods(),
+        dbService.getCategories(),
+        dbService.getOrders(),
+        dbService.getSettings()
       ]);
-
-      if (fRes.ok) setFoods(await fRes.json());
-      if (cRes.ok) setCategories(await cRes.json());
-      if (oRes.ok) setOrders(await oRes.json());
-      if (setRes.ok) setSettings(await setRes.json());
-      if (notifRes.ok) setNotifications(await notifRes.json());
+      if (f.length > 0) setFoods(f);
+      if (c.length > 0) setCategories(c);
+      if (o.length > 0) setOrders(o);
+      if (set) setSettings(set);
     } catch (err) {
-      console.log('Using local mock data state (Backend server fallback)');
+      console.log('Using fallback local states...');
     }
   };
 
   useEffect(() => {
     fetchBackendData();
-    // Poll for realtime kitchen updates every 5 seconds
-    const interval = setInterval(() => {
-      fetchBackendData();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+
+    // Wire up real-time status subscription from Supabase Realtime channel
+    let orderSubscription: any;
+    const initializeRealtime = async () => {
+      const { supabase } = await import('./supabaseClient');
+      orderSubscription = supabase
+        .channel('order-status-bumps')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, (payload) => {
+          const updatedOrder = payload.new as Order;
+          setOrders((prev) => prev.map((o) => o.id === updatedOrder.id ? { ...o, orderStatus: updatedOrder.orderStatus, kitchenNotes: updatedOrder.kitchenNotes } : o));
+
+          // Trigger local browser alert simulation
+          if (updatedOrder.studentId === currentUser.id) {
+            const nextNotif = {
+              id: `notif_${Date.now()}`,
+              userId: currentUser.id,
+              title: `Order #${updatedOrder.orderNumber} status update`,
+              message: `Your food has updated to state: ${updatedOrder.orderStatus.toUpperCase()}`,
+              type: 'order_status' as any,
+              read: false,
+              createdAt: new Date().toISOString()
+            };
+            setNotifications((prev) => [nextNotif, ...prev]);
+          }
+        })
+        .subscribe();
+    };
+
+    initializeRealtime();
+
+    return () => {
+      if (orderSubscription) orderSubscription.unsubscribe();
+    };
+  }, [currentUser]);
 
   // Sync role change
   const handleRoleChange = (newRole: UserRole) => {
-    setActiveRole(newRole);
-    const matchUser = INITIAL_USERS.find((u) => u.role === newRole) || currentUser;
+    const roleMap = newRole === 'super_admin' ? 'admin' : newRole;
+    setActiveRole(roleMap);
+    const matchUser = INITIAL_USERS.find((u) => u.role === roleMap) || currentUser;
     setCurrentUser(matchUser);
   };
 
@@ -162,25 +187,28 @@ export default function App() {
   const handleApplyCoupon = async (code: string) => {
     const subtotal = cartItems.reduce((acc, item) => acc + item.totalPrice, 0);
     try {
-      const res = await fetch('/api/coupons/validate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, subtotal }),
-      });
+      const { dbService } = await import('./services/dbService');
+      const allCoupons = await dbService.getCoupons();
+      const match = allCoupons.find((c) => c.code.toUpperCase() === code.toUpperCase() && c.isActive);
 
-      const data = await res.json();
-      if (res.ok && data.valid) {
-        setAppliedCoupon({ code: data.coupon.code, discountAmount: data.discountAmount });
-        return { success: true, message: `Applied code ${data.coupon.code}! Saved $${data.discountAmount.toFixed(2)}` };
+      if (match) {
+        let disc = 0;
+        if (match.discountType === 'percentage') {
+          disc = (subtotal * match.discountValue) / 100;
+        } else {
+          disc = match.discountValue;
+        }
+        setAppliedCoupon({ code: match.code, discountAmount: disc });
+        return { success: true, message: `Applied code ${match.code}! Saved ৳${disc.toFixed(2)}` };
       } else {
-        return { success: false, message: data.message || 'Invalid promo coupon' };
+        throw new Error('No active coupon matching this code was found.');
       }
     } catch (err) {
       // Local fallback
       if (code.toUpperCase() === 'WELCOME10') {
         const disc = subtotal * 0.1;
         setAppliedCoupon({ code: 'WELCOME10', discountAmount: disc });
-        return { success: true, message: `Applied WELCOME10! Saved $${disc.toFixed(2)}` };
+        return { success: true, message: `Applied WELCOME10! Saved ৳${disc.toFixed(2)}` };
       }
       return { success: false, message: 'Invalid promo code' };
     }
@@ -232,19 +260,9 @@ export default function App() {
   // Kitchen Bump Bar Status Shift
   const handleUpdateOrderStatus = async (orderId: string, status: OrderStatus, notes?: string) => {
     try {
-      const res = await fetch(`/api/orders/${orderId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderStatus: status, kitchenNotes: notes }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
-      } else {
-        setOrders((prev) =>
-          prev.map((o) => (o.id === orderId ? { ...o, orderStatus: status } : o))
-        );
-      }
+      const { dbService } = await import('./services/dbService');
+      const updated = await dbService.updateOrderStatus(orderId, status, notes);
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
     } catch (err) {
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, orderStatus: status } : o))
@@ -255,19 +273,9 @@ export default function App() {
   // Kitchen Quick Stock Toggle
   const handleUpdateStock = async (foodId: string, isAvailable: boolean, stockQuantity?: number) => {
     try {
-      const res = await fetch(`/api/foods/${foodId}/stock`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isAvailable, stockQuantity }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setFoods((prev) => prev.map((f) => (f.id === foodId ? updated : f)));
-      } else {
-        setFoods((prev) =>
-          prev.map((f) => (f.id === foodId ? { ...f, isAvailable } : f))
-        );
-      }
+      const { dbService } = await import('./services/dbService');
+      const updated = await dbService.updateStock(foodId, isAvailable, stockQuantity);
+      setFoods((prev) => prev.map((f) => (f.id === foodId ? updated : f)));
     } catch (err) {
       setFoods((prev) =>
         prev.map((f) => (f.id === foodId ? { ...f, isAvailable } : f))
@@ -278,15 +286,9 @@ export default function App() {
   // Admin Actions
   const handleAddFood = async (newFood: Partial<FoodItem>) => {
     try {
-      const res = await fetch('/api/foods', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newFood),
-      });
-      if (res.ok) {
-        const created = await res.json();
-        setFoods((prev) => [created, ...prev]);
-      }
+      const { dbService } = await import('./services/dbService');
+      const created = await dbService.addFood(newFood);
+      setFoods((prev) => [created, ...prev]);
     } catch (err) {
       console.error(err);
     }
@@ -294,7 +296,8 @@ export default function App() {
 
   const handleDeleteFood = async (id: string) => {
     try {
-      await fetch(`/api/foods/${id}`, { method: 'DELETE' });
+      const { dbService } = await import('./services/dbService');
+      await dbService.deleteFood(id);
       setFoods((prev) => prev.filter((f) => f.id !== id));
     } catch (err) {
       setFoods((prev) => prev.filter((f) => f.id !== id));
@@ -303,15 +306,10 @@ export default function App() {
 
   const handleAddCoupon = async (newCoupon: Partial<Coupon>) => {
     try {
-      const res = await fetch('/api/coupons', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newCoupon),
-      });
-      if (res.ok) {
-        const created = await res.json();
-        setCoupons((prev) => [created, ...prev]);
-      }
+      const { supabase } = await import('./supabaseClient');
+      const { data, error } = await supabase.from('coupons').insert([newCoupon]).select().single();
+      if (error) throw error;
+      setCoupons((prev) => [data, ...prev]);
     } catch (err) {
       console.error(err);
     }
@@ -319,11 +317,8 @@ export default function App() {
 
   const handleUpdateUserRole = async (userId: string, role: UserRole) => {
     try {
-      await fetch(`/api/users/${userId}/role`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role }),
-      });
+      const { supabase } = await import('./supabaseClient');
+      await supabase.from('profiles').update({ role }).eq('id', userId);
     } catch (err) {
       console.error(err);
     }
@@ -331,15 +326,9 @@ export default function App() {
 
   const handleUpdateSettings = async (newSet: Partial<CafeteriaSettings>) => {
     try {
-      const res = await fetch('/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newSet),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setSettings(updated);
-      }
+      const { dbService } = await import('./services/dbService');
+      const updated = await dbService.updateSettings(newSet);
+      setSettings(updated);
     } catch (err) {
       setSettings((prev) => ({ ...prev, ...newSet }));
     }
@@ -359,7 +348,7 @@ export default function App() {
         }}
         cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
         onOpenCart={() => setIsCartOpen(true)}
-        onOpenAiAssistant={() => setIsAiAssistantOpen(true)}
+        onOpenAiAssistant={() => {}}
         notifications={notifications}
         orders={orders}
         onOpenAuth={() => setIsAuthOpen(true)}
@@ -377,7 +366,7 @@ export default function App() {
               if (catSlug) setSelectedCategorySlug(catSlug);
               setActiveTab('menu');
             }}
-            onOpenAiAssistant={() => setIsAiAssistantOpen(true)}
+            onOpenAiAssistant={() => {}}
             onQuickAdd={handleQuickAdd}
           />
         )}
@@ -388,7 +377,7 @@ export default function App() {
             foods={foods}
             selectedCategorySlug={selectedCategorySlug}
             onSelectFood={(food) => setSelectedFoodForDetail(food)}
-            onOpenAiAssistant={() => setIsAiAssistantOpen(true)}
+            onOpenAiAssistant={() => {}}
             onQuickAdd={handleQuickAdd}
           />
         )}
@@ -478,15 +467,7 @@ export default function App() {
         onProceedToCheckout={() => setActiveTab('checkout')}
       />
 
-      {/* Gemini AI Meal Concierge Modal */}
-      <AiMealAssistantModal
-        isOpen={isAiAssistantOpen}
-        onClose={() => setIsAiAssistantOpen(false)}
-        availableFoods={foods}
-        onAddComboToCart={(items) => {
-          items.forEach((item) => handleAddToCart(item, 1, [], ''));
-        }}
-      />
+      {/* Gemini AI Meal Concierge Modal disabled as requested */}
 
       {/* Auth / Demo Role Switcher Modal */}
       <AuthModal
@@ -494,10 +475,11 @@ export default function App() {
         onClose={() => setIsAuthOpen(false)}
         currentUser={currentUser}
         onSelectUser={(user) => {
-          setCurrentUser(user);
-          setActiveRole(user.role);
-          if (user.role === 'staff') setActiveTab('staff-kitchen');
-          else if (user.role === 'admin' || user.role === 'super_admin') setActiveTab('admin-dashboard');
+          const userRole = user.role === 'super_admin' ? 'admin' : user.role;
+          setCurrentUser({ ...user, role: userRole });
+          setActiveRole(userRole);
+          if (userRole === 'staff') setActiveTab('staff-kitchen');
+          else if (userRole === 'admin') setActiveTab('admin-dashboard');
           else setActiveTab('home');
         }}
       />

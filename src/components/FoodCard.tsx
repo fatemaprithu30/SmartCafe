@@ -98,7 +98,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, onSelect, onQuickAdd }
       <div className="p-4 pt-2 flex items-center justify-between border-t border-slate-100 mt-auto bg-slate-50/50">
         <div>
           <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">Pre-Order</span>
-          <span className="text-lg font-extrabold text-blue-600">${food.price.toFixed(2)}</span>
+          <span className="text-lg font-extrabold text-blue-600">৳{food.price.toFixed(2)}</span>
         </div>
 
         {isOutOfStock ? (

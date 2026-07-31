@@ -96,14 +96,6 @@ export const MenuView: React.FC<MenuViewProps> = ({
             Browse all hot meals, wraps, salads, breakfast & cold brews. Pre-order in advance.
           </p>
         </div>
-
-        <button
-          onClick={onOpenAiAssistant}
-          className="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-all shadow-sm shadow-blue-500/30 flex items-center justify-center gap-2 shrink-0 active:scale-98"
-        >
-          <Sparkles className="w-4 h-4 text-blue-200" />
-          <span>Gemini AI Meal Helper</span>
-        </button>
       </div>
 
       {/* Main Layout Grid (Filters sidebar + Menu items) */}
@@ -200,7 +192,7 @@ export const MenuView: React.FC<MenuViewProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
                 <span className="font-semibold text-slate-700">Max Budget Price</span>
-                <span className="font-bold text-blue-600">${maxPrice.toFixed(2)}</span>
+                <span className="font-bold text-blue-600">৳{maxPrice.toFixed(2)}</span>
               </div>
               <input
                 type="range"

@@ -112,18 +112,6 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </button>
           </div>
 
-          {/* Quick AI Trigger Banner */}
-          <div className="pt-2">
-            <button
-              onClick={onOpenAiAssistant}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-300 hover:bg-blue-500/20 text-xs font-semibold transition-all shadow-sm group"
-            >
-              <Sparkles className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
-              <span>Not sure what to eat? Ask Gemini AI for a $6 High-Protein Lunch Combo</span>
-              <ChevronRight className="w-4 h-4 text-blue-400" />
-            </button>
-          </div>
-
           {/* Stats Bar */}
           <div className="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto text-slate-300 text-xs">
             <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80 text-center">

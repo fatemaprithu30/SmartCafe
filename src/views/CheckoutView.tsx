@@ -31,16 +31,19 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   onBackToMenu,
   onOrderPlaced,
 }) => {
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('student_id');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bkash_nagad');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mobileWalletNumber, setMobileWalletNumber] = useState('01700000000');
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Dynamic manual gateway MFS details & dynamic SSLCommerz setup
+  const [mfsGateway, setMfsGateway] = useState<'bKash' | 'Nagad' | 'Rocket'>('bKash');
+  const [mfsMerchantNum, setMfsMerchantNum] = useState('017XXXXXXXX (Merchant)');
+  const [sslCommerzSimulated, setSslCommerzSimulated] = useState(false);
+
   const subtotal = cartItems.reduce((acc, item) => acc + item.totalPrice, 0);
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const total = Math.max(0, subtotal - discount);
-
-  const isWalletSufficient = currentUser.walletBalance >= total;
 
   const handleConfirmOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,18 +54,12 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       return;
     }
 
-    if (paymentMethod === 'student_id' && !isWalletSufficient) {
-      setErrorMessage(
-        `Insufficient Student ID wallet balance ($${currentUser.walletBalance.toFixed(
-          2
-        )}). Please select bKash/Nagad or credit card.`
-      );
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
+      // Simulate real SSLCommerz transaction details if card
+      let simulatedTxId = 'TXN_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+
       const orderPayload = {
         studentId: currentUser.id,
         studentName: currentUser.name,
@@ -84,25 +81,13 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
         couponCode: appliedCoupon?.code,
         total,
         paymentMethod,
-        paymentStatus: paymentMethod === 'cash' ? 'unpaid' : 'paid',
+        paymentStatus: 'paid',
         pickupTimeSlot: selectedPickupSlot,
+        transactionId: simulatedTxId
       };
 
-      const res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderPayload),
-      });
-
-      if (!res.ok) throw new Error('Failed to create order');
-
-      const createdOrder: Order = await res.json();
-      
-      // If student id wallet, deduct balance client state
-      if (paymentMethod === 'student_id') {
-        currentUser.walletBalance -= total;
-      }
-
+      const { dbService } = await import('../services/dbService');
+      const createdOrder = await dbService.addOrder(orderPayload as any);
       onOrderPlaced(createdOrder);
     } catch (err: any) {
       setErrorMessage(err.message || 'Error processing pre-order checkout');
@@ -183,73 +168,108 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
             </h3>
 
             <div className="space-y-3">
-              {/* Option A: Student ID Card Balance */}
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('student_id')}
-                className={`w-full p-3.5 rounded-xl border text-left flex items-start justify-between transition-all ${
-                  paymentMethod === 'student_id'
-                    ? 'bg-amber-500/15 border-amber-500 text-amber-300'
-                    : 'bg-stone-950 border-stone-800 text-stone-300 hover:bg-stone-800/60'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-stone-900 border border-stone-800 text-amber-400">
-                    <Wallet className="w-5 h-5" />
+              {/* Option A: bKash / Nagad / Rocket MFS with Manual configuration */}
+              <div className="bg-stone-950 border border-stone-800 rounded-xl p-4 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('bkash_nagad')}
+                  className={`w-full p-3 rounded-xl border text-left flex items-start justify-between transition-all ${
+                    paymentMethod === 'bkash_nagad'
+                      ? 'bg-amber-500/15 border-amber-500 text-amber-300'
+                      : 'bg-stone-900 border-stone-800 text-stone-300 hover:bg-stone-800/60'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-stone-950 border border-stone-800 text-pink-400">
+                      <Smartphone className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-xs text-white block">MFS (bKash / Nagad / Rocket)</span>
+                      <span className="text-[11px] text-stone-400">Manual MFS payment setup</span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="font-bold text-xs text-white block">Student ID Card Wallet Balance</span>
-                    <span className="text-[11px] text-stone-400">
-                      Available Balance: ${currentUser.walletBalance.toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-                {paymentMethod === 'student_id' && <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />}
-              </button>
+                  {paymentMethod === 'bkash_nagad' && <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />}
+                </button>
 
-              {/* Option B: bKash / Nagad / Mobile Wallet */}
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('bkash_nagad')}
-                className={`w-full p-3.5 rounded-xl border text-left flex items-start justify-between transition-all ${
-                  paymentMethod === 'bkash_nagad'
-                    ? 'bg-amber-500/15 border-amber-500 text-amber-300'
-                    : 'bg-stone-950 border-stone-800 text-stone-300 hover:bg-stone-800/60'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-stone-900 border border-stone-800 text-pink-400">
-                    <Smartphone className="w-5 h-5" />
+                {paymentMethod === 'bkash_nagad' && (
+                  <div className="p-3 bg-stone-900 border border-stone-800 rounded-xl space-y-2.5 text-xs">
+                    <div className="flex gap-2">
+                      {['bKash', 'Nagad', 'Rocket'].map((gatewayOption) => (
+                        <button
+                          key={gatewayOption}
+                          type="button"
+                          onClick={() => {
+                            setMfsGateway(gatewayOption as any);
+                            setMfsMerchantNum(gatewayOption === 'bKash' ? '01711223344 (Merchant)' : gatewayOption === 'Nagad' ? '01855667788 (Merchant)' : '01999887766 (SendMoney)');
+                          }}
+                          className={`flex-1 py-1 px-2 rounded-md font-bold text-center border ${
+                            mfsGateway === gatewayOption ? 'bg-pink-600 border-pink-500 text-white' : 'bg-stone-950 border-stone-800 text-stone-400'
+                          }`}
+                        >
+                          {gatewayOption}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="space-y-1 bg-stone-950 p-2.5 rounded-lg border border-stone-800">
+                      <div className="flex justify-between text-stone-400 text-[10px]">
+                        <span>Manual Pay To:</span>
+                        <span className="font-bold text-amber-400">{mfsMerchantNum}</span>
+                      </div>
+                      <div className="flex justify-between text-stone-400 text-[10px]">
+                        <span>Amount to pay:</span>
+                        <span className="font-bold text-white">৳{total.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-stone-300 text-[10px] font-semibold mb-1">Enter your {mfsGateway} Account/Trx Number</label>
+                      <input
+                        type="text"
+                        value={mobileWalletNumber}
+                        onChange={(e) => setMobileWalletNumber(e.target.value)}
+                        placeholder="e.g. 017XXXXXXXX / TrxID"
+                        className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2 text-white text-xs focus:outline-none"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <span className="font-bold text-xs text-white block">bKash / Nagad / Mobile Banking</span>
-                    <span className="text-[11px] text-stone-400">Instant digital wallet checkout</span>
-                  </div>
-                </div>
-                {paymentMethod === 'bkash_nagad' && <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />}
-              </button>
+                )}
+              </div>
 
-              {/* Option C: Credit/Debit Card */}
-              <button
-                type="button"
-                onClick={() => setPaymentMethod('card')}
-                className={`w-full p-3.5 rounded-xl border text-left flex items-start justify-between transition-all ${
-                  paymentMethod === 'card'
-                    ? 'bg-amber-500/15 border-amber-500 text-amber-300'
-                    : 'bg-stone-950 border-stone-800 text-stone-300 hover:bg-stone-800/60'
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-stone-900 border border-stone-800 text-blue-400">
-                    <CreditCard className="w-5 h-5" />
+              {/* Option B: SSLCommerz Visa/MasterCard Credit/Debit Card */}
+              <div className="bg-stone-950 border border-stone-800 rounded-xl p-4 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('card')}
+                  className={`w-full p-3 rounded-xl border text-left flex items-start justify-between transition-all ${
+                    paymentMethod === 'card'
+                      ? 'bg-blue-500/15 border-blue-500 text-blue-300'
+                      : 'bg-stone-900 border-stone-800 text-stone-300 hover:bg-stone-800/60'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-stone-950 border border-stone-800 text-blue-400">
+                      <CreditCard className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="font-bold text-xs text-white block">Credit / Debit Card (SSLCommerz)</span>
+                      <span className="text-[11px] text-stone-400">Secure gateway payment configuration</span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="font-bold text-xs text-white block">Credit / Debit Card (Visa/MasterCard)</span>
-                    <span className="text-[11px] text-stone-400">Secure gateway payment</span>
+                  {paymentMethod === 'card' && <CheckCircle2 className="w-5 h-5 text-blue-400 shrink-0" />}
+                </button>
+
+                {paymentMethod === 'card' && (
+                  <div className="p-3 bg-stone-900 border border-stone-800 rounded-xl space-y-2 text-xs">
+                    <div className="flex items-center gap-2 text-stone-300 text-[10px] bg-stone-950 p-2 rounded-lg border border-stone-800">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <span>SSLCommerz Secured Payment Gateway (Sandbox active)</span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="block text-[10px] text-stone-400">Cardholder Name: {currentUser.name}</span>
+                      <span className="block text-[10px] text-stone-400">Total amount to charge: ৳{total.toFixed(2)}</span>
+                    </div>
                   </div>
-                </div>
-                {paymentMethod === 'card' && <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />}
-              </button>
+                )}
+              </div>
             </div>
 
             {errorMessage && (
@@ -275,7 +295,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                     <span className="font-semibold text-stone-100">{item.food.name}</span>
                     <span className="text-stone-500 block text-[10px]">Qty: {item.quantity}</span>
                   </div>
-                  <span className="font-bold text-amber-400">${item.totalPrice.toFixed(2)}</span>
+                  <span className="font-bold text-amber-400">৳{item.totalPrice.toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -283,17 +303,17 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
             <div className="pt-3 border-t border-stone-800 space-y-1.5 text-xs">
               <div className="flex justify-between text-stone-400">
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>৳{subtotal.toFixed(2)}</span>
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-emerald-400 font-semibold">
                   <span>Discount</span>
-                  <span>-${discount.toFixed(2)}</span>
+                  <span>-৳{discount.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-stone-100 font-black text-base pt-2 border-t border-stone-800">
                 <span>Total Due</span>
-                <span className="text-amber-400">${total.toFixed(2)}</span>
+                <span className="text-amber-400">৳{total.toFixed(2)}</span>
               </div>
             </div>
 

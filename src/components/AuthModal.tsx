@@ -76,11 +76,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
             {INITIAL_USERS.map((user) => {
               const isCurrent = currentUser.id === user.id;
+              const userRole = user.role === 'super_admin' ? 'admin' : user.role;
               return (
                 <button
                   key={user.id}
                   onClick={() => {
-                    onSelectUser(user);
+                    onSelectUser({ ...user, role: userRole });
                     onClose();
                   }}
                   className={`w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all ${
@@ -91,16 +92,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 >
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-stone-900 border border-stone-800">
-                      {user.role === 'student' && <User className="w-4 h-4 text-blue-400" />}
-                      {user.role === 'staff' && <ChefHat className="w-4 h-4 text-emerald-400" />}
-                      {user.role === 'admin' && <ShieldAlert className="w-4 h-4 text-amber-400" />}
-                      {user.role === 'super_admin' && <ShieldAlert className="w-4 h-4 text-purple-400" />}
+                      {userRole === 'student' && <User className="w-4 h-4 text-blue-400" />}
+                      {userRole === 'staff' && <ChefHat className="w-4 h-4 text-emerald-400" />}
+                      {userRole === 'admin' && <ShieldAlert className="w-4 h-4 text-amber-400" />}
                     </div>
                     <div>
                       <div className="text-xs font-bold text-white flex items-center gap-1.5">
                         {user.name}
                         <span className="capitalize text-[10px] px-1.5 py-0.2 rounded bg-stone-800 text-stone-400">
-                          {user.role.replace('_', ' ')}
+                          {userRole}
                         </span>
                       </div>
                       <span className="text-[10px] text-stone-400 block">{user.email}</span>
@@ -114,9 +114,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
         ) : (
           <form
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              onClose();
+              try {
+                const { supabase } = await import('../supabaseClient');
+                if (activeTab === 'login') {
+                  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                  if (error) throw error;
+                  // Load database profile
+                  const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user?.id).single();
+                  if (profile) {
+                    onSelectUser({
+                      id: profile.id,
+                      name: profile.name,
+                      email: profile.email,
+                      role: profile.role,
+                      studentId: profile.student_id,
+                      walletBalance: profile.wallet_balance || 0,
+                      dietaryPreferences: profile.dietary_preferences || {}
+                    });
+                  }
+                } else {
+                  const { data, error } = await supabase.auth.signUp({ email, password });
+                  if (error) throw error;
+                  if (data.user) {
+                    await supabase.from('profiles').insert([{
+                      id: data.user.id,
+                      name: email.split('@')[0],
+                      email: email,
+                      role: 'student'
+                    }]);
+                  }
+                }
+                onClose();
+              } catch (err: any) {
+                alert(err.message || 'Authentication error.');
+              }
             }}
             className="space-y-4 text-xs"
           >
