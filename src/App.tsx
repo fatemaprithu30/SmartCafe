@@ -85,14 +85,37 @@ export default function App() {
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [studentDashboardTab, setStudentDashboardTab] = useState<'orders' | 'favorites' | 'reviews' | 'profile'>('orders');
 
-  // Sync route on popstate manually
+  // Sync route on popstate and pushstate manually
   useEffect(() => {
     const handleLocationChange = () => {
       setCurrentPath(window.location.pathname);
     };
+
+    // Patch history pushState and replaceState to trigger the popstate event so react state picks up manual route switches
+    const originalPushState = window.history.pushState;
+    window.history.pushState = function (...args) {
+      originalPushState.apply(this, args);
+      handleLocationChange();
+    };
+
+    const originalReplaceState = window.history.replaceState;
+    window.history.replaceState = function (...args) {
+      originalReplaceState.apply(this, args);
+      handleLocationChange();
+    };
+
     window.addEventListener('popstate', handleLocationChange);
-    return () => window.removeEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange);
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+    };
   }, []);
+
+  // Custom route navigator helper
+  const navigateToPath = (path: string) => {
+    window.history.pushState({}, '', path);
+  };
 
   // Fetch initial data using migrated live database services
   const fetchBackendData = async () => {
@@ -671,6 +694,15 @@ export default function App() {
                   Verify Credentials & Enter Panel
                 </button>
               </form>
+
+              <div className="text-center pt-2">
+                <button
+                  onClick={() => navigateToPath('/')}
+                  className="text-xs text-blue-400 hover:underline font-semibold"
+                >
+                  &larr; Back to Student Website
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -736,6 +768,15 @@ export default function App() {
                   Verify Credentials & Enter Screen
                 </button>
               </form>
+
+              <div className="text-center pt-2">
+                <button
+                  onClick={() => navigateToPath('/')}
+                  className="text-xs text-emerald-400 hover:underline font-semibold"
+                >
+                  &larr; Back to Student Website
+                </button>
+              </div>
             </div>
           </div>
         )}
