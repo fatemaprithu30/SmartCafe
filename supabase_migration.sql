@@ -236,52 +236,56 @@ create trigger profiles_updated_at before update on public.profiles for each row
 create trigger orders_updated_at before update on public.orders for each row execute procedure public.handle_updated_at();
 create trigger settings_updated_at before update on public.settings for each row execute procedure public.handle_updated_at();
 
+-- Security definer functions to bypass recursive profile table RLS reads
+create or replace function public.is_admin()
+returns boolean as $$
+begin
+  return exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role = 'admin'
+  );
+end;
+$$ language plpgsql security definer;
+
+create or replace function public.is_staff_or_admin()
+returns boolean as $$
+begin
+  return exists (
+    select 1 from public.profiles
+    where id = auth.uid() and role in ('staff', 'admin')
+  );
+end;
+$$ language plpgsql security definer;
+
 -- PROFILES policies
 create policy "Allow public read access to active profiles" on public.profiles
   for select using (true);
+
+create policy "Allow users to insert their own profile" on public.profiles
+  for insert with check (auth.uid() = id);
 
 create policy "Allow users to update their own profile" on public.profiles
   for update using (auth.uid() = id);
 
 create policy "Allow full admin access on profiles" on public.profiles
-  for all using (
-    exists (
-      select 1 from public.profiles
-      where public.profiles.id = auth.uid() and public.profiles.role = 'admin'
-    )
-  );
+  for all using (public.is_admin());
 
 -- CATEGORIES policies
 create policy "Allow public read access to categories" on public.categories
   for select using (true);
 
 create policy "Allow admins to modify categories" on public.categories
-  for all using (
-    exists (
-      select 1 from public.profiles
-      where public.profiles.id = auth.uid() and public.profiles.role = 'admin'
-    )
-  );
+  for all using (public.is_admin());
 
 -- MENU ITEMS policies
 create policy "Allow public read access to menu items" on public.menu_items
   for select using (true);
 
 create policy "Allow kitchen staff to read and update availability" on public.menu_items
-  for update using (
-    exists (
-      select 1 from public.profiles
-      where public.profiles.id = auth.uid() and public.profiles.role in ('staff', 'admin')
-    )
-  );
+  for update using (public.is_staff_or_admin());
 
 create policy "Allow admins full access to menu items" on public.menu_items
-  for all using (
-    exists (
-      select 1 from public.profiles
-      where public.profiles.id = auth.uid() and public.profiles.role = 'admin'
-    )
-  );
+  for all using (public.is_admin());
 
 -- ORDERS policies
 create policy "Allow students to read their own orders" on public.orders
@@ -291,12 +295,7 @@ create policy "Allow students to create orders" on public.orders
   for insert with check (auth.uid() = student_id);
 
 create policy "Allow kitchen staff to read and update all orders" on public.orders
-  for all using (
-    exists (
-      select 1 from public.profiles
-      where public.profiles.id = auth.uid() and public.profiles.role in ('staff', 'admin')
-    )
-  );
+  for all using (public.is_staff_or_admin());
 
 -- ORDER ITEMS policies
 create policy "Allow select access to own order items" on public.order_items
@@ -304,10 +303,7 @@ create policy "Allow select access to own order items" on public.order_items
     exists (
       select 1 from public.orders
       where public.orders.id = order_id and public.orders.student_id = auth.uid()
-    ) or exists (
-      select 1 from public.profiles
-      where public.profiles.id = auth.uid() and public.profiles.role in ('staff', 'admin')
-    )
+    ) or public.is_staff_or_admin()
   );
 
 create policy "Allow insert of order items" on public.order_items
@@ -333,24 +329,14 @@ create policy "Allow public read to settings" on public.settings
   for select using (true);
 
 create policy "Allow admins to update settings" on public.settings
-  for all using (
-    exists (
-      select 1 from public.profiles
-      where public.profiles.id = auth.uid() and public.profiles.role = 'admin'
-    )
-  );
+  for all using (public.is_admin());
 
 -- COUPONS policies
 create policy "Allow public read of coupons" on public.coupons
   for select using (true);
 
 create policy "Allow admins full access to coupons" on public.coupons
-  for all using (
-    exists (
-      select 1 from public.profiles
-      where public.profiles.id = auth.uid() and public.profiles.role = 'admin'
-    )
-  );
+  for all using (public.is_admin());
 
 -- REVIEWS policies
 create policy "Allow public read of reviews" on public.reviews
@@ -360,21 +346,11 @@ create policy "Allow students to insert reviews" on public.reviews
   for insert with check (auth.uid() = student_id);
 
 create policy "Allow admins to moderate reviews" on public.reviews
-  for all using (
-    exists (
-      select 1 from public.profiles
-      where public.profiles.id = auth.uid() and public.profiles.role = 'admin'
-    )
-  );
+  for all using (public.is_admin());
 
 -- PAYMENT GATEWAYS policies
 create policy "Allow admins full access to gateways" on public.payment_gateways
-  for all using (
-    exists (
-      select 1 from public.profiles
-      where public.profiles.id = auth.uid() and public.profiles.role = 'admin'
-    )
-  );
+  for all using (public.is_admin());
 
 create policy "Allow read access to active gateways for registered users" on public.payment_gateways
   for select using (true);
@@ -387,21 +363,11 @@ create policy "Allow student insert payment" on public.payments
   for insert with check (auth.uid() = student_id);
 
 create policy "Allow staff/admin select payments" on public.payments
-  for select using (
-    exists (
-      select 1 from public.profiles
-      where public.profiles.id = auth.uid() and public.profiles.role in ('staff', 'admin')
-    )
-  );
+  for select using (public.is_staff_or_admin());
 
 -- AUDIT LOGS policies
 create policy "Allow admins to view audit logs" on public.audit_logs
-  for select using (
-    exists (
-      select 1 from public.profiles
-      where public.profiles.id = auth.uid() and public.profiles.role = 'admin'
-    )
-  );
+  for select using (public.is_admin());
 
 create policy "Allow system logging" on public.audit_logs
   for insert with check (true);
