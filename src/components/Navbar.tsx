@@ -1,0 +1,356 @@
+import React, { useState } from 'react';
+import {
+  UtensilsCrossed,
+  ShoppingBag,
+  Bell,
+  User,
+  Sparkles,
+  Search,
+  ShieldAlert,
+  ChefHat,
+  LayoutDashboard,
+  Clock,
+  LogOut,
+  ChevronDown,
+} from 'lucide-react';
+import { UserProfile, UserRole, AppNotification, Order } from '../types';
+
+interface NavbarProps {
+  currentUser: UserProfile;
+  activeRole: UserRole;
+  onRoleChange: (role: UserRole) => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  cartCount: number;
+  onOpenCart: () => void;
+  onOpenAiAssistant: () => void;
+  notifications: AppNotification[];
+  orders: Order[];
+  onOpenAuth: () => void;
+  announcementText?: string;
+}
+
+export const Navbar: React.FC<NavbarProps> = ({
+  currentUser,
+  activeRole,
+  onRoleChange,
+  activeTab,
+  setActiveTab,
+  cartCount,
+  onOpenCart,
+  onOpenAiAssistant,
+  notifications,
+  orders,
+  onOpenAuth,
+  announcementText,
+}) => {
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const [showNotificationsPopover, setShowNotificationsPopover] = useState(false);
+
+  const unreadNotifications = notifications.filter((n) => !n.read);
+  const activeReadyOrders = orders.filter(
+    (o) => o.studentId === currentUser.id && o.orderStatus === 'ready'
+  );
+
+  return (
+    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-slate-900/95 border-b border-slate-800 text-slate-100 transition-all shadow-md">
+      {/* Announcement Banner */}
+      {announcementText && (
+        <div className="bg-blue-900/40 border-b border-blue-800/50 px-4 py-1.5 text-xs text-blue-200 text-center flex items-center justify-center gap-2 font-medium">
+          <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+          <span>{announcementText}</span>
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-4">
+          {/* Logo & Brand */}
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => setActiveTab('home')}
+              className="flex items-center gap-2.5 group text-left focus:outline-none"
+            >
+              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/30 group-hover:bg-blue-500 transition-colors">
+                <UtensilsCrossed className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="font-bold text-lg tracking-tight text-white flex items-center gap-1">
+                  Smart<span className="text-blue-400 font-extrabold">Café</span>
+                </span>
+                <span className="text-[10px] uppercase tracking-wider text-slate-400 block -mt-1 font-semibold">
+                  Campus Dining
+                </span>
+              </div>
+            </button>
+
+            {/* Main Navigation Links */}
+            <nav className="hidden md:flex items-center gap-1">
+              <button
+                onClick={() => setActiveTab('home')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'home'
+                    ? 'bg-slate-800 text-blue-400 font-semibold'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                Home
+              </button>
+              <button
+                onClick={() => setActiveTab('menu')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'menu'
+                    ? 'bg-slate-800 text-blue-400 font-semibold'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                Menu
+              </button>
+              <button
+                onClick={() => setActiveTab('about')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'about'
+                    ? 'bg-slate-800 text-blue-400 font-semibold'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                About
+              </button>
+              <button
+                onClick={() => setActiveTab('contact')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'contact'
+                    ? 'bg-slate-800 text-blue-400 font-semibold'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                Contact
+              </button>
+              <button
+                onClick={() => setActiveTab('faq')}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'faq'
+                    ? 'bg-slate-800 text-blue-400 font-semibold'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                FAQ
+              </button>
+            </nav>
+          </div>
+
+          {/* Right Action Items */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* AI Assistant Button */}
+            <button
+              onClick={onOpenAiAssistant}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-blue-600/20 border border-blue-500/30 text-blue-300 hover:bg-blue-600/30 transition-all shadow-sm"
+              title="Ask Gemini for meal recommendations based on budget and calories"
+            >
+              <Sparkles className="w-4 h-4 text-blue-400" />
+              <span className="hidden sm:inline">AI Meal Helper</span>
+            </button>
+
+            {/* Active Ready Order Badge Banner (If student has a food ready for pickup!) */}
+            {activeReadyOrders.length > 0 && (
+              <button
+                onClick={() => setActiveTab('student-orders')}
+                className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 animate-pulse"
+              >
+                <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span>Order Ready! Show QR</span>
+              </button>
+            )}
+
+            {/* Cart Button */}
+            <button
+              onClick={onOpenCart}
+              className="relative p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors focus:outline-none border border-slate-700/50"
+              title="View Cart"
+            >
+              <ShoppingBag className="w-5 h-5 text-blue-400" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-blue-600 text-white font-bold text-[11px] w-5 h-5 rounded-full flex items-center justify-center shadow">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notifications Bell */}
+            <div className="relative">
+              <button
+                onClick={() => setShowNotificationsPopover(!showNotificationsPopover)}
+                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors relative border border-slate-700/50"
+              >
+                <Bell className="w-5 h-5 text-slate-300" />
+                {unreadNotifications.length > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-orange-500 ring-2 ring-slate-900" />
+                )}
+              </button>
+
+              {/* Notifications Popover */}
+              {showNotificationsPopover && (
+                <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 p-3">
+                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
+                    <span className="font-semibold text-xs text-slate-200">
+                      Notifications ({notifications.length})
+                    </span>
+                    <span className="text-[10px] text-blue-400 font-medium uppercase tracking-wider">Real-Time</span>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                    {notifications.length === 0 ? (
+                      <p className="text-xs text-slate-500 text-center py-4">No new notifications</p>
+                    ) : (
+                      notifications.map((n) => (
+                        <div
+                          key={n.id}
+                          className="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs text-slate-300"
+                        >
+                          <p className="font-semibold text-slate-100">{n.title}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">{n.message}</p>
+                          <span className="text-[9px] text-slate-500 mt-1 block">
+                            {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Role Switcher Pill */}
+            <div className="relative">
+              <button
+                onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition-colors"
+              >
+                {activeRole === 'student' && <User className="w-3.5 h-3.5 text-blue-400" />}
+                {activeRole === 'staff' && <ChefHat className="w-3.5 h-3.5 text-emerald-400" />}
+                {(activeRole === 'admin' || activeRole === 'super_admin') && (
+                  <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                )}
+                <span className="capitalize">{activeRole.replace('_', ' ')}</span>
+                <ChevronDown className="w-3 h-3 text-slate-400" />
+              </button>
+
+              {showRoleDropdown && (
+                <div className="absolute right-0 mt-2 w-52 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 p-2 text-xs">
+                  <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-slate-500 font-bold border-b border-slate-800 mb-1">
+                    Switch Active Role
+                  </div>
+                  <button
+                    onClick={() => {
+                      onRoleChange('student');
+                      setActiveTab('home');
+                      setShowRoleDropdown(false);
+                    }}
+                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left transition-colors ${
+                      activeRole === 'student' ? 'bg-blue-600/20 text-blue-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    <User className="w-3.5 h-3.5 text-blue-400" />
+                    <div>
+                      <div>Student View</div>
+                      <span className="text-[10px] text-slate-500 font-normal">Pre-order, Cart, QR Tracking</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      onRoleChange('staff');
+                      setActiveTab('staff-kitchen');
+                      setShowRoleDropdown(false);
+                    }}
+                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left transition-colors ${
+                      activeRole === 'staff' ? 'bg-blue-600/20 text-blue-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    <ChefHat className="w-3.5 h-3.5 text-emerald-400" />
+                    <div>
+                      <div>Kitchen Staff View</div>
+                      <span className="text-[10px] text-slate-500 font-normal">Live Bump Bar & Inventory</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      onRoleChange('admin');
+                      setActiveTab('admin-dashboard');
+                      setShowRoleDropdown(false);
+                    }}
+                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left transition-colors ${
+                      activeRole === 'admin' ? 'bg-blue-600/20 text-blue-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                    <div>
+                      <div>Admin Dashboard</div>
+                      <span className="text-[10px] text-slate-500 font-normal">Analytics, Menu & Coupons</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      onRoleChange('super_admin');
+                      setActiveTab('admin-dashboard');
+                      setShowRoleDropdown(false);
+                    }}
+                    className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left transition-colors ${
+                      activeRole === 'super_admin' ? 'bg-blue-600/20 text-blue-300 font-bold' : 'text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    <ShieldAlert className="w-3.5 h-3.5 text-purple-400" />
+                    <div>
+                      <div>Super Admin</div>
+                      <span className="text-[10px] text-slate-500 font-normal">Roles, Audit Logs, Settings</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Role Specific Dashboard Shortcut */}
+            {activeRole === 'student' && (
+              <button
+                onClick={() => setActiveTab('student-orders')}
+                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 transition-colors border border-slate-700/50"
+                title="Student Pre-Orders & QR Codes"
+              >
+                <Clock className="w-5 h-5" />
+              </button>
+            )}
+
+            {activeRole === 'staff' && (
+              <button
+                onClick={() => setActiveTab('staff-kitchen')}
+                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm shadow-emerald-600/20"
+              >
+                <ChefHat className="w-4 h-4" />
+                <span className="hidden sm:inline">Kitchen Queue</span>
+              </button>
+            )}
+
+            {(activeRole === 'admin' || activeRole === 'super_admin') && (
+              <button
+                onClick={() => setActiveTab('admin-dashboard')}
+                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-sm shadow-blue-500/20"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span className="hidden sm:inline">Admin Panel</span>
+              </button>
+            )}
+
+            {/* Auth / Profile trigger */}
+            <button
+              onClick={onOpenAuth}
+              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors border border-slate-700/50"
+              title={`Logged in as ${currentUser.name}`}
+            >
+              <User className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};

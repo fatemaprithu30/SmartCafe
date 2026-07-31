@@ -1,0 +1,6 @@
+{
+  "name": "Smart Café",
+  "description": "Online Food Pre-Ordering System for University Cafeterias featuring meal pre-orders, live kitchen queue, nutrition information, staff kitchen dashboard, and admin management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
