@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Trash2, Clock, Ticket, ShoppingBag, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { X, Trash2, Clock, Ticket, ShoppingBag, ArrowRight, CheckCircle2, Flame } from 'lucide-react';
 import { CartItem } from '../types';
 
 interface CartDrawerProps {
@@ -14,6 +14,7 @@ interface CartDrawerProps {
   onApplyCoupon: (code: string) => Promise<{ success: boolean; message: string }>;
   onRemoveCoupon: () => void;
   onProceedToCheckout: () => void;
+  dailyCalorieTarget?: number;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -28,6 +29,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onApplyCoupon,
   onRemoveCoupon,
   onProceedToCheckout,
+  dailyCalorieTarget = 2000,
 }) => {
   const [couponInput, setCouponInput] = useState('');
   const [couponError, setCouponError] = useState('');
@@ -40,7 +42,15 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const total = Math.max(0, subtotal - discount);
 
-  // Available pickup time slots for university cafeteria
+  // Total Calories calculation
+  const totalCalories = cartItems.reduce((acc, item) => {
+    const itemCalories = item.food.nutrition?.calories || 0;
+    return acc + (itemCalories * item.quantity);
+  }, 0);
+
+  const caloriePercentage = Math.min(100, (totalCalories / dailyCalorieTarget) * 100);
+
+  // Available pickup time slots for GUB cafeteria
   const timeSlots = [
     '12:00 PM - 12:10 PM',
     '12:10 PM - 12:20 PM',
@@ -99,7 +109,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
               <p className="text-stone-300 font-semibold text-sm">Your tray is empty</p>
               <p className="text-xs text-stone-500 max-w-xs mx-auto">
-                Browse our menu to pre-order fresh cafeteria meals and skip the lunch line.
+                Browse our menu to pre-order fresh cafeteria meals and skip the GUB lunch line.
               </p>
             </div>
           ) : (
@@ -123,6 +133,26 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 </select>
                 <p className="text-[10px] text-stone-500">
                   ⚡ Pre-ordering guarantees your meal is hot & packaged when you arrive.
+                </p>
+              </div>
+
+              {/* Total Calories Progress Bar */}
+              <div className="bg-stone-950 p-3.5 rounded-xl border border-stone-800 space-y-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="font-bold text-stone-300 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Flame className="w-4 h-4 text-orange-500" />
+                    Total Calories in Cart
+                  </span>
+                  <span className="font-bold text-amber-400">{totalCalories} / {dailyCalorieTarget} kcal</span>
+                </div>
+                <div className="w-full bg-stone-800 h-2.5 rounded-full overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-orange-500 to-red-500 h-full transition-all duration-300"
+                    style={{ width: `${caloriePercentage}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-stone-500">
+                  Daily calorie budget tracking computed on chosen menu item specs.
                 </p>
               </div>
 

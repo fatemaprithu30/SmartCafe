@@ -73,7 +73,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           {/* Top Pill */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-blue-400 text-xs font-semibold shadow-sm">
             <Sparkles className="w-4 h-4 text-blue-400" />
-            <span>Official Campus Cafeteria Pre-Ordering Platform</span>
+            <span>Official Green University of Bangladesh Cafeteria Pre-Ordering Platform</span>
           </div>
 
           {/* Main Headline */}
@@ -83,7 +83,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               <br className="hidden sm:inline" /> Pre-Order & Pickup Hot.
             </h1>
             <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-              Select your pickup time slot, customize dietary preferences, pay with your Student ID card or mobile wallet, and grab your meal instantly with a live QR code.
+              Select your pickup time slot, customize dietary preferences, pay with your mobile wallet, and grab your meal instantly with a live QR code at the GUB Campus Cafeteria.
             </p>
           </div>
 
@@ -107,7 +107,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               onClick={() => onNavigateToMenu()}
               className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm transition-all shrink-0 flex items-center justify-center gap-2 shadow-sm shadow-blue-500/20 active:scale-98"
             >
-              <span>Explore Menu</span>
+              <span>Explore GUB Menu</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -200,7 +200,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <div className="text-center space-y-2 max-w-xl mx-auto">
             <h2 className="text-2xl sm:text-3xl font-black text-slate-900">How Pre-Ordering Works</h2>
             <p className="text-xs sm:text-sm text-slate-500">
-              Designed specifically for busy campus schedules between lecture halls.
+              Designed specifically for GUB students' schedules between lecture halls.
             </p>
           </div>
 
@@ -231,7 +231,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               </div>
               <h3 className="font-bold text-slate-900 text-base">Scan QR & Express Pickup</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Walk up to Express Counter 1, show your order QR code on your phone, and grab your packaged meal immediately.
+                Walk up to GUB Express Counter 1, show your order QR code on your phone, and grab your packaged meal immediately.
               </p>
             </div>
           </div>
@@ -244,7 +244,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <div className="flex items-center gap-2">
             <Flame className="w-5 h-5 text-orange-500" />
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Most Loved Campus Favorites</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Most Loved GUB Campus Favorites</h2>
               <p className="text-xs text-slate-500">High rating & fast turnaround time</p>
             </div>
           </div>
@@ -274,7 +274,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
               <Star className="w-4 h-4 fill-amber-400" />
             </div>
             <p className="text-slate-200 text-sm italic leading-relaxed">
-              "Pre-ordering my Teriyaki Rice Bowl at 11:45 AM before my physics lecture ends means I walk past a 40-person line straight to Express Counter 1. Total game changer!"
+              "Pre-ordering my Teriyaki Rice Bowl at 11:45 AM before my CSE lecture ends means I walk past a 40-person line straight to GUB Express Counter 1. Total game changer!"
             </p>
             <span className="text-xs font-bold text-blue-400 block">— Aria R., Computer Science '26</span>
           </div>

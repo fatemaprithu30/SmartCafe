@@ -1,5 +1,5 @@
 import React from 'react';
-import { UtensilsCrossed, Clock, MapPin, Phone, Mail, ShieldCheck, Heart } from 'lucide-react';
+import { UtensilsCrossed, Clock, MapPin, Phone, Mail, ShieldCheck } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (tab: string) => void;
@@ -17,11 +17,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <UtensilsCrossed className="w-4 h-4" />
               </div>
               <span className="font-bold text-lg text-white">
-                Smart<span className="text-blue-400">Café</span>
+                GUB Smart<span className="text-blue-400">Café</span>
               </span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Official online food pre-ordering & kitchen queue system for university students, faculty, and campus cafeteria staff.
+              Official online food pre-ordering & kitchen display system for Green University of Bangladesh students, faculty, and campus cafeteria staff.
             </p>
             <div className="flex items-center gap-2 text-xs text-blue-400 font-medium">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
@@ -84,22 +84,22 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <ul className="space-y-2 text-xs">
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-                <span>Student Center Building 2, Ground Floor Dining Hall</span>
+                <span>Green University of Bangladesh Campus Cafeteria, Ground Floor</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-blue-400 shrink-0" />
-                <span>+1 (555) 019-2834 (Cafeteria Desk)</span>
+                <span>+880 1711223344 (Cafeteria Desk)</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-blue-400 shrink-0" />
-                <span>dining@univ.edu</span>
+                <span>cafe-support@green.edu.bd</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} Smart Café System. Built for University Campus Pre-Ordering.</p>
+          <p>© {new Date().getFullYear()} GUB Smart Café. Built for Green University of Bangladesh Pre-Ordering.</p>
           <div className="flex items-center gap-1 text-slate-400">
             <span>Designed for fast, queue-free campus dining</span>
           </div>
