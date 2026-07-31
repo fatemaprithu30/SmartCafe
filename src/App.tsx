@@ -185,40 +185,96 @@ export default function App() {
           const kitchenEmailEnv = (import.meta as any).env?.VITE_KITCHEN_EMAIL || 'kitchen@green.edu.bd';
           const userEmail = session.user.email?.toLowerCase();
 
-          let { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
+          let profile: any = null;
+          try {
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            if (!error && data) {
+              profile = data;
+            }
+          } catch (profileQueryErr) {
+            console.error('Failed to query profile in checkSession, utilizing fallbacks:', profileQueryErr);
+          }
 
           // Auto upgrade profile if they are configured via Admin Email env
           if (userEmail === adminEmailEnv.toLowerCase()) {
             if (!profile) {
-              const { data: newProf } = await supabase.from('profiles').insert([{
-                id: session.user.id,
-                name: 'GUB Administrator',
-                email: session.user.email,
-                role: 'admin',
-                is_active: true
-              }]).select().single();
-              profile = newProf;
+              try {
+                const { data: newProf, error } = await supabase.from('profiles').insert([{
+                  id: session.user.id,
+                  name: 'GUB Administrator',
+                  email: session.user.email,
+                  role: 'admin',
+                  is_active: true
+                }]).select().single();
+                if (!error && newProf) {
+                  profile = newProf;
+                }
+              } catch (insErr) {
+                console.error('Failed to insert admin profile, using fallback profile representation:', insErr);
+              }
+              if (!profile) {
+                profile = {
+                  id: session.user.id,
+                  name: 'GUB Administrator',
+                  email: session.user.email,
+                  role: 'admin',
+                  is_active: true
+                };
+              }
             } else if (profile.role !== 'admin') {
-              const { data: updProf } = await supabase.from('profiles').update({ role: 'admin', is_active: true }).eq('id', session.user.id).select().single();
-              profile = updProf;
+              try {
+                const { data: updProf, error } = await supabase.from('profiles').update({ role: 'admin', is_active: true }).eq('id', session.user.id).select().single();
+                if (!error && updProf) {
+                  profile = updProf;
+                }
+              } catch (updErr) {
+                console.error('Failed to update admin profile role, using fallback:', updErr);
+              }
+              // Ensure role is updated in-memory
+              profile.role = 'admin';
+              profile.is_active = true;
             }
           } else if (userEmail === kitchenEmailEnv.toLowerCase()) {
             if (!profile) {
-              const { data: newProf } = await supabase.from('profiles').insert([{
-                id: session.user.id,
-                name: 'GUB Kitchen Staff',
-                email: session.user.email,
-                role: 'staff',
-                is_active: true
-              }]).select().single();
-              profile = newProf;
+              try {
+                const { data: newProf, error } = await supabase.from('profiles').insert([{
+                  id: session.user.id,
+                  name: 'GUB Kitchen Staff',
+                  email: session.user.email,
+                  role: 'staff',
+                  is_active: true
+                }]).select().single();
+                if (!error && newProf) {
+                  profile = newProf;
+                }
+              } catch (insErr) {
+                console.error('Failed to insert kitchen profile, using fallback profile representation:', insErr);
+              }
+              if (!profile) {
+                profile = {
+                  id: session.user.id,
+                  name: 'GUB Kitchen Staff',
+                  email: session.user.email,
+                  role: 'staff',
+                  is_active: true
+                };
+              }
             } else if (profile.role !== 'staff') {
-              const { data: updProf } = await supabase.from('profiles').update({ role: 'staff', is_active: true }).eq('id', session.user.id).select().single();
-              profile = updProf;
+              try {
+                const { data: updProf, error } = await supabase.from('profiles').update({ role: 'staff', is_active: true }).eq('id', session.user.id).select().single();
+                if (!error && updProf) {
+                  profile = updProf;
+                }
+              } catch (updErr) {
+                console.error('Failed to update kitchen profile role, using fallback:', updErr);
+              }
+              // Ensure role is updated in-memory
+              profile.role = 'staff';
+              profile.is_active = true;
             }
           }
 
@@ -583,26 +639,58 @@ export default function App() {
         const adminEmailEnv = (import.meta as any).env?.VITE_ADMIN_EMAIL || 'admin@green.edu.bd';
         const userEmail = data.user.email?.toLowerCase();
 
-        let { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
+        let profile: any = null;
+        try {
+          const { data: dbProf, error: queryError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+          if (!queryError && dbProf) {
+            profile = dbProf;
+          }
+        } catch (profileQueryErr) {
+          console.error('Failed to query profiles in admin login portal:', profileQueryErr);
+        }
 
         // Check if admin matches VITE_ADMIN_EMAIL config directly
         if (userEmail === adminEmailEnv.toLowerCase()) {
           if (!profile) {
-            const { data: newProf } = await supabase.from('profiles').insert([{
-              id: data.user.id,
-              name: 'GUB Administrator',
-              email: data.user.email,
-              role: 'admin',
-              is_active: true
-            }]).select().single();
-            profile = newProf;
+            try {
+              const { data: newProf, error: insError } = await supabase.from('profiles').insert([{
+                id: data.user.id,
+                name: 'GUB Administrator',
+                email: data.user.email,
+                role: 'admin',
+                is_active: true
+              }]).select().single();
+              if (!insError && newProf) {
+                profile = newProf;
+              }
+            } catch (insErr) {
+              console.error('Failed to insert admin profile on login, utilizing fallback:', insErr);
+            }
+            if (!profile) {
+              profile = {
+                id: data.user.id,
+                name: 'GUB Administrator',
+                email: data.user.email,
+                role: 'admin',
+                is_active: true
+              };
+            }
           } else if (profile.role !== 'admin') {
-            const { data: updProf } = await supabase.from('profiles').update({ role: 'admin', is_active: true }).eq('id', data.user.id).select().single();
-            profile = updProf;
+            try {
+              const { data: updProf, error: updError } = await supabase.from('profiles').update({ role: 'admin', is_active: true }).eq('id', data.user.id).select().single();
+              if (!updError && updProf) {
+                profile = updProf;
+              }
+            } catch (updErr) {
+              console.error('Failed to update admin profile role on login, utilizing fallback:', updErr);
+            }
+            // Ensure role and active properties are applied to fallback
+            profile.role = 'admin';
+            profile.is_active = true;
           }
         }
 
@@ -647,26 +735,58 @@ export default function App() {
         const kitchenEmailEnv = (import.meta as any).env?.VITE_KITCHEN_EMAIL || 'kitchen@green.edu.bd';
         const userEmail = data.user.email?.toLowerCase();
 
-        let { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
+        let profile: any = null;
+        try {
+          const { data: dbProf, error: queryError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', data.user.id)
+            .single();
+          if (!queryError && dbProf) {
+            profile = dbProf;
+          }
+        } catch (profileQueryErr) {
+          console.error('Failed to query profiles in kitchen login portal:', profileQueryErr);
+        }
 
         // Check if kitchen matches VITE_KITCHEN_EMAIL config directly
         if (userEmail === kitchenEmailEnv.toLowerCase()) {
           if (!profile) {
-            const { data: newProf } = await supabase.from('profiles').insert([{
-              id: data.user.id,
-              name: 'GUB Kitchen Staff',
-              email: data.user.email,
-              role: 'staff',
-              is_active: true
-            }]).select().single();
-            profile = newProf;
+            try {
+              const { data: newProf, error: insError } = await supabase.from('profiles').insert([{
+                id: data.user.id,
+                name: 'GUB Kitchen Staff',
+                email: data.user.email,
+                role: 'staff',
+                is_active: true
+              }]).select().single();
+              if (!insError && newProf) {
+                profile = newProf;
+              }
+            } catch (insErr) {
+              console.error('Failed to insert kitchen profile on login, utilizing fallback:', insErr);
+            }
+            if (!profile) {
+              profile = {
+                id: data.user.id,
+                name: 'GUB Kitchen Staff',
+                email: data.user.email,
+                role: 'staff',
+                is_active: true
+              };
+            }
           } else if (profile.role !== 'staff') {
-            const { data: updProf } = await supabase.from('profiles').update({ role: 'staff', is_active: true }).eq('id', data.user.id).select().single();
-            profile = updProf;
+            try {
+              const { data: updProf, error: updError } = await supabase.from('profiles').update({ role: 'staff', is_active: true }).eq('id', data.user.id).select().single();
+              if (!updError && updProf) {
+                profile = updProf;
+              }
+            } catch (updErr) {
+              console.error('Failed to update kitchen profile role on login, utilizing fallback:', updErr);
+            }
+            // Ensure role and active properties are applied to fallback
+            profile.role = 'staff';
+            profile.is_active = true;
           }
         }
 
