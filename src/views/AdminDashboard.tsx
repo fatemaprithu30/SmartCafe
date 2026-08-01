@@ -49,6 +49,8 @@ interface AdminDashboardProps {
   onUpdateStock: (foodId: string, stockQuantity: number) => void;
   onLogOut: () => void;
   onStaffCreated?: () => void;
+  onToggleSuspendUser?: (userId: string, isActive: boolean) => void;
+  onDeleteUser?: (userId: string) => void;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
@@ -71,6 +73,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onUpdateStock,
   onLogOut,
   onStaffCreated,
+  onToggleSuspendUser,
+  onDeleteUser,
 }) => {
   const [activeTab, setActiveTab] = useState<
     'analytics' | 'foods' | 'approvals' | 'inventory' | 'coupons' | 'users' | 'audit' | 'settings'
@@ -700,11 +704,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </button>
                     <button
                       onClick={() => {
-                        alert(`Successfully updated suspend state status for ${u.name}`);
+                        if (onToggleSuspendUser) {
+                          onToggleSuspendUser(u.id, u.isActive !== false);
+                        }
+                      }}
+                      className={`px-2.5 py-1 font-semibold rounded hover:brightness-110 ${
+                        u.isActive === false
+                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-900/40'
+                          : 'bg-amber-950 text-amber-300 border border-amber-900/40'
+                      }`}
+                    >
+                      {u.isActive === false ? 'Unsuspend' : 'Suspend'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (onDeleteUser) {
+                          onDeleteUser(u.id);
+                        }
                       }}
                       className="px-2.5 py-1 bg-red-950 text-red-300 font-semibold rounded hover:bg-red-900"
                     >
-                      Suspend
+                      Delete
                     </button>
                   </div>
                 </div>
