@@ -545,33 +545,10 @@ export default function App() {
 
   const handleEditFood = async (foodId: string, updatedFields: Partial<FoodItem>) => {
     try {
-      const { supabase } = await import('./supabaseClient');
       const { dbService } = await import('./services/dbService');
-      const dbPayload = {
-        name: updatedFields.name,
-        category_id: updatedFields.categoryId,
-        category_name: updatedFields.categoryName,
-        description: updatedFields.description,
-        price: updatedFields.price,
-        prep_time_minutes: updatedFields.prepTimeMinutes,
-        image_url: updatedFields.imageUrl,
-        nutrition: updatedFields.nutrition,
-        stock_quantity: updatedFields.stockQuantity,
-        min_stock_alert: updatedFields.minStockAlert,
-      };
-
-      const { data, error } = await supabase
-        .from('menu_items')
-        .update(dbPayload)
-        .eq('id', foodId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      if (data) {
-        const camelFood = await dbService.getFoods();
-        setFoods(camelFood);
-      }
+      await dbService.updateFood(foodId, updatedFields);
+      const camelFood = await dbService.getFoods();
+      setFoods(camelFood);
     } catch (err) {
       setFoods((prev) =>
         prev.map((f) => (f.id === foodId ? { ...f, ...updatedFields } : f))
@@ -592,9 +569,11 @@ export default function App() {
   const handleAddCoupon = async (newCoupon: Partial<Coupon>) => {
     try {
       const { supabase } = await import('./supabaseClient');
-      const { data, error } = await supabase.from('coupons').insert([newCoupon]).select().single();
+      const { toSnake, toCamel } = await import('./services/dbService');
+      const dbCoupon = toSnake(newCoupon);
+      const { data, error } = await supabase.from('coupons').insert([dbCoupon]).select().single();
       if (error) throw error;
-      setCoupons((prev) => [data, ...prev]);
+      setCoupons((prev) => [toCamel(data), ...prev]);
     } catch (err) {
       console.error(err);
     }
@@ -875,6 +854,7 @@ export default function App() {
             onRejectStudent={handleRejectStudent}
             onUpdateStock={handleUpdateStockQuantity}
             onLogOut={handleLogOut}
+            onStaffCreated={fetchUsersDirectory}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center p-4">
