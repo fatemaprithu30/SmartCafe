@@ -26,6 +26,8 @@ interface NavbarProps {
   onOpenAuth: () => void;
   onLogOut: () => void;
   announcementText?: string;
+  onMarkNotificationAsRead?: (id: string) => void;
+  onMarkAllNotificationsAsRead?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -42,6 +44,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenAuth,
   onLogOut,
   announcementText,
+  onMarkNotificationAsRead,
+  onMarkAllNotificationsAsRead,
 }) => {
   const [showNotificationsPopover, setShowNotificationsPopover] = useState(false);
 
@@ -180,23 +184,40 @@ export const Navbar: React.FC<NavbarProps> = ({
 
                 {/* Notifications Popover */}
                 {showNotificationsPopover && (
-                  <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 p-3">
+                  <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 p-3 text-xs">
                     <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
                       <span className="font-semibold text-xs text-slate-200">
                         Notifications ({notifications.length})
                       </span>
-                      <span className="text-[10px] text-blue-400 font-medium uppercase tracking-wider">Real-Time</span>
+                      {unreadNotifications.length > 0 && onMarkAllNotificationsAsRead && (
+                        <button
+                          onClick={() => onMarkAllNotificationsAsRead()}
+                          className="text-[10px] text-blue-400 hover:text-blue-300 font-semibold"
+                        >
+                          Mark all read
+                        </button>
+                      )}
                     </div>
                     <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
                       {notifications.length === 0 ? (
-                        <p className="text-xs text-slate-500 text-center py-4">No new notifications</p>
+                        <p className="text-xs text-slate-500 text-center py-4">No notifications yet</p>
                       ) : (
                         notifications.map((n) => (
                           <div
                             key={n.id}
-                            className="p-2.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs text-slate-300"
+                            onClick={() => !n.read && onMarkNotificationAsRead && onMarkNotificationAsRead(n.id)}
+                            className={`p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
+                              n.read
+                                ? 'bg-slate-900/40 border-slate-800/80 text-slate-400'
+                                : 'bg-slate-800/90 border-slate-700/60 text-slate-200 hover:bg-slate-800'
+                            }`}
                           >
-                            <p className="font-semibold text-slate-100">{n.title}</p>
+                            <div className="flex justify-between items-start gap-1">
+                              <p className="font-semibold">{n.title}</p>
+                              {!n.read && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-1" />
+                              )}
+                            </div>
                             <p className="text-[11px] text-slate-400 mt-0.5">{n.message}</p>
                             <span className="text-[9px] text-slate-500 mt-1 block">
                               {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
