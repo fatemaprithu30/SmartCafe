@@ -93,10 +93,49 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             try {
               const { supabase } = await import('../supabaseClient');
               if (activeTab === 'login') {
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) throw error;
+                if (!studentIdInput) {
+                  setErrorMessage('Please enter your GUB Student ID.');
+                  return;
+                }
 
-                // Load database profile
+                // Retrieve university email address mapped to this student ID in the profiles directory
+                const { data: dbProfiles, error: pQueryErr } = await supabase
+                  .from('profiles')
+                  .select('email, is_active, role')
+                  .eq('student_id', studentIdInput.trim());
+
+                if (pQueryErr) throw pQueryErr;
+                if (!dbProfiles || dbProfiles.length === 0) {
+                  setErrorMessage('Invalid Student ID. No registered student profile was found for this ID.');
+                  return;
+                }
+
+                const profileDetails = dbProfiles[0];
+                if (profileDetails.role !== 'student') {
+                  setErrorMessage('This login portal is strictly reserved for GUB students. Please use the appropriate URL to log in.');
+                  return;
+                }
+
+                if (!profileDetails.is_active) {
+                  setErrorMessage('Your student registration is pending administrator approval. Please wait for the GUB Dining Office to review and accept your account.');
+                  return;
+                }
+
+                // Successfully found email and verified state, authenticate using email + password credentials
+                const { data, error } = await supabase.auth.signInWithPassword({
+                  email: profileDetails.email,
+                  password
+                });
+                if (error) {
+                  if (error.message && error.message.toLowerCase().includes('invalid login credentials')) {
+                    setErrorMessage('Incorrect Password. Please check your password and try again.');
+                  } else {
+                    throw error;
+                  }
+                  return;
+                }
+
+                // Load complete database profile
                 const { data: profile, error: profileErr } = await supabase
                   .from('profiles')
                   .select('*')
@@ -104,18 +143,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   .single();
 
                 if (profileErr) throw profileErr;
-
-                if (!profile.is_active) {
-                  await supabase.auth.signOut();
-                  setErrorMessage('Your student registration is pending administrator approval. Please wait for the GUB Dining Office to review and accept your account.');
-                  return;
-                }
-
-                if (profile.role !== 'student') {
-                  await supabase.auth.signOut();
-                  setErrorMessage('This login portal is strictly reserved for GUB students. Please use the appropriate URL to log in.');
-                  return;
-                }
 
                 onSelectUser({
                   id: profile.id,
@@ -138,6 +165,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 onClose();
               } else {
                 // Register a new user
+                // Prevent duplicate Student ID or Email checks
+                const { data: dupCheck, error: dupErr } = await supabase
+                  .from('profiles')
+                  .select('id, student_id, email')
+                  .or(`student_id.eq.${studentIdInput.trim()},email.eq.${email.trim()}`);
+
+                if (dupErr) throw dupErr;
+
+                if (dupCheck && dupCheck.length > 0) {
+                  const hasDupId = dupCheck.some((p: any) => p.student_id?.toLowerCase() === studentIdInput.trim().toLowerCase());
+                  const hasDupEmail = dupCheck.some((p: any) => p.email?.toLowerCase() === email.trim().toLowerCase());
+                  if (hasDupId) {
+                    setErrorMessage('Student already exists. This Student ID is already registered.');
+                    return;
+                  }
+                  if (hasDupEmail) {
+                    setErrorMessage('Registration failed. This university email is already in use.');
+                    return;
+                  }
+                }
+
                 const { data, error } = await supabase.auth.signUp({ email, password });
                 if (error) throw error;
                 if (data.user) {
@@ -153,6 +201,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   }]);
                   if (insertErr) throw insertErr;
 
+                  // Insert notification records automatically for all GUB administrators
+                  try {
+                    const { data: admins } = await supabase
+                      .from('profiles')
+                      .select('id')
+                      .eq('role', 'admin');
+
+                    if (admins && admins.length > 0) {
+                      const notificationInserts = admins.map((admin: any) => ({
+                        user_id: admin.id,
+                        title: 'New Student Registration Pending',
+                        message: `New student registered: ${fullName} (ID: ${studentIdInput})`,
+                        type: 'system',
+                        read: false
+                      }));
+                      await supabase.from('notifications').insert(notificationInserts);
+                    }
+                  } catch (notifErr) {
+                    console.error('Failed to dispatch registration notifications to admin: ', notifErr);
+                  }
+
                   // Sign out user immediately since they are not approved yet
                   await supabase.auth.signOut();
                   setSuccessMessage('Registration request submitted successfully! Your account is now pending GUB administrator approval. Once accepted, you will be able to log in.');
@@ -165,6 +234,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           }}
           className="space-y-4 text-xs"
         >
+          {activeTab === 'login' && (
+            <div>
+              <label className="block text-stone-300 font-semibold mb-1">GUB Student ID</label>
+              <input
+                type="text"
+                required
+                value={studentIdInput}
+                onChange={(e) => setStudentIdInput(e.target.value)}
+                placeholder="e.g. UG-2024-8842"
+                className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-xs text-white focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          )}
+
           {activeTab === 'register' && (
             <>
               <div>
@@ -214,23 +297,23 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-xs text-white focus:border-blue-500 focus:outline-none"
                 />
               </div>
+
+              <div>
+                <label className="block text-stone-300 font-semibold mb-1">University Email</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-stone-500 absolute left-3 top-2.5" />
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="student@green.edu.bd"
+                    className="w-full bg-stone-950 border border-stone-800 rounded-xl pl-9 p-2.5 text-xs text-white focus:border-blue-500 focus:outline-none"
+                  />
+                </div>
+              </div>
             </>
           )}
-
-          <div>
-            <label className="block text-stone-300 font-semibold mb-1">University Email</label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-stone-500 absolute left-3 top-2.5" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="student@green.edu.bd"
-                className="w-full bg-stone-950 border border-stone-800 rounded-xl pl-9 p-2.5 text-xs text-white focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-          </div>
 
           <div>
             <label className="block text-stone-300 font-semibold mb-1">Password</label>

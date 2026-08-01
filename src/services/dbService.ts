@@ -153,5 +153,22 @@ export const dbService = {
       .single();
     if (error) throw error;
     return toCamel(data) as CafeteriaSettings;
+  },
+
+  // Notifications
+  async markNotificationAsRead(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('user_id', userId);
+    if (error) throw error;
   }
 };

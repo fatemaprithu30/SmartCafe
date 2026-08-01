@@ -136,6 +136,34 @@ export default function App() {
     }
   };
 
+  // Fetch unread and read notifications for current authenticated user
+  const fetchUserNotifications = async (userId: string) => {
+    try {
+      const { supabase } = await import('./supabaseClient');
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      if (data) {
+        const mappedNotifs: AppNotification[] = data.map((n: any) => ({
+          id: n.id,
+          userId: n.user_id,
+          title: n.title,
+          message: n.message,
+          type: n.type,
+          read: n.read,
+          createdAt: n.created_at
+        }));
+        setNotifications(mappedNotifs);
+      }
+    } catch (err) {
+      console.error('Failed to load user notifications: ', err);
+    }
+  };
+
   // Load registered users directory for Admin panel approvals
   const fetchUsersDirectory = async () => {
     try {
@@ -170,6 +198,12 @@ export default function App() {
       setDbUsers(INITIAL_USERS);
     }
   };
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      fetchUserNotifications(currentUser.id);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     fetchBackendData();
@@ -1000,6 +1034,27 @@ export default function App() {
         onOpenAuth={() => setIsAuthOpen(true)}
         onLogOut={handleLogOut}
         announcementText={settings.announcementBanner}
+        onMarkNotificationAsRead={async (id) => {
+          try {
+            const { dbService } = await import('./services/dbService');
+            await dbService.markNotificationAsRead(id);
+            if (currentUser?.id) {
+              fetchUserNotifications(currentUser.id);
+            }
+          } catch (err) {
+            setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+          }
+        }}
+        onMarkAllNotificationsAsRead={async () => {
+          if (!currentUser?.id) return;
+          try {
+            const { dbService } = await import('./services/dbService');
+            await dbService.markAllNotificationsAsRead(currentUser.id);
+            fetchUserNotifications(currentUser.id);
+          } catch (err) {
+            setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+          }
+        }}
       />
 
       {/* Main Content Area */}
