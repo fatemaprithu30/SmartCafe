@@ -72,8 +72,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onLogOut,
   onStaffCreated,
 }) => {
-  const envServiceRoleKey = (import.meta as any).env?.VITE_SUPABASE_SERVICE_ROLE_KEY || '';
-
   const [activeTab, setActiveTab] = useState<
     'analytics' | 'foods' | 'approvals' | 'inventory' | 'coupons' | 'users' | 'audit' | 'settings'
   >('analytics');
@@ -211,31 +209,35 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleCreateStaff = async (e: React.FormEvent) => {
     e.preventDefault();
-    const envServiceRoleKey = (import.meta as any).env?.VITE_SUPABASE_SERVICE_ROLE_KEY || '';
-    if (!envServiceRoleKey) {
-      alert('You must configure VITE_SUPABASE_SERVICE_ROLE_KEY in your environment variables to programmatically register authentic users securely.');
-      return;
-    }
     setStaffRegistering(true);
     try {
-      const { createAdminHelperClient } = await import('../supabaseClient');
-      const serviceClient = createAdminHelperClient(
-        (import.meta as any).env?.VITE_SUPABASE_URL || '',
-        envServiceRoleKey
-      );
+      const { supabase } = await import('../supabaseClient');
+      const { createClient } = await import('@supabase/supabase-js');
 
-      // Create authentication user programmatically using service-role helper bypass client
-      const { data, error } = await serviceClient.auth.admin.createUser({
+      const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
+      const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
+
+      // Create a temporary client with public anon key and persistSession: false
+      // so we can sign up the staff user without logging out the currently logged in admin user.
+      const tempClient = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      });
+
+      // Sign up the new kitchen staff user safely
+      const { data, error } = await tempClient.auth.signUp({
         email: staffRegistrationEmail,
         password: staffRegistrationPassword,
-        email_confirm: true,
       });
 
       if (error) throw error;
 
       if (data.user) {
-        // Now insert their profile role row securely
-        const { error: insertErr } = await serviceClient
+        // Since Admin is logged in on the primary client, use 'supabase' primary client
+        // to insert the profile row. The Admin insert RLS policy will permit this securely.
+        const { error: insertErr } = await supabase
           .from('profiles')
           .insert([{
             id: data.user.id,
@@ -658,27 +660,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               </div>
 
-              {!envServiceRoleKey && (
-                <div className="p-4 bg-red-950/80 border border-red-800 text-red-300 text-xs rounded-xl flex items-center gap-3">
-                  <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
-                  <div>
-                    <span className="font-bold block text-sm">Service Key Warning</span>
-                    <span>
-                      "VITE_SUPABASE_SERVICE_ROLE_KEY" environment variable is not configured.
-                      Programmatic GUB Kitchen Staff account creation is disabled.
-                    </span>
-                  </div>
-                </div>
-              )}
-
               <button
                 type="submit"
-                disabled={staffRegistering || !envServiceRoleKey}
-                className={`w-full py-3 rounded-xl text-white font-black text-xs transition-colors ${
-                  !envServiceRoleKey
-                    ? 'bg-stone-800 text-stone-500 cursor-not-allowed border border-stone-700'
-                    : 'bg-blue-600 hover:bg-blue-500'
-                }`}
+                disabled={staffRegistering}
+                className="w-full py-3 rounded-xl text-white font-black text-xs bg-blue-600 hover:bg-blue-500 transition-colors"
               >
                 {staffRegistering ? 'Registering Staff Securely...' : 'Register GUB Kitchen Staff & Sync DB Profile'}
               </button>
