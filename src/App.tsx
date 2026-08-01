@@ -33,7 +33,6 @@ import {
 } from './types';
 
 import {
-  INITIAL_USERS,
   CATEGORIES,
   INITIAL_FOODS,
   INITIAL_ORDERS,
@@ -43,6 +42,25 @@ import {
   INITIAL_AUDIT_LOGS,
   DEFAULT_CAFETERIA_SETTINGS,
 } from './data/mockData';
+
+const GUEST_STUDENT: UserProfile = {
+  id: 'guest_student',
+  name: 'GUB Guest Student',
+  email: 'guest.student@green.edu.bd',
+  role: 'student',
+  studentId: 'N/A',
+  department: 'GUB Campus',
+  phone: '+880',
+  walletBalance: 0,
+  dietaryPreferences: {
+    allergens: [],
+    isHalal: true,
+    isVegan: false,
+    isVegetarian: false,
+    isGlutenFree: false,
+    dailyCalorieTarget: 2000,
+  },
+};
 
 export default function App() {
   // Navigation / Routing path state
@@ -194,8 +212,8 @@ export default function App() {
         setDbUsers(mappedUsers);
       }
     } catch (err) {
-      // Local Fallback list
-      setDbUsers(INITIAL_USERS);
+      // Local Fallback list is empty to avoid showing demo/mock users
+      setDbUsers([]);
     }
   };
 
@@ -1072,7 +1090,7 @@ export default function App() {
 
         {activeTab === 'checkout' && (
           <CheckoutView
-            currentUser={currentUser || INITIAL_USERS[0]}
+            currentUser={currentUser || GUEST_STUDENT}
             cartItems={cartItems}
             selectedPickupSlot={selectedPickupSlot}
             onSelectPickupSlot={setSelectedPickupSlot}
@@ -1084,7 +1102,7 @@ export default function App() {
 
         {activeTab === 'student-orders' && (
           <StudentDashboard
-            currentUser={currentUser || INITIAL_USERS[0]}
+            currentUser={currentUser || GUEST_STUDENT}
             orders={orders}
             onRefreshOrders={fetchBackendData}
             onReOrder={handleReOrder}
