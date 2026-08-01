@@ -72,6 +72,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onLogOut,
   onStaffCreated,
 }) => {
+  const envServiceRoleKey = (import.meta as any).env?.VITE_SUPABASE_SERVICE_ROLE_KEY || '';
+
   const [activeTab, setActiveTab] = useState<
     'analytics' | 'foods' | 'approvals' | 'inventory' | 'coupons' | 'users' | 'audit' | 'settings'
   >('analytics');
@@ -106,7 +108,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [staffRegistrationPassword, setStaffRegistrationPassword] = useState('');
   const [staffRegistrationName, setStaffRegistrationName] = useState('');
   const [staffRegistrationPhone, setStaffRegistrationPhone] = useState('');
-  const [staffServiceRoleKey, setStaffServiceRoleKey] = useState('');
   const [staffRegistering, setStaffRegistering] = useState(false);
 
   const totalRevenue = orders
@@ -210,8 +211,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleCreateStaff = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!staffServiceRoleKey) {
-      alert('You must provide your Supabase Service Role key in the field below to programmatically register authentic users securely.');
+    const envServiceRoleKey = (import.meta as any).env?.VITE_SUPABASE_SERVICE_ROLE_KEY || '';
+    if (!envServiceRoleKey) {
+      alert('You must configure VITE_SUPABASE_SERVICE_ROLE_KEY in your environment variables to programmatically register authentic users securely.');
       return;
     }
     setStaffRegistering(true);
@@ -219,7 +221,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const { createAdminHelperClient } = await import('../supabaseClient');
       const serviceClient = createAdminHelperClient(
         (import.meta as any).env?.VITE_SUPABASE_URL || '',
-        staffServiceRoleKey
+        envServiceRoleKey
       );
 
       // Create authentication user programmatically using service-role helper bypass client
@@ -656,22 +658,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-amber-400 font-bold mb-1">Supabase Service Role Key</label>
-                <input
-                  type="password"
-                  required
-                  value={staffServiceRoleKey}
-                  onChange={(e) => setStaffServiceRoleKey(e.target.value)}
-                  placeholder="Paste VITE_SUPABASE_SERVICE_ROLE_KEY to programmatically register Auth users secure from Admin dashboard"
-                  className="w-full bg-stone-950 border border-amber-500/30 rounded-xl p-3 text-white focus:outline-none focus:border-amber-500 font-mono"
-                />
-              </div>
+              {!envServiceRoleKey && (
+                <div className="p-4 bg-red-950/80 border border-red-800 text-red-300 text-xs rounded-xl flex items-center gap-3">
+                  <AlertTriangle className="w-5 h-5 text-red-400 shrink-0" />
+                  <div>
+                    <span className="font-bold block text-sm">Service Key Warning</span>
+                    <span>
+                      "VITE_SUPABASE_SERVICE_ROLE_KEY" environment variable is not configured.
+                      Programmatic GUB Kitchen Staff account creation is disabled.
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <button
                 type="submit"
-                disabled={staffRegistering}
-                className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition-colors"
+                disabled={staffRegistering || !envServiceRoleKey}
+                className={`w-full py-3 rounded-xl text-white font-black text-xs transition-colors ${
+                  !envServiceRoleKey
+                    ? 'bg-stone-800 text-stone-500 cursor-not-allowed border border-stone-700'
+                    : 'bg-blue-600 hover:bg-blue-500'
+                }`}
               >
                 {staffRegistering ? 'Registering Staff Securely...' : 'Register GUB Kitchen Staff & Sync DB Profile'}
               </button>
