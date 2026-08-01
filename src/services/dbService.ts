@@ -3,9 +3,10 @@ import { FoodItem, FoodCategory, Order, Coupon, AppNotification, CafeteriaSettin
 
 // Helper to convert snake_case object to camelCase
 export function toCamel(obj: any): any {
+  if (obj === undefined || obj === null) return obj;
   if (Array.isArray(obj)) {
     return obj.map(v => toCamel(v));
-  } else if (obj !== null && obj.constructor === Object) {
+  } else if (typeof obj === 'object' && obj.constructor === Object) {
     return Object.keys(obj).reduce((result: any, key: string) => {
       const camelKey = key.replace(/([-_][a-z])/g, group =>
         group.toUpperCase().replace('-', '').replace('_', '')
@@ -19,9 +20,10 @@ export function toCamel(obj: any): any {
 
 // Helper to convert camelCase object to snake_case
 export function toSnake(obj: any): any {
+  if (obj === undefined || obj === null) return obj;
   if (Array.isArray(obj)) {
     return obj.map(v => toSnake(v));
-  } else if (obj !== null && obj.constructor === Object) {
+  } else if (typeof obj === 'object' && obj.constructor === Object) {
     return Object.keys(obj).reduce((result: any, key: string) => {
       const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
       result[snakeKey] = toSnake(obj[key]);
