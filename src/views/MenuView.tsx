@@ -34,7 +34,7 @@ export const MenuView: React.FC<MenuViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDietaryTags, setSelectedDietaryTags] = useState<string[]>([]);
   const [maxPrepMinutes, setMaxPrepMinutes] = useState<number>(30);
-  const [maxPrice, setMaxPrice] = useState<number>(15);
+  const [maxPrice, setMaxPrice] = useState<number>(1000);
   const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'price_asc' | 'price_desc' | 'prep_speed'>('popular');
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
 
@@ -108,14 +108,14 @@ export const MenuView: React.FC<MenuViewProps> = ({
                 <SlidersHorizontal className="w-4 h-4 text-blue-600" />
                 Menu Filters
               </span>
-              {(selectedDietaryTags.length > 0 || activeCategory !== 'all' || searchQuery) && (
+              {(selectedDietaryTags.length > 0 || activeCategory !== 'all' || searchQuery || maxPrice !== 1000) && (
                 <button
                   onClick={() => {
                     setActiveCategory('all');
                     setSearchQuery('');
                     setSelectedDietaryTags([]);
                     setMaxPrepMinutes(30);
-                    setMaxPrice(15);
+                    setMaxPrice(1000);
                   }}
                   className="text-[11px] text-blue-600 hover:underline font-semibold"
                 >
@@ -192,13 +192,13 @@ export const MenuView: React.FC<MenuViewProps> = ({
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
                 <span className="font-semibold text-slate-700">Max Budget Price</span>
-                <span className="font-bold text-blue-600">৳{maxPrice.toFixed(2)}</span>
+                <span className="font-bold text-blue-600">৳{maxPrice.toFixed(0)}</span>
               </div>
               <input
                 type="range"
-                min={2}
-                max={20}
-                step={0.5}
+                min={10}
+                max={1000}
+                step={10}
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
                 className="w-full accent-blue-600 bg-slate-200 rounded-lg cursor-pointer h-2"
