@@ -139,16 +139,42 @@ export default function App() {
   const fetchBackendData = async () => {
     try {
       const { dbService } = await import('./services/dbService');
-      const [f, c, o, set] = await Promise.all([
-        dbService.getFoods(),
-        dbService.getCategories(),
-        dbService.getOrders(),
-        dbService.getSettings()
-      ]);
-      if (f.length > 0) setFoods(f);
-      if (c.length > 0) setCategories(c);
-      if (o.length > 0) setOrders(o);
-      if (set) setSettings(set);
+
+      // Load foods
+      try {
+        const f = await dbService.getFoods();
+        setFoods(f);
+      } catch (err) {
+        console.error('Failed to load menu items:', err);
+      }
+
+      // Load categories
+      try {
+        let c = await dbService.getCategories();
+        if (c.length === 0) {
+          const { DEFAULT_CATEGORIES } = await import('./data/mockData');
+          c = await dbService.seedCategories(DEFAULT_CATEGORIES);
+        }
+        setCategories(c);
+      } catch (err) {
+        console.error('Failed to load/seed categories:', err);
+      }
+
+      // Load orders
+      try {
+        const o = await dbService.getOrders();
+        setOrders(o);
+      } catch (err) {
+        console.error('Failed to load orders:', err);
+      }
+
+      // Load settings
+      try {
+        const set = await dbService.getSettings();
+        if (set) setSettings(set);
+      } catch (err) {
+        console.error('Failed to load cafeteria settings:', err);
+      }
     } catch (err) {
       console.log('Using fallback local states...');
     }
@@ -331,6 +357,12 @@ export default function App() {
           }
 
           if (profile) {
+            if (profile.is_active === false) {
+              await supabase.auth.signOut();
+              setCurrentUser(null);
+              return;
+            }
+
             const mappedUser: UserProfile = {
               id: profile.id,
               name: profile.name,
@@ -650,6 +682,39 @@ export default function App() {
     }
   };
 
+  const handleToggleSuspendUser = async (userId: string, currentIsActive: boolean) => {
+    try {
+      const { supabase } = await import('./supabaseClient');
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_active: !currentIsActive })
+        .eq('id', userId);
+
+      if (error) throw error;
+      alert('User suspension status successfully updated!');
+      fetchUsersDirectory();
+    } catch (err: any) {
+      alert(err.message || 'Error updating user status.');
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!window.confirm('Are you sure you want to permanently delete this user profile?')) return;
+    try {
+      const { supabase } = await import('./supabaseClient');
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (error) throw error;
+      alert('User profile permanently deleted successfully!');
+      fetchUsersDirectory();
+    } catch (err: any) {
+      alert(err.message || 'Error deleting user profile.');
+    }
+  };
+
   // Direct Stock editor tracker
   const handleUpdateStockQuantity = async (foodId: string, stockQuantity: number) => {
     await handleUpdateStock(foodId, stockQuantity > 0, stockQuantity);
@@ -726,6 +791,11 @@ export default function App() {
         }
 
         if (profile?.role === 'admin') {
+          if (profile.is_active === false) {
+            await supabase.auth.signOut();
+            setPortalError('Access Denied. This administrator account has been suspended.');
+            return;
+          }
           setCurrentUser({
             id: profile.id,
             name: profile.name,
@@ -822,6 +892,11 @@ export default function App() {
         }
 
         if (profile?.role === 'staff') {
+          if (profile.is_active === false) {
+            await supabase.auth.signOut();
+            setPortalError('Access Denied. This kitchen staff account has been suspended.');
+            return;
+          }
           setCurrentUser({
             id: profile.id,
             name: profile.name,
@@ -873,6 +948,8 @@ export default function App() {
             onUpdateStock={handleUpdateStockQuantity}
             onLogOut={handleLogOut}
             onStaffCreated={fetchUsersDirectory}
+            onToggleSuspendUser={handleToggleSuspendUser}
+            onDeleteUser={handleDeleteUser}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center p-4">

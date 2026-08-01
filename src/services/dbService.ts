@@ -43,7 +43,12 @@ export const dbService = {
   },
 
   async addFood(food: Partial<FoodItem>): Promise<FoodItem> {
-    const dbFood = toSnake(food);
+    const generatedSlug = food.slug || (food.name || 'food-item')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '') + '-' + Math.random().toString(36).substring(2, 7);
+    const foodWithSlug = { ...food, slug: generatedSlug };
+    const dbFood = toSnake(foodWithSlug);
     const { data, error } = await supabase
       .from('menu_items')
       .insert([dbFood])
@@ -89,6 +94,22 @@ export const dbService = {
     const { data, error } = await supabase
       .from('categories')
       .select('*');
+    if (error) throw error;
+    return toCamel(data || []) as FoodCategory[];
+  },
+
+  async seedCategories(categoriesList: Partial<FoodCategory>[]): Promise<FoodCategory[]> {
+    const dbCategories = categoriesList.map(cat => ({
+      name: cat.name,
+      slug: cat.slug,
+      description: cat.description,
+      icon: cat.icon,
+      image: cat.image
+    }));
+    const { data, error } = await supabase
+      .from('categories')
+      .insert(dbCategories)
+      .select();
     if (error) throw error;
     return toCamel(data || []) as FoodCategory[];
   },
