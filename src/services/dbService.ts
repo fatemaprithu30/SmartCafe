@@ -118,21 +118,77 @@ export const dbService = {
   async getOrders(): Promise<Order[]> {
     const { data, error } = await supabase
       .from('orders')
-      .select('*')
+      .select('*, order_items(*)')
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return toCamel(data || []) as Order[];
+    const camelOrders = toCamel(data || []) as any[];
+    return camelOrders.map(ord => ({
+      ...ord,
+      items: ord.orderItems || []
+    })) as Order[];
   },
 
-  async addOrder(order: Partial<Order>): Promise<Order> {
-    const dbOrder = toSnake(order);
-    const { data, error } = await supabase
+  async addOrder(order: Partial<Order> & { items: any[] }): Promise<Order> {
+    const orderNumber = 'GUB-' + Date.now().toString().slice(-6);
+    const qrCodeData = orderNumber + '-STUDENT-PICKUP';
+
+    // Construct the database orders row fields (omitting items array)
+    const orderFields = {
+      orderNumber,
+      studentId: order.studentId,
+      studentName: order.studentName,
+      studentEmail: order.studentEmail,
+      studentPhone: order.studentPhone,
+      studentIdCardNumber: order.studentIdCardNumber,
+      subtotal: order.subtotal,
+      discount: order.discount,
+      couponCode: order.couponCode,
+      total: order.total,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus || 'paid',
+      orderStatus: 'pending',
+      pickupTimeSlot: order.pickupTimeSlot,
+      qrCodeData,
+      estimatedReadyTime: order.estimatedReadyTime || '15 mins',
+      kitchenNotes: order.kitchenNotes || ''
+    };
+
+    const dbOrder = toSnake(orderFields);
+    const { data: ordData, error: ordErr } = await supabase
       .from('orders')
       .insert([dbOrder])
       .select()
       .single();
-    if (error) throw error;
-    return toCamel(data) as Order;
+
+    if (ordErr) throw ordErr;
+
+    const createdOrder = toCamel(ordData);
+
+    // Now insert each order item into order_items table
+    if (order.items && order.items.length > 0) {
+      const dbItems = order.items.map(it => toSnake({
+        orderId: createdOrder.id,
+        foodId: it.foodId,
+        foodName: it.foodName,
+        foodImage: it.foodImage,
+        quantity: it.quantity,
+        unitPrice: it.unitPrice,
+        totalPrice: it.totalPrice,
+        selectedOptionsText: it.selectedOptionsText || '',
+        specialInstructions: it.specialInstructions || ''
+      }));
+
+      const { error: itemsErr } = await supabase
+        .from('order_items')
+        .insert(dbItems);
+
+      if (itemsErr) throw itemsErr;
+    }
+
+    return {
+      ...createdOrder,
+      items: order.items
+    } as Order;
   },
 
   async updateOrderStatus(id: string, status: string, notes?: string): Promise<Order> {
@@ -140,10 +196,14 @@ export const dbService = {
       .from('orders')
       .update({ order_status: status, kitchen_notes: notes })
       .eq('id', id)
-      .select()
+      .select('*, order_items(*)')
       .single();
     if (error) throw error;
-    return toCamel(data) as Order;
+    const camelOrder = toCamel(data) as any;
+    return {
+      ...camelOrder,
+      items: camelOrder.orderItems || []
+    } as Order;
   },
 
   // Coupons
