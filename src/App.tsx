@@ -388,7 +388,7 @@ export default function App() {
               await supabase.auth.signOut();
               return;
             }
-            if (window.location.pathname === '/kitchenstuff' && profile.role !== 'staff') {
+            if ((window.location.pathname === '/kitchenstaff' || window.location.pathname === '/kitchenstuff') && profile.role !== 'staff') {
               await supabase.auth.signOut();
               return;
             }
@@ -1014,7 +1014,7 @@ export default function App() {
     );
   }
 
-  if (currentPath === '/kitchenstuff') {
+  if (currentPath === '/kitchenstaff' || currentPath === '/kitchenstuff') {
     return (
       <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
         {currentUser && activeRole === 'staff' ? (
