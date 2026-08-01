@@ -48,6 +48,7 @@ interface AdminDashboardProps {
   onRejectStudent: (userId: string) => void;
   onUpdateStock: (foodId: string, stockQuantity: number) => void;
   onLogOut: () => void;
+  onStaffCreated?: () => void;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
@@ -69,6 +70,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onRejectStudent,
   onUpdateStock,
   onLogOut,
+  onStaffCreated,
 }) => {
   const [activeTab, setActiveTab] = useState<
     'analytics' | 'foods' | 'approvals' | 'inventory' | 'coupons' | 'users' | 'audit' | 'settings'
@@ -250,6 +252,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         setStaffRegistrationName('');
         setStaffRegistrationPhone('');
         alert('GUB Kitchen staff account securely generated & synchronized directly inside the authentication directory successfully!');
+        if (onStaffCreated) {
+          onStaffCreated();
+        }
       }
     } catch (err: any) {
       alert(err.message || 'Error occurred generating GUB staff user.');

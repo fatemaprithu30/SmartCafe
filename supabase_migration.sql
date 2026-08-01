@@ -258,17 +258,26 @@ end;
 $$ language plpgsql security definer;
 
 -- PROFILES policies
-create policy "Allow public read access to active profiles" on public.profiles
+create policy "Allow public read access on profiles" on public.profiles
   for select using (true);
 
 create policy "Allow users to insert their own profile" on public.profiles
-  for insert with check (auth.uid() = id);
+  for insert with check (
+    (auth.uid() = id) OR
+    (role = 'student' and is_active = false)
+  );
 
 create policy "Allow users to update their own profile" on public.profiles
   for update using (auth.uid() = id);
 
-create policy "Allow full admin access on profiles" on public.profiles
-  for all using (public.is_admin());
+create policy "Allow admin insert access on profiles" on public.profiles
+  for insert with check (public.is_admin());
+
+create policy "Allow admin update access on profiles" on public.profiles
+  for update using (public.is_admin());
+
+create policy "Allow admin delete access on profiles" on public.profiles
+  for delete using (public.is_admin());
 
 -- CATEGORIES policies
 create policy "Allow public read access to categories" on public.categories

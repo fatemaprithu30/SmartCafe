@@ -2,7 +2,7 @@ import { supabase } from '../supabaseClient';
 import { FoodItem, FoodCategory, Order, Coupon, AppNotification, CafeteriaSettings, AuditLog, UserProfile } from '../types';
 
 // Helper to convert snake_case object to camelCase
-function toCamel(obj: any): any {
+export function toCamel(obj: any): any {
   if (Array.isArray(obj)) {
     return obj.map(v => toCamel(v));
   } else if (obj !== null && obj.constructor === Object) {
@@ -18,7 +18,7 @@ function toCamel(obj: any): any {
 }
 
 // Helper to convert camelCase object to snake_case
-function toSnake(obj: any): any {
+export function toSnake(obj: any): any {
   if (Array.isArray(obj)) {
     return obj.map(v => toSnake(v));
   } else if (obj !== null && obj.constructor === Object) {
@@ -59,6 +59,18 @@ export const dbService = {
       .delete()
       .eq('id', id);
     if (error) throw error;
+  },
+
+  async updateFood(id: string, food: Partial<FoodItem>): Promise<FoodItem> {
+    const dbFood = toSnake(food);
+    const { data, error } = await supabase
+      .from('menu_items')
+      .update(dbFood)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return toCamel(data) as FoodItem;
   },
 
   async updateStock(id: string, isAvailable: boolean, stockQuantity?: number): Promise<FoodItem> {
