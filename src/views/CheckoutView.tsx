@@ -35,7 +35,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bkash_nagad');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mobileWalletNumber, setMobileWalletNumber] = useState('01700000000');
+  const [mobileWalletNumber, setMobileWalletNumber] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   // Guest details state for non-signed-in customers
@@ -120,7 +120,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
         createdOrder = {
           id: `ord_${Date.now()}`,
           orderNumber: generatedOrderNum,
-          studentId: currentUser?.id || 'guest',
+          studentId: currentUser?.id || undefined as any,
           studentName: finalName,
           studentEmail: currentUser?.email || guestEmail.trim() || 'guest@green.edu.bd',
           studentPhone: finalPhone,
