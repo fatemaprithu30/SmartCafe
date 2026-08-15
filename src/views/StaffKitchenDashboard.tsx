@@ -149,13 +149,21 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
                       </p>
                     )}
 
-                    <button
-                      onClick={() => onUpdateOrderStatus(ord.id, 'preparing')}
-                      className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs rounded-xl transition-all shadow flex items-center justify-center gap-1.5"
-                    >
-                      <Flame className="w-4 h-4" />
-                      <span>Start Cooking Order</span>
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => onUpdateOrderStatus(ord.id, 'confirmed', 'Order Accepted by Kitchen')}
+                        className="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl transition-all"
+                      >
+                        Accept
+                      </button>
+                      <button
+                        onClick={() => onUpdateOrderStatus(ord.id, 'preparing', 'Cooking in progress (10 mins est)')}
+                        className="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs rounded-xl transition-all flex items-center justify-center gap-1"
+                      >
+                        <Flame className="w-3.5 h-3.5" />
+                        <span>Start Cooking</span>
+                      </button>
+                    </div>
                   </div>
                 ))
               )}

@@ -79,11 +79,16 @@ export default function App() {
   const [selectedPickupSlot, setSelectedPickupSlot] = useState<string>('12:10 PM - 12:20 PM');
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
 
-  // Modal Toggles
+  // Modal Toggles & Order Tracking State
   const [selectedFoodForDetail, setSelectedFoodForDetail] = useState<FoodItem | null>(null);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [studentDashboardTab, setStudentDashboardTab] = useState<'orders' | 'favorites' | 'reviews' | 'profile'>('orders');
+
+  const [isTrackOrderOpen, setIsTrackOrderOpen] = useState<boolean>(false);
+  const [trackingOrderNumber, setTrackingOrderNumber] = useState<string>('');
+  const [trackedOrderResult, setTrackedOrderResult] = useState<Order | null>(null);
+  const [trackingSearchError, setTrackingSearchError] = useState<string>('');
 
   // Sync route on popstate and pushstate manually
   useEffect(() => {
@@ -1034,6 +1039,10 @@ export default function App() {
         onOpenAuth={() => setIsAuthOpen(true)}
         onLogOut={handleLogOut}
         announcementText={settings.announcementBanner}
+        onOpenTrackOrder={() => {
+          setTrackingSearchError('');
+          setIsTrackOrderOpen(true);
+        }}
         onMarkNotificationAsRead={async (id) => {
           try {
             const { dbService } = await import('./services/dbService');
@@ -1092,13 +1101,21 @@ export default function App() {
 
         {activeTab === 'checkout' && (
           <CheckoutView
-            currentUser={currentUser || INITIAL_USERS[0]}
+            currentUser={currentUser}
             cartItems={cartItems}
             selectedPickupSlot={selectedPickupSlot}
             onSelectPickupSlot={setSelectedPickupSlot}
             appliedCoupon={appliedCoupon}
             onBackToMenu={() => setActiveTab('menu')}
             onOrderPlaced={handleOrderPlaced}
+            onTrackOrder={(num) => {
+              setTrackingOrderNumber(num);
+              const found = orders.find((o) => o.orderNumber.toLowerCase() === num.toLowerCase());
+              if (found) {
+                setTrackedOrderResult(found);
+              }
+              setIsTrackOrderOpen(true);
+            }}
           />
         )}
 
@@ -1142,6 +1159,95 @@ export default function App() {
         onProceedToCheckout={() => setActiveTab('checkout')}
         dailyCalorieTarget={currentUser?.dietaryPreferences?.dailyCalorieTarget || 2000}
       />
+
+      {/* Guest Order Tracking Modal */}
+      {isTrackOrderOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-md bg-stone-900 border border-stone-800 rounded-2xl shadow-2xl p-6 space-y-6 text-stone-100">
+            <button
+              onClick={() => setIsTrackOrderOpen(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+            >
+              ✕
+            </button>
+
+            <div className="text-center space-y-1">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center mx-auto text-stone-950 font-black shadow-lg">
+                GUB
+              </div>
+              <h2 className="text-xl font-bold text-white">Track Order Status</h2>
+              <p className="text-xs text-stone-400">Live KDS status tracking without account login</p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setTrackingSearchError('');
+                const match = orders.find(
+                  (o) => o.orderNumber.trim().toLowerCase() === trackingOrderNumber.trim().toLowerCase()
+                );
+                if (match) {
+                  setTrackedOrderResult(match);
+                } else {
+                  setTrackedOrderResult(null);
+                  setTrackingSearchError('No active cafeteria order found for this Order Number.');
+                }
+              }}
+              className="space-y-3 text-xs"
+            >
+              <div>
+                <label className="block text-stone-300 font-semibold mb-1">Enter Order Number</label>
+                <input
+                  type="text"
+                  required
+                  value={trackingOrderNumber}
+                  onChange={(e) => setTrackingOrderNumber(e.target.value)}
+                  placeholder="e.g. GUB-884210"
+                  className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-xs text-white focus:border-amber-500 focus:outline-none uppercase font-mono font-bold"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs transition-colors shadow-lg"
+              >
+                Track Live Order
+              </button>
+            </form>
+
+            {trackingSearchError && (
+              <div className="p-3 bg-red-950 border border-red-800 text-red-300 text-xs rounded-xl text-center">
+                {trackingSearchError}
+              </div>
+            )}
+
+            {trackedOrderResult && (
+              <div className="p-4 bg-stone-950 border border-stone-800 rounded-2xl space-y-3 text-xs animate-fade-in">
+                <div className="flex justify-between items-center border-b border-stone-800 pb-2">
+                  <span className="font-bold text-white">Status</span>
+                  <span className="px-2.5 py-1 rounded-lg text-xs font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                    {trackedOrderResult.orderStatus}
+                  </span>
+                </div>
+                <div className="space-y-1 text-stone-300">
+                  <div className="flex justify-between">
+                    <span className="text-stone-400">Customer</span>
+                    <span className="font-semibold text-white">{trackedOrderResult.studentName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-stone-400">Pickup Slot</span>
+                    <span className="font-semibold text-amber-400">{trackedOrderResult.pickupTimeSlot}</span>
+                  </div>
+                  {trackedOrderResult.kitchenNotes && (
+                    <div className="p-2 bg-stone-900 border border-stone-800 rounded text-amber-300 italic text-[11px] mt-2">
+                      Kitchen Note: {trackedOrderResult.kitchenNotes}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Auth Modal */}
       <AuthModal

@@ -13,13 +13,14 @@ import {
 import { CartItem, PaymentMethod, UserProfile, Order } from '../types';
 
 interface CheckoutViewProps {
-  currentUser: UserProfile;
+  currentUser: UserProfile | null;
   cartItems: CartItem[];
   selectedPickupSlot: string;
   onSelectPickupSlot: (slot: string) => void;
   appliedCoupon: { code: string; discountAmount: number } | null;
   onBackToMenu: () => void;
   onOrderPlaced: (order: Order) => void;
+  onTrackOrder?: (orderNumber: string) => void;
 }
 
 export const CheckoutView: React.FC<CheckoutViewProps> = ({
@@ -30,16 +31,25 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   appliedCoupon,
   onBackToMenu,
   onOrderPlaced,
+  onTrackOrder,
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bkash_nagad');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mobileWalletNumber, setMobileWalletNumber] = useState('01700000000');
   const [errorMessage, setErrorMessage] = useState('');
 
+  // Guest details state for non-signed-in customers
+  const [guestName, setGuestName] = useState(currentUser?.name || '');
+  const [guestPhone, setGuestPhone] = useState(currentUser?.phone || '');
+  const [guestEmail, setGuestEmail] = useState(currentUser?.email || '');
+  const [guestStudentId, setGuestStudentId] = useState(currentUser?.studentId || '');
+
+  // Confirmation screen state
+  const [placedOrderDetails, setPlacedOrderDetails] = useState<Order | null>(null);
+
   // Dynamic manual gateway MFS details & dynamic SSLCommerz setup
   const [mfsGateway, setMfsGateway] = useState<'bKash' | 'Nagad' | 'Rocket'>('bKash');
   const [mfsMerchantNum, setMfsMerchantNum] = useState('017XXXXXXXX (Merchant)');
-  const [sslCommerzSimulated, setSslCommerzSimulated] = useState(false);
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.totalPrice, 0);
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
@@ -54,18 +64,31 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       return;
     }
 
+    const finalName = currentUser?.name || guestName.trim();
+    const finalPhone = currentUser?.phone || guestPhone.trim();
+
+    if (!finalName) {
+      setErrorMessage('Please enter your Name.');
+      return;
+    }
+    if (!finalPhone) {
+      setErrorMessage('Please enter a Contact Phone number for order pickup verification.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Simulate real SSLCommerz transaction details if card
       let simulatedTxId = 'TXN_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+      const generatedOrderNum = 'GUB-' + Math.floor(100000 + Math.random() * 900000);
 
       const orderPayload = {
-        studentId: currentUser.id,
-        studentName: currentUser.name,
-        studentEmail: currentUser.email,
-        studentPhone: currentUser.phone,
-        studentIdCardNumber: currentUser.studentId,
+        orderNumber: generatedOrderNum,
+        studentId: currentUser?.id || null,
+        studentName: finalName,
+        studentEmail: currentUser?.email || guestEmail.trim() || 'guest@green.edu.bd',
+        studentPhone: finalPhone,
+        studentIdCardNumber: currentUser?.studentId || guestStudentId.trim() || 'GUEST',
         items: cartItems.map((item) => ({
           foodId: item.food.id,
           foodName: item.food.name,
@@ -82,12 +105,62 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
         total,
         paymentMethod,
         paymentStatus: 'paid',
+        orderStatus: 'pending',
         pickupTimeSlot: selectedPickupSlot,
+        qrCodeData: generatedOrderNum,
         transactionId: simulatedTxId
       };
 
       const { dbService } = await import('../services/dbService');
-      const createdOrder = await dbService.addOrder(orderPayload as any);
+      let createdOrder: Order;
+      try {
+        createdOrder = await dbService.addOrder(orderPayload as any);
+      } catch (dbErr) {
+        // Fallback order generation if DB offline/mock
+        createdOrder = {
+          id: `ord_${Date.now()}`,
+          orderNumber: generatedOrderNum,
+          studentId: currentUser?.id || 'guest',
+          studentName: finalName,
+          studentEmail: currentUser?.email || guestEmail.trim() || 'guest@green.edu.bd',
+          studentPhone: finalPhone,
+          studentIdCardNumber: currentUser?.studentId || guestStudentId.trim() || 'GUEST',
+          items: orderPayload.items as any,
+          subtotal,
+          discount,
+          total,
+          paymentMethod,
+          paymentStatus: 'paid',
+          orderStatus: 'pending',
+          pickupTimeSlot: selectedPickupSlot,
+          qrCodeData: generatedOrderNum,
+          createdAt: new Date().toISOString()
+        };
+      }
+
+      // Automatically dispatch notification records to staff & admins
+      try {
+        const { supabase } = await import('../supabaseClient');
+        const { data: staffMembers } = await supabase
+          .from('profiles')
+          .select('id')
+          .in('role', ['staff', 'admin']);
+
+        if (staffMembers && staffMembers.length > 0) {
+          const staffNotifications = staffMembers.map((m: any) => ({
+            user_id: m.id,
+            title: `New Order Received #${createdOrder.orderNumber}`,
+            message: `${createdOrder.studentName} placed a new order for ৳${createdOrder.total.toFixed(2)}.`,
+            type: 'order_status',
+            read: false
+          }));
+          await supabase.from('notifications').insert(staffNotifications);
+        }
+      } catch (notifErr) {
+        console.error('Failed dispatching order notification to kitchen staff:', notifErr);
+      }
+
+      setPlacedOrderDetails(createdOrder);
       onOrderPlaced(createdOrder);
     } catch (err: any) {
       setErrorMessage(err.message || 'Error processing pre-order checkout');
@@ -95,6 +168,56 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       setIsSubmitting(false);
     }
   };
+
+  if (placedOrderDetails) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-12 text-center space-y-6">
+        <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto border border-emerald-500/40">
+          <CheckCircle2 className="w-10 h-10" />
+        </div>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-black text-white">Order Received Successfully!</h1>
+          <p className="text-xs text-stone-400">Your pre-order has been forwarded directly to the GUB Kitchen KDS Display.</p>
+        </div>
+
+        <div className="bg-stone-900 border border-stone-800 p-6 rounded-3xl space-y-4 text-xs text-left">
+          <div className="flex justify-between items-center pb-3 border-b border-stone-800">
+            <span className="text-stone-400 font-semibold">Order Number</span>
+            <span className="font-black text-amber-400 text-lg">{placedOrderDetails.orderNumber}</span>
+          </div>
+          <div className="flex justify-between items-center text-stone-300">
+            <span>Customer Name</span>
+            <span className="font-bold text-white">{placedOrderDetails.studentName}</span>
+          </div>
+          <div className="flex justify-between items-center text-stone-300">
+            <span>Pickup Slot</span>
+            <span className="font-bold text-amber-400">{placedOrderDetails.pickupTimeSlot}</span>
+          </div>
+          <div className="flex justify-between items-center text-stone-300">
+            <span>Total Paid</span>
+            <span className="font-bold text-emerald-400">৳{placedOrderDetails.total.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          {onTrackOrder && (
+            <button
+              onClick={() => onTrackOrder(placedOrderDetails.orderNumber)}
+              className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl transition-colors"
+            >
+              Track Order Live Status &rarr;
+            </button>
+          )}
+          <button
+            onClick={onBackToMenu}
+            className="px-6 py-3 bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold text-xs rounded-xl transition-colors"
+          >
+            Back to Cafeteria Menu
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -115,23 +238,73 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left Column - Checkout Steps */}
         <div className="md:col-span-2 space-y-6">
-          {/* Step 1: Student Identity & Slot */}
+          {/* Step 1: Customer Identity & Pickup Window */}
           <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 space-y-4">
             <h3 className="font-bold text-sm text-amber-400 flex items-center gap-2 uppercase tracking-wider">
               <ShieldCheck className="w-4 h-4" />
-              1. Student Identity & Express Pickup Slot
+              1. Customer Identity & Express Pickup Window
             </h3>
 
-            <div className="grid grid-cols-2 gap-3 text-xs bg-stone-950 p-3 rounded-xl border border-stone-800/80">
-              <div>
-                <span className="text-stone-400 block text-[10px]">Student Name</span>
-                <span className="font-bold text-stone-100">{currentUser.name}</span>
+            {currentUser ? (
+              <div className="grid grid-cols-2 gap-3 text-xs bg-stone-950 p-3 rounded-xl border border-stone-800/80">
+                <div>
+                  <span className="text-stone-400 block text-[10px]">Student Name</span>
+                  <span className="font-bold text-stone-100">{currentUser.name}</span>
+                </div>
+                <div>
+                  <span className="text-stone-400 block text-[10px]">Student ID / Email</span>
+                  <span className="font-bold text-amber-400">{currentUser.studentId || currentUser.email}</span>
+                </div>
               </div>
-              <div>
-                <span className="text-stone-400 block text-[10px]">Student ID Card #</span>
-                <span className="font-bold text-amber-400">{currentUser.studentId || 'UG-2024-8842'}</span>
+            ) : (
+              <div className="space-y-3 bg-stone-950 p-4 rounded-xl border border-stone-800/80 text-xs">
+                <p className="text-[11px] text-amber-300 font-medium">Guest Pre-Order Active (No account required)</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-stone-300 mb-1 font-semibold">Your Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="e.g. Aria Rahman"
+                      className="w-full bg-stone-900 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-stone-300 mb-1 font-semibold">Phone Number *</label>
+                    <input
+                      type="text"
+                      required
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      placeholder="e.g. +8801712345678"
+                      className="w-full bg-stone-900 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-stone-300 mb-1 font-semibold">GUB Student ID (Optional)</label>
+                    <input
+                      type="text"
+                      value={guestStudentId}
+                      onChange={(e) => setGuestStudentId(e.target.value)}
+                      placeholder="e.g. 232002030"
+                      className="w-full bg-stone-900 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-stone-300 mb-1 font-semibold">Email (Optional)</label>
+                    <input
+                      type="email"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      placeholder="student@green.edu.bd"
+                      className="w-full bg-stone-900 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <label className="block text-xs font-semibold text-stone-300 mb-1 flex items-center gap-1.5">

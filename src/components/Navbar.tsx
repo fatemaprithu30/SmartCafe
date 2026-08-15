@@ -9,6 +9,7 @@ import {
   Clock,
   LogOut,
   ChevronDown,
+  Truck,
 } from 'lucide-react';
 import { UserProfile, UserRole, AppNotification, Order } from '../types';
 
@@ -28,6 +29,7 @@ interface NavbarProps {
   announcementText?: string;
   onMarkNotificationAsRead?: (id: string) => void;
   onMarkAllNotificationsAsRead?: () => void;
+  onOpenTrackOrder?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -46,6 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   announcementText,
   onMarkNotificationAsRead,
   onMarkAllNotificationsAsRead,
+  onOpenTrackOrder,
 }) => {
   const [showNotificationsPopover, setShowNotificationsPopover] = useState(false);
 
@@ -229,6 +232,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                 )}
               </div>
+            )}
+
+            {/* Guest / General Order Tracking Button */}
+            {onOpenTrackOrder && (
+              <button
+                onClick={onOpenTrackOrder}
+                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 transition-colors border border-slate-700/50 flex items-center gap-1.5 text-xs font-semibold"
+                title="Track Order Status"
+              >
+                <Truck className="w-4 h-4" />
+                <span className="hidden sm:inline">Track Order</span>
+              </button>
             )}
 
             {/* Student Dashboard Shortcut */}
