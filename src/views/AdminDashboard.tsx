@@ -37,6 +37,7 @@ interface AdminDashboardProps {
   users: UserProfile[];
   orders: Order[];
   settings: CafeteriaSettings;
+  reviews?: any[];
   onAddFood: (food: Partial<FoodItem>) => void;
   onEditFood: (foodId: string, food: Partial<FoodItem>) => void;
   onDeleteFood: (id: string) => void;
@@ -61,6 +62,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   users,
   orders,
   settings,
+  reviews = [],
   onAddFood,
   onEditFood,
   onDeleteFood,
@@ -77,7 +79,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onDeleteUser,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    'analytics' | 'foods' | 'approvals' | 'inventory' | 'coupons' | 'users' | 'audit' | 'settings'
+    'analytics' | 'foods' | 'approvals' | 'inventory' | 'coupons' | 'users' | 'feedback' | 'audit' | 'settings'
   >('analytics');
 
   // Add/Edit Food Modal state
@@ -176,7 +178,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       isAvailable: true,
       isSpecial: false,
       isPopular: true,
-      dietaryTags: ['Halal', 'High Protein'],
+      dietaryTags: ['High Protein'],
       allergens: [],
       nutrition: {
         calories: Number(foodCalories),
@@ -353,6 +355,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         >
           <Users className="w-4 h-4" />
           <span>Staff & Users</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('feedback')}
+          className={`px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap ${
+            activeTab === 'feedback' ? 'bg-blue-600 text-white font-bold' : 'text-stone-400 hover:text-white'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          <span>Feedback ({reviews.length})</span>
         </button>
 
         <button
@@ -730,6 +742,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 5.5: Student & Order Feedback */}
+      {activeTab === 'feedback' && (
+        <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 space-y-4">
+          <h2 className="font-bold text-lg text-white">Student Meal & Service Feedback</h2>
+          <p className="text-xs text-stone-400">Ratings & feedback submitted by students regarding food items and orders.</p>
+          <div className="space-y-3">
+            {reviews.length === 0 ? (
+              <p className="text-xs text-stone-500 text-center py-8">No feedback submitted yet.</p>
+            ) : (
+              reviews.map((rev) => (
+                <div key={rev.id} className="p-4 bg-stone-950 rounded-2xl border border-stone-800 space-y-2">
+                  <div className="flex justify-between items-start text-xs">
+                    <div>
+                      <span className="font-bold text-white block">{rev.studentName}</span>
+                      <span className="text-amber-400 font-semibold">{rev.foodName}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-amber-400 font-bold block">{rev.rating} ★</span>
+                      <span className="text-[10px] text-stone-500">{new Date(rev.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-stone-300 bg-stone-900 p-2.5 rounded-xl border border-stone-800">
+                    "{rev.comment}"
+                  </p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}

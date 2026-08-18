@@ -19,7 +19,7 @@ export const FAQView: React.FC = () => {
     },
     {
       q: 'How are allergens and dietary requirements handled?',
-      a: 'All food items list full macro nutrition (Calories, Protein, Carbs, Fat) and allergen tags (Gluten, Peanuts, Dairy, Eggs). You can also filter the entire menu by Halal, Vegan, High Protein, or Gluten-Free.',
+      a: 'All food items list full macro nutrition (Calories, Protein, Carbs, Fat) and allergen tags (Gluten, Peanuts, Dairy, Eggs). You can also filter the entire menu by Vegetarian, Non-Vegetarian, or High Protein.',
     },
     {
       q: 'Can I cancel or modify my pre-order after placing it?',

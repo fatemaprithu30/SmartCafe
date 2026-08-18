@@ -12,10 +12,9 @@ export interface UserProfile {
   walletBalance: number;
   dietaryPreferences: {
     allergens: string[];
-    isHalal: boolean;
-    isVegan: boolean;
     isVegetarian: boolean;
-    isGlutenFree: boolean;
+    isNonVegetarian: boolean;
+    isHighProtein: boolean;
     dailyCalorieTarget: number;
   };
   isActive?: boolean;
@@ -71,7 +70,7 @@ export interface FoodItem {
   isPopular: boolean;
   rating: number;
   reviewCount: number;
-  dietaryTags: string[]; // e.g. ['Halal', 'Vegan', 'High Protein', 'Gluten Free']
+  dietaryTags: string[]; // e.g. ['Vegetarian', 'Non-Vegetarian', 'High Protein']
   allergens: string[]; // e.g. ['Peanuts', 'Dairy', 'Gluten', 'Eggs']
   nutrition: NutritionInfo;
   customizationGroups?: CustomizationGroup[];

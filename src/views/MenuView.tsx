@@ -52,13 +52,11 @@ export const MenuView: React.FC<MenuViewProps> = ({
         if (cat && food.categoryId !== cat.id) return false;
       }
 
-      // Search query
+      // Search query (Strictly match food item name, case-insensitive)
       if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
+        const q = searchQuery.trim().toLowerCase();
         const matchName = food.name.toLowerCase().includes(q);
-        const matchDesc = food.description.toLowerCase().includes(q);
-        const matchCat = food.categoryName.toLowerCase().includes(q);
-        if (!matchName && !matchDesc && !matchCat) return false;
+        if (!matchName) return false;
       }
 
       // Dietary tags match (must match all selected tags)
@@ -136,13 +134,13 @@ export const MenuView: React.FC<MenuViewProps> = ({
               />
             </div>
 
-            {/* Dietary Checkboxes */}
+            {/* Food Type Filters */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                Dietary Preferences
+                Food Type Filters
               </label>
               <div className="space-y-1.5">
-                {['Halal', 'Vegan', 'Vegetarian', 'High Protein', 'Gluten-Free', 'Dairy-Free'].map((tag) => {
+                {['Vegetarian', 'Non-Vegetarian', 'High Protein'].map((tag) => {
                   const isChecked = selectedDietaryTags.includes(tag);
                   return (
                     <button
