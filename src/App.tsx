@@ -142,7 +142,9 @@ export default function App() {
       // Load foods
       try {
         const f = await dbService.getFoods();
-        setFoods(f);
+        if (f && f.length > 0) {
+          setFoods(f);
+        }
       } catch (err) {
         console.error('Failed to load menu items:', err);
       }
@@ -482,6 +484,11 @@ export default function App() {
     selectedOptions: CartItemOption[],
     specialInstructions: string
   ) => {
+    if (!currentUser) {
+      setIsAuthOpen(true);
+      return;
+    }
+
     const optionsPrice = selectedOptions.reduce((sum, opt) => sum + opt.price, 0);
     const unitPrice = food.price + optionsPrice;
     const totalPrice = unitPrice * quantity;
@@ -1169,11 +1176,21 @@ export default function App() {
         onRoleChange={setActiveRole}
         activeTab={activeTab}
         setActiveTab={(tab) => {
+          if ((tab === 'checkout' || tab === 'student-orders') && !currentUser) {
+            setIsAuthOpen(true);
+            return;
+          }
           setActiveTab(tab);
           setSelectedCategorySlug(undefined);
         }}
         cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
-        onOpenCart={() => setIsCartOpen(true)}
+        onOpenCart={() => {
+          if (!currentUser) {
+            setIsAuthOpen(true);
+            return;
+          }
+          setIsCartOpen(true);
+        }}
         onOpenAiAssistant={() => {}}
         notifications={notifications}
         orders={orders}
@@ -1275,7 +1292,15 @@ export default function App() {
       </div>
 
       {/* Footer */}
-      <Footer onNavigate={(tab) => setActiveTab(tab)} />
+      <Footer
+        onNavigate={(tab) => {
+          if ((tab === 'checkout' || tab === 'student-orders') && !currentUser) {
+            setIsAuthOpen(true);
+            return;
+          }
+          setActiveTab(tab);
+        }}
+      />
 
       {/* Food Detail Modal */}
       {selectedFoodForDetail && (
