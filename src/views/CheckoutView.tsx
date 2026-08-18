@@ -33,7 +33,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bkash_nagad');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mobileWalletNumber, setMobileWalletNumber] = useState('01700000000');
+  const [mobileWalletNumber, setMobileWalletNumber] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   // Dynamic manual gateway MFS details & dynamic SSLCommerz setup
@@ -54,9 +54,35 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       return;
     }
 
+    // Operating hours check (8:30 AM to 4:30 PM)
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const openMinutes = 8 * 60 + 30; // 8:30 AM = 510
+    const closeMinutes = 16 * 60 + 30; // 4:30 PM = 990
+
+    if (currentMinutes < openMinutes || currentMinutes > closeMinutes) {
+      setErrorMessage('Ordering is closed. The GUB Café operates strictly between 8:30 AM and 4:30 PM.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      if (paymentMethod === 'bkash_nagad') {
+        const cleanNumber = mobileWalletNumber.trim();
+        const bdPhoneRegex = /^01[3-9]\d{8}$/;
+        if (!cleanNumber) {
+          setErrorMessage(`Please enter your ${mfsGateway} mobile wallet number.`);
+          setIsSubmitting(false);
+          return;
+        }
+        if (!bdPhoneRegex.test(cleanNumber)) {
+          setErrorMessage(`Please enter a valid 11-digit Bangladeshi mobile number (e.g. 01712345678).`);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       // Simulate real SSLCommerz transaction details if card
       let simulatedTxId = 'TXN_' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
@@ -221,12 +247,12 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                       </div>
                     </div>
                     <div>
-                      <label className="block text-stone-300 text-[10px] font-semibold mb-1">Enter your {mfsGateway} Account/Trx Number</label>
+                      <label className="block text-stone-300 text-[10px] font-semibold mb-1">Enter your {mfsGateway} Account Number (01XXXXXXXXX)</label>
                       <input
                         type="text"
                         value={mobileWalletNumber}
                         onChange={(e) => setMobileWalletNumber(e.target.value)}
-                        placeholder="e.g. 017XXXXXXXX / TrxID"
+                        placeholder="e.g. 017XXXXXXXX"
                         className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2 text-white text-xs focus:outline-none"
                       />
                     </div>

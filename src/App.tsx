@@ -54,10 +54,9 @@ const GUEST_STUDENT: UserProfile = {
   walletBalance: 0,
   dietaryPreferences: {
     allergens: [],
-    isHalal: true,
-    isVegan: false,
     isVegetarian: false,
-    isGlutenFree: false,
+    isNonVegetarian: false,
+    isHighProtein: false,
     dailyCalorieTarget: 2000,
   },
 };
@@ -175,6 +174,30 @@ export default function App() {
       } catch (err) {
         console.error('Failed to load cafeteria settings:', err);
       }
+
+      // Load reviews/feedback
+      try {
+        const { supabase } = await import('./supabaseClient');
+        const { data: revsData, error: revsErr } = await supabase
+          .from('reviews')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (!revsErr && revsData) {
+          const mappedRevs: Review[] = revsData.map((r: any) => ({
+            id: r.id,
+            foodId: r.food_id,
+            foodName: r.food_name,
+            studentId: r.student_id,
+            studentName: r.student_name,
+            rating: r.rating,
+            comment: r.comment,
+            createdAt: r.created_at,
+          }));
+          setReviews(mappedRevs);
+        }
+      } catch (err) {
+        console.error('Failed to load reviews:', err);
+      }
     } catch (err) {
       console.log('Using fallback local states...');
     }
@@ -228,10 +251,9 @@ export default function App() {
           createdAt: profile.created_at,
           dietaryPreferences: profile.dietary_preferences || {
             allergens: [],
-            isHalal: true,
-            isVegan: false,
             isVegetarian: false,
-            isGlutenFree: false,
+            isNonVegetarian: false,
+            isHighProtein: false,
             dailyCalorieTarget: 2000
           }
         }));
@@ -375,10 +397,9 @@ export default function App() {
               isActive: profile.is_active,
               dietaryPreferences: profile.dietary_preferences || {
                 allergens: [],
-                isHalal: true,
-                isVegan: false,
                 isVegetarian: false,
-                isGlutenFree: false,
+                isNonVegetarian: false,
+                isHighProtein: false,
                 dailyCalorieTarget: 2000
               }
             };
@@ -536,6 +557,25 @@ export default function App() {
     setAppliedCoupon(null);
   };
 
+  // Helper to send DB notification
+  const sendNotification = async (userId: string, title: string, message: string) => {
+    try {
+      const { supabase } = await import('./supabaseClient');
+      await supabase.from('notifications').insert([{
+        user_id: userId,
+        title,
+        message,
+        type: 'order_status',
+        read: false,
+      }]);
+      if (currentUser?.id === userId) {
+        fetchUserNotifications(userId);
+      }
+    } catch (err) {
+      console.error('Failed to send notification:', err);
+    }
+  };
+
   // Handle Order Placed
   const handleOrderPlaced = (newOrder: Order) => {
     setOrders((prev) => [newOrder, ...prev]);
@@ -543,6 +583,14 @@ export default function App() {
     setAppliedCoupon(null);
     setActiveTab('student-orders');
     setStudentDashboardTab('orders');
+
+    if (newOrder.studentId) {
+      sendNotification(
+        newOrder.studentId,
+        `Order #${newOrder.orderNumber} Placed`,
+        `Your pre-order #${newOrder.orderNumber} has been successfully placed!`
+      );
+    }
   };
 
   // Re-Order Same Meal
@@ -562,6 +610,29 @@ export default function App() {
       const { dbService } = await import('./services/dbService');
       const updated = await dbService.updateOrderStatus(orderId, status, notes);
       setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
+
+      // Trigger user notifications for important order status changes
+      if (updated.studentId) {
+        if (status === 'preparing') {
+          sendNotification(
+            updated.studentId,
+            `Order #${updated.orderNumber} Accepted & Cooking`,
+            `Your food is currently being prepared/cooked. ${notes ? `(${notes})` : ''}`
+          );
+        } else if (status === 'ready') {
+          sendNotification(
+            updated.studentId,
+            `Order #${updated.orderNumber} Ready for Pickup`,
+            `Your food is ready for pickup. Please collect your food from FoodZone.`
+          );
+        } else if (status === 'confirmed') {
+          sendNotification(
+            updated.studentId,
+            `Order #${updated.orderNumber} Confirmed`,
+            `Staff has accepted your order.`
+          );
+        }
+      }
     } catch (err) {
       setOrders((prev) =>
         prev.map((o) => (o.id === orderId ? { ...o, orderStatus: status } : o))
@@ -804,10 +875,9 @@ export default function App() {
             walletBalance: profile.wallet_balance || 0,
             dietaryPreferences: profile.dietary_preferences || {
               allergens: [],
-              isHalal: true,
-              isVegan: false,
               isVegetarian: false,
-              isGlutenFree: false,
+              isNonVegetarian: false,
+              isHighProtein: false,
               dailyCalorieTarget: 2000
             }
           });
@@ -905,10 +975,9 @@ export default function App() {
             walletBalance: profile.wallet_balance || 0,
             dietaryPreferences: profile.dietary_preferences || {
               allergens: [],
-              isHalal: true,
-              isVegan: false,
               isVegetarian: false,
-              isGlutenFree: false,
+              isNonVegetarian: false,
+              isHighProtein: false,
               dailyCalorieTarget: 2000
             }
           });
@@ -936,6 +1005,7 @@ export default function App() {
             users={dbUsers}
             orders={orders}
             settings={settings}
+            reviews={reviews}
             onAddFood={handleAddFood}
             onEditFood={handleEditFood}
             onDeleteFood={handleDeleteFood}
@@ -1021,6 +1091,7 @@ export default function App() {
           <StaffKitchenDashboard
             orders={orders}
             foods={foods}
+            reviews={reviews}
             onUpdateOrderStatus={handleUpdateOrderStatus}
             onUpdateStock={handleUpdateStock}
             onLogOut={handleLogOut}
@@ -1166,15 +1237,28 @@ export default function App() {
         {activeTab === 'faq' && <FAQView />}
 
         {activeTab === 'checkout' && (
-          <CheckoutView
-            currentUser={currentUser || GUEST_STUDENT}
-            cartItems={cartItems}
-            selectedPickupSlot={selectedPickupSlot}
-            onSelectPickupSlot={setSelectedPickupSlot}
-            appliedCoupon={appliedCoupon}
-            onBackToMenu={() => setActiveTab('menu')}
-            onOrderPlaced={handleOrderPlaced}
-          />
+          currentUser ? (
+            <CheckoutView
+              currentUser={currentUser}
+              cartItems={cartItems}
+              selectedPickupSlot={selectedPickupSlot}
+              onSelectPickupSlot={setSelectedPickupSlot}
+              appliedCoupon={appliedCoupon}
+              onBackToMenu={() => setActiveTab('menu')}
+              onOrderPlaced={handleOrderPlaced}
+            />
+          ) : (
+            <div className="max-w-md mx-auto my-12 p-8 bg-white border border-slate-200 rounded-2xl text-center space-y-4 shadow-sm">
+              <h2 className="text-xl font-bold text-slate-900">Authentication Required</h2>
+              <p className="text-xs text-slate-600">Please sign in to place an order and proceed to checkout.</p>
+              <button
+                onClick={() => setIsAuthOpen(true)}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-md transition-colors"
+              >
+                Sign In / Login
+              </button>
+            </div>
+          )
         )}
 
         {activeTab === 'student-orders' && (
@@ -1214,7 +1298,14 @@ export default function App() {
         appliedCoupon={appliedCoupon}
         onApplyCoupon={handleApplyCoupon}
         onRemoveCoupon={handleRemoveCoupon}
-        onProceedToCheckout={() => setActiveTab('checkout')}
+        onProceedToCheckout={() => {
+          if (!currentUser) {
+            setIsCartOpen(false);
+            setIsAuthOpen(true);
+            return;
+          }
+          setActiveTab('checkout');
+        }}
         dailyCalorieTarget={currentUser?.dietaryPreferences?.dailyCalorieTarget || 2000}
       />
 

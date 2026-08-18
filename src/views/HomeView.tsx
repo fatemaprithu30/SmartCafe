@@ -112,15 +112,40 @@ export const HomeView: React.FC<HomeViewProps> = ({
             </button>
           </div>
 
+          {/* GUB Operating Hours Window Banner */}
+          <div className="bg-slate-800/90 border border-slate-700 p-4 rounded-xl text-left space-y-3 max-w-2xl mx-auto shadow-md">
+            <div className="flex items-center justify-between border-b border-slate-700 pb-2">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+                <Clock className="w-4 h-4 text-amber-400" />
+                <span>GUB Cafe Operating Hours: 8:30 AM – 4:30 PM</span>
+              </div>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">Active Ordering Window</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
+              <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-700">
+                <span className="text-slate-400 block text-[10px]">Breakfast</span>
+                <span className="font-bold text-white">8:30 AM – 10:00 AM</span>
+              </div>
+              <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-700">
+                <span className="text-slate-400 block text-[10px]">Snacks</span>
+                <span className="font-bold text-white">10:00 AM – 12:00 PM<br/>&amp; 3:00 PM – 4:30 PM</span>
+              </div>
+              <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-700">
+                <span className="text-slate-400 block text-[10px]">Lunch</span>
+                <span className="font-bold text-white">12:00 PM – 3:00 PM</span>
+              </div>
+            </div>
+          </div>
+
           {/* Stats Bar */}
-          <div className="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto text-slate-300 text-xs">
+          <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto text-slate-300 text-xs">
             <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80 text-center">
               <span className="block font-black text-blue-400 text-xl sm:text-2xl">0 Mins</span>
               <span className="text-slate-400 text-[11px] font-medium">Waiting Time at Counter</span>
             </div>
             <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80 text-center">
               <span className="block font-black text-blue-400 text-xl sm:text-2xl">100%</span>
-              <span className="text-slate-400 text-[11px] font-medium">Halal & Daily Nutrition</span>
+              <span className="text-slate-400 text-[11px] font-medium">Daily Fresh Nutrition</span>
             </div>
             <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80 text-center">
               <span className="block font-black text-blue-400 text-xl sm:text-2xl">1,400+</span>

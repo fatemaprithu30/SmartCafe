@@ -336,11 +336,15 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
             <div className="bg-stone-950 p-4 rounded-xl border border-stone-800 space-y-3">
-              <span className="font-bold text-amber-400 block uppercase">Allergens & Halal Settings</span>
+              <span className="font-bold text-amber-400 block uppercase">Food Type Filters & Allergens</span>
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-stone-300">
-                  <input type="checkbox" defaultChecked className="accent-amber-500" />
-                  <span>Only display 100% Halal certified options</span>
+                  <input type="checkbox" className="accent-amber-500" />
+                  <span>Vegetarian Preference</span>
+                </label>
+                <label className="flex items-center gap-2 text-stone-300">
+                  <input type="checkbox" className="accent-amber-500" />
+                  <span>High Protein Preference</span>
                 </label>
                 <label className="flex items-center gap-2 text-stone-300">
                   <input type="checkbox" defaultChecked className="accent-amber-500" />

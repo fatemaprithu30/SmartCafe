@@ -155,10 +155,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   walletBalance: profile.wallet_balance || 0,
                   dietaryPreferences: profile.dietary_preferences || {
                     allergens: [],
-                    isHalal: true,
-                    isVegan: false,
                     isVegetarian: false,
-                    isGlutenFree: false,
+                    isNonVegetarian: false,
+                    isHighProtein: false,
                     dailyCalorieTarget: 2000
                   }
                 });

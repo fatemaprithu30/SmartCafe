@@ -32,9 +32,9 @@ export const AboutView: React.FC = () => {
           <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
             <ShieldCheck className="w-5 h-5" />
           </div>
-          <h3 className="font-bold text-slate-900 text-base">100% Halal & Clean Sourcing</h3>
+          <h3 className="font-bold text-slate-900 text-base">Fresh & Clean Sourcing</h3>
           <p className="text-xs text-slate-500 leading-relaxed">
-            All GUB cafeteria meat products are 100% Halal certified, sourced daily from local organic farms with full allergen disclosure.
+            All GUB cafeteria food items are prepared fresh daily using quality ingredients sourced from local suppliers with full allergen disclosure.
           </p>
         </div>
 

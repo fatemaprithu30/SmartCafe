@@ -25,7 +25,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             </p>
             <div className="flex items-center gap-2 text-xs text-blue-400 font-medium">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>100% Halal Certified & Daily Macro Tracker</span>
+              <span>Daily Fresh Ingredients & Macro Tracker</span>
             </div>
           </div>
 

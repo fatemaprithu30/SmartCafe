@@ -16,6 +16,7 @@ import { Order, OrderStatus, FoodItem } from '../types';
 interface StaffKitchenDashboardProps {
   orders: Order[];
   foods: FoodItem[];
+  reviews?: any[];
   onUpdateOrderStatus: (orderId: string, status: OrderStatus, notes?: string) => void;
   onUpdateStock: (foodId: string, isAvailable: boolean, stockQuantity?: number) => void;
   onLogOut: () => void;
@@ -24,13 +25,15 @@ interface StaffKitchenDashboardProps {
 export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
   orders,
   foods,
+  reviews = [],
   onUpdateOrderStatus,
   onUpdateStock,
   onLogOut,
 }) => {
-  const [activeTab, setActiveTab] = useState<'queue' | 'inventory'>('queue');
+  const [activeTab, setActiveTab] = useState<'queue' | 'inventory' | 'feedback'>('queue');
   const [chimeEnabled, setChimeEnabled] = useState(true);
   const [inventorySearch, setInventorySearch] = useState('');
+  const [prepTimes, setPrepTimes] = useState<{ [orderId: string]: number }>({});
 
   const incomingOrders = orders.filter((o) => o.orderStatus === 'pending');
   const preparingOrders = orders.filter((o) => o.orderStatus === 'preparing');
@@ -92,6 +95,15 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveTab('feedback')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors ${
+              activeTab === 'feedback' ? 'bg-amber-500 text-stone-950' : 'bg-stone-800 text-stone-300'
+            }`}
+          >
+            Student Feedback ({reviews.length})
+          </button>
+
+          <button
             onClick={onLogOut}
             className="px-4 py-2 rounded-xl text-xs font-bold bg-red-950 text-red-400 border border-red-900/30 hover:bg-red-900/50"
           >
@@ -149,12 +161,30 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
                       </p>
                     )}
 
+                    <div className="flex items-center gap-2 bg-stone-950 p-2 rounded-xl border border-stone-800">
+                      <span className="text-[11px] text-stone-400 font-bold shrink-0">Est. Prep Time:</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={120}
+                        value={prepTimes[ord.id] || 15}
+                        onChange={(e) => setPrepTimes({ ...prepTimes, [ord.id]: Number(e.target.value) })}
+                        className="w-16 bg-stone-900 border border-stone-700 rounded-lg p-1 text-center font-bold text-white text-xs focus:outline-none"
+                      />
+                      <span className="text-[11px] text-stone-400 font-bold">Mins</span>
+                    </div>
+
                     <button
-                      onClick={() => onUpdateOrderStatus(ord.id, 'preparing')}
+                      onClick={() => {
+                        const prepMin = prepTimes[ord.id] || 15;
+                        const readyDate = new Date(Date.now() + prepMin * 60000);
+                        const estTimeStr = readyDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        onUpdateOrderStatus(ord.id, 'preparing', `Estimated prep time: ${prepMin} mins (Ready ~ ${estTimeStr})`);
+                      }}
                       className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs rounded-xl transition-all shadow flex items-center justify-center gap-1.5"
                     >
                       <Flame className="w-4 h-4" />
-                      <span>Start Cooking Order</span>
+                      <span>Accept & Start Cooking</span>
                     </button>
                   </div>
                 ))
@@ -262,6 +292,40 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
                 ))
               )}
             </div>
+          </div>
+        </div>
+      ) : activeTab === 'feedback' ? (
+        /* Student Feedback View for Kitchen Staff */
+        <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 space-y-4">
+          <div>
+            <h2 className="text-lg font-bold text-white">Student Meal & Service Feedback</h2>
+            <p className="text-xs text-stone-400">
+              Direct feedback and ratings from students to help improve preparation quality.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {reviews.length === 0 ? (
+              <p className="text-xs text-stone-500 text-center py-8">No feedback submitted yet.</p>
+            ) : (
+              reviews.map((rev) => (
+                <div key={rev.id} className="p-4 bg-stone-950 rounded-2xl border border-stone-800 space-y-2">
+                  <div className="flex justify-between items-start text-xs">
+                    <div>
+                      <span className="font-bold text-white block">{rev.studentName}</span>
+                      <span className="text-amber-400 font-semibold">{rev.foodName}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-amber-400 font-bold block">{rev.rating} ★</span>
+                      <span className="text-[10px] text-stone-500">{new Date(rev.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-stone-300 bg-stone-900 p-2.5 rounded-xl border border-stone-800">
+                    "{rev.comment}"
+                  </p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       ) : (
