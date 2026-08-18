@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Key, Mail, ShieldAlert, User, CheckCircle2 } from 'lucide-react';
+import { X, Key, Mail, Search, ShieldCheck } from 'lucide-react';
 import { UserProfile } from '../types';
 
 interface AuthModalProps {
@@ -22,39 +22,71 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [studentIdInput, setStudentIdInput] = useState('');
   const [phoneInput, setPhoneInput] = useState('');
   const [departmentInput, setDepartmentInput] = useState('');
+  const [smartCafeSearch, setSmartCafeSearch] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-md bg-stone-900 border border-stone-800 rounded-2xl shadow-2xl overflow-hidden text-stone-100 p-6 space-y-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-white border border-emerald-500/40 rounded-2xl shadow-2xl overflow-hidden text-slate-900 p-6 sm:p-8 space-y-5 my-8">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="text-center space-y-1">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center mx-auto text-white font-black shadow-lg">
-            GUB
+        {/* Green University Branding Banner */}
+        <div className="text-center space-y-2 border-b border-slate-100 pb-4">
+          <div className="flex items-center justify-center gap-3">
+            {/* GUB Tree Logo SVG */}
+            <svg className="w-10 h-10 text-emerald-600 shrink-0" viewBox="0 0 100 100" fill="currentColor">
+              <path d="M50 5 L20 35 H35 L10 65 H30 L5 90 H95 L70 65 H90 L65 35 H80 Z" />
+            </svg>
+            <div className="text-left">
+              <span className="text-2xl font-black italic tracking-tight block">
+                <span className="text-emerald-600">Green</span> <span className="text-sky-600">University of Bangladesh</span>
+              </span>
+              <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+                SmartCafé Official Access Portal
+              </span>
+            </div>
           </div>
-          <h2 className="text-xl font-bold text-white">Smart Café Student Portal</h2>
-          <p className="text-xs text-stone-400">Green University of Bangladesh Campus Pre-Ordering</p>
+
+          {/* GUB SmartCafe Integrated Search Bar */}
+          <div className="relative max-w-md mx-auto pt-2">
+            <Search className="w-4 h-4 text-emerald-600 absolute left-3 top-4" />
+            <input
+              type="text"
+              value={smartCafeSearch}
+              onChange={(e) => setSmartCafeSearch(e.target.value)}
+              placeholder="Search GUB SmartCafe meals, menu, or portal info..."
+              className="w-full bg-slate-50 border border-emerald-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white shadow-inner"
+            />
+          </div>
+        </div>
+
+        <div className="text-center space-y-1">
+          <h2 className="text-xl font-bold text-slate-900">
+            {activeTab === 'login' ? 'Student Login' : 'Student Account Registration'}
+          </h2>
+          <p className="text-xs text-slate-500">
+            Enter your credentials to pre-order food from GUB SmartCafé.
+          </p>
         </div>
 
         {/* Tab switcher */}
-        <div className="flex bg-stone-950 p-1 rounded-xl border border-stone-800 text-xs font-semibold">
+        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
           <button
             onClick={() => {
               setActiveTab('login');
               setErrorMessage('');
               setSuccessMessage('');
             }}
-            className={`flex-1 py-1.5 rounded-lg transition-colors ${
-              activeTab === 'login' ? 'bg-blue-600 text-white font-extrabold' : 'text-stone-400 hover:text-white'
+            className={`flex-1 py-2 rounded-lg transition-colors ${
+              activeTab === 'login' ? 'bg-emerald-600 text-white font-black shadow' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Log In
@@ -65,8 +97,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               setErrorMessage('');
               setSuccessMessage('');
             }}
-            className={`flex-1 py-1.5 rounded-lg transition-colors ${
-              activeTab === 'register' ? 'bg-blue-600 text-white font-extrabold' : 'text-stone-400 hover:text-white'
+            className={`flex-1 py-2 rounded-lg transition-colors ${
+              activeTab === 'register' ? 'bg-emerald-600 text-white font-black shadow' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Register Student
@@ -74,13 +106,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
 
         {errorMessage && (
-          <div className="p-3 bg-red-950 border border-red-800 text-red-300 text-xs rounded-xl">
+          <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium">
             {errorMessage}
           </div>
         )}
 
         {successMessage && (
-          <div className="p-3 bg-emerald-950 border border-emerald-800 text-emerald-300 text-xs rounded-xl">
+          <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl font-medium">
             {successMessage}
           </div>
         )}
@@ -235,14 +267,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         >
           {activeTab === 'login' && (
             <div>
-              <label className="block text-stone-300 font-semibold mb-1">GUB Student ID</label>
+              <label className="block text-slate-700 font-semibold mb-1">GUB Student ID</label>
               <input
                 type="text"
                 required
                 value={studentIdInput}
                 onChange={(e) => setStudentIdInput(e.target.value)}
-                placeholder="e.g. UG-2024-8842"
-                className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-xs text-white focus:border-blue-500 focus:outline-none"
+                placeholder="232002030"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none shadow-sm"
               />
             </div>
           )}
@@ -250,64 +282,64 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {activeTab === 'register' && (
             <>
               <div>
-                <label className="block text-stone-300 font-semibold mb-1">Full Name</label>
+                <label className="block text-slate-700 font-semibold mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Aria Rahman"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-xs text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-stone-300 font-semibold mb-1">GUB Student ID</label>
+                <label className="block text-slate-700 font-semibold mb-1">GUB Student ID</label>
                 <input
                   type="text"
                   required
                   value={studentIdInput}
                   onChange={(e) => setStudentIdInput(e.target.value)}
-                  placeholder="e.g. UG-2024-8842"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-xs text-white focus:border-blue-500 focus:outline-none"
+                  placeholder="232002030"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-stone-300 font-semibold mb-1">Department</label>
+                <label className="block text-slate-700 font-semibold mb-1">Department</label>
                 <input
                   type="text"
                   required
                   value={departmentInput}
                   onChange={(e) => setDepartmentInput(e.target.value)}
                   placeholder="e.g. CSE"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-xs text-white focus:border-blue-500 focus:outline-none"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-stone-300 font-semibold mb-1">Phone Number</label>
+                <label className="block text-slate-700 font-semibold mb-1">Phone Number</label>
                 <input
                   type="text"
                   required
                   value={phoneInput}
                   onChange={(e) => setPhoneInput(e.target.value)}
-                  placeholder="e.g. +8801712345678"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-xs text-white focus:border-blue-500 focus:outline-none"
+                  placeholder="e.g. 01712345678"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none shadow-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-stone-300 font-semibold mb-1">University Email</label>
+                <label className="block text-slate-700 font-semibold mb-1">University Email</label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-stone-500 absolute left-3 top-2.5" />
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="student@green.edu.bd"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl pl-9 p-2.5 text-xs text-white focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 p-3 text-xs text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none shadow-sm"
                   />
                 </div>
               </div>
@@ -315,25 +347,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
 
           <div>
-            <label className="block text-stone-300 font-semibold mb-1">Password</label>
+            <label className="block text-slate-700 font-semibold mb-1">Password</label>
             <div className="relative">
-              <Key className="w-4 h-4 text-stone-500 absolute left-3 top-2.5" />
+              <Key className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-stone-950 border border-stone-800 rounded-xl pl-9 p-2.5 text-xs text-white focus:border-blue-500 focus:outline-none"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 p-3 text-xs text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none shadow-sm"
               />
             </div>
           </div>
 
           <button
             type="submit"
-            className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs transition-colors shadow-lg"
+            className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-emerald-600/20 active:scale-98"
           >
-            {activeTab === 'login' ? 'Sign In to GUB Smart Café' : 'Request Student Account Registration'}
+            {activeTab === 'login' ? 'LOG IN' : 'Request Student Account Registration'}
           </button>
         </form>
       </div>
