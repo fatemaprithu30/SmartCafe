@@ -17,7 +17,12 @@ interface StaffKitchenDashboardProps {
   orders: Order[];
   foods: FoodItem[];
   reviews?: any[];
-  onUpdateOrderStatus: (orderId: string, status: OrderStatus, notes?: string) => void;
+  onUpdateOrderStatus: (
+    orderId: string,
+    status: OrderStatus,
+    notes?: string,
+    extraFields?: { cookingStation?: string; cookingStartedAt?: string; prepDurationMinutes?: number }
+  ) => void;
   onUpdateStock: (foodId: string, isAvailable: boolean, stockQuantity?: number) => void;
   onLogOut: () => void;
 }
@@ -34,10 +39,37 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
   const [chimeEnabled, setChimeEnabled] = useState(true);
   const [inventorySearch, setInventorySearch] = useState('');
   const [prepTimes, setPrepTimes] = useState<{ [orderId: string]: number }>({});
+  const [selectedStations, setSelectedStations] = useState<{ [orderId: string]: string }>({});
+
+  // Live ticker for independent cooking timers
+  const [now, setNow] = React.useState(Date.now());
+  React.useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const incomingOrders = orders.filter((o) => o.orderStatus === 'pending');
   const preparingOrders = orders.filter((o) => o.orderStatus === 'preparing');
   const readyOrders = orders.filter((o) => o.orderStatus === 'ready');
+
+  // Auto-transition orders when cooking timer reaches 0
+  React.useEffect(() => {
+    preparingOrders.forEach((ord) => {
+      const startTime = ord.cookingStartedAt ? new Date(ord.cookingStartedAt).getTime() : new Date(ord.createdAt).getTime();
+      const prepMin = ord.prepDurationMinutes || 15;
+      const totalSec = prepMin * 60;
+      const elapsedSec = Math.floor((now - startTime) / 1000);
+      const remainingSec = totalSec - elapsedSec;
+
+      if (remainingSec <= 0) {
+        onUpdateOrderStatus(
+          ord.id,
+          'ready',
+          `Cooking timer completed (${prepMin} mins)`
+        );
+      }
+    });
+  }, [now, preparingOrders, onUpdateOrderStatus]);
 
   const filteredFoods = foods.filter((f) =>
     f.name.toLowerCase().includes(inventorySearch.toLowerCase())
@@ -161,25 +193,54 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
                       </p>
                     )}
 
-                    <div className="flex items-center gap-2 bg-stone-950 p-2 rounded-xl border border-stone-800">
-                      <span className="text-[11px] text-stone-400 font-bold shrink-0">Est. Prep Time:</span>
-                      <input
-                        type="number"
-                        min={1}
-                        max={120}
-                        value={prepTimes[ord.id] || 15}
-                        onChange={(e) => setPrepTimes({ ...prepTimes, [ord.id]: Number(e.target.value) })}
-                        className="w-16 bg-stone-900 border border-stone-700 rounded-lg p-1 text-center font-bold text-white text-xs focus:outline-none"
-                      />
-                      <span className="text-[11px] text-stone-400 font-bold">Mins</span>
+                    <div className="space-y-2 bg-stone-950 p-2.5 rounded-xl border border-stone-800">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-stone-400 font-bold">Station:</span>
+                        <select
+                          value={selectedStations[ord.id] || 'Stove Station 1'}
+                          onChange={(e) => setSelectedStations({ ...selectedStations, [ord.id]: e.target.value })}
+                          className="bg-stone-900 border border-stone-700 rounded-lg p-1 text-xs text-amber-300 font-bold focus:outline-none"
+                        >
+                          <option value="Stove Station 1">Stove Station 1</option>
+                          <option value="Stove Station 2">Stove Station 2</option>
+                          <option value="Grill Station A">Grill Station A</option>
+                          <option value="Grill Station B">Grill Station B</option>
+                          <option value="Fryer / Express">Fryer / Express</option>
+                        </select>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-stone-400 font-bold">Timer Duration:</span>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min={1}
+                            max={120}
+                            value={prepTimes[ord.id] || 15}
+                            onChange={(e) => setPrepTimes({ ...prepTimes, [ord.id]: Number(e.target.value) })}
+                            className="w-14 bg-stone-900 border border-stone-700 rounded-lg p-1 text-center font-bold text-white text-xs focus:outline-none"
+                          />
+                          <span className="text-[11px] text-stone-400 font-bold">Mins</span>
+                        </div>
+                      </div>
                     </div>
 
                     <button
                       onClick={() => {
                         const prepMin = prepTimes[ord.id] || 15;
+                        const station = selectedStations[ord.id] || 'Stove Station 1';
                         const readyDate = new Date(Date.now() + prepMin * 60000);
                         const estTimeStr = readyDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                        onUpdateOrderStatus(ord.id, 'preparing', `Estimated prep time: ${prepMin} mins (Ready ~ ${estTimeStr})`);
+                        onUpdateOrderStatus(
+                          ord.id,
+                          'preparing',
+                          `Station: ${station} | Est. prep: ${prepMin} mins (Ready ~ ${estTimeStr})`,
+                          {
+                            cookingStation: station,
+                            cookingStartedAt: new Date().toISOString(),
+                            prepDurationMinutes: prepMin,
+                          }
+                        );
                       }}
                       className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs rounded-xl transition-all shadow flex items-center justify-center gap-1.5"
                     >
@@ -208,39 +269,62 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
               {preparingOrders.length === 0 ? (
                 <p className="text-xs text-stone-500 text-center py-8">No orders cooking currently</p>
               ) : (
-                preparingOrders.map((ord) => (
-                  <div key={ord.id} className="bg-stone-900 border border-stone-800 p-4 rounded-2xl space-y-3 shadow-lg">
-                    <div className="flex justify-between items-start border-b border-stone-800 pb-2">
-                      <div>
-                        <span className="font-black text-blue-400 text-sm block">{ord.orderNumber}</span>
-                        <span className="text-[11px] text-stone-400">
-                          {ord.studentName} • Slot: {ord.pickupTimeSlot}
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-bold text-amber-400 bg-stone-950 px-2 py-1 rounded">
-                        Target: {ord.estimatedReadyTime}
-                      </span>
-                    </div>
+                preparingOrders.map((ord) => {
+                  const startTime = ord.cookingStartedAt ? new Date(ord.cookingStartedAt).getTime() : new Date(ord.createdAt).getTime();
+                  const prepMin = ord.prepDurationMinutes || 15;
+                  const totalSec = prepMin * 60;
+                  const elapsedSec = Math.floor((now - startTime) / 1000);
+                  const remainingSec = Math.max(0, totalSec - elapsedSec);
+                  const displayMin = Math.floor(remainingSec / 60);
+                  const displaySec = remainingSec % 60;
 
-                    <div className="space-y-1.5 text-xs text-stone-200">
-                      {ord.items.map((it, idx) => (
-                        <div key={idx} className="flex justify-between font-semibold">
-                          <span>
-                            {it.quantity}x {it.foodName}
+                  return (
+                    <div key={ord.id} className="bg-stone-900 border border-blue-500/40 p-4 rounded-2xl space-y-3 shadow-lg relative overflow-hidden">
+                      <div className="flex justify-between items-start border-b border-stone-800 pb-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-blue-400 text-sm block">{ord.orderNumber}</span>
+                            <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30">
+                              {ord.cookingStation || 'Stove Station 1'}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-stone-400">
+                            {ord.studentName} • Slot: {ord.pickupTimeSlot}
                           </span>
                         </div>
-                      ))}
-                    </div>
+                      </div>
 
-                    <button
-                      onClick={() => onUpdateOrderStatus(ord.id, 'ready')}
-                      className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl transition-all shadow flex items-center justify-center gap-1.5"
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span>Mark Ready at Express Counter 1</span>
-                    </button>
-                  </div>
-                ))
+                      {/* Live Ticking Countdown Bar */}
+                      <div className="bg-stone-950 p-2.5 rounded-xl border border-stone-800 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-xs text-stone-300 font-bold">
+                          <Clock className="w-4 h-4 text-blue-400 animate-spin" />
+                          <span>Timer Remaining:</span>
+                        </div>
+                        <span className="font-mono text-base font-black text-amber-400">
+                          {String(displayMin).padStart(2, '0')}:{String(displaySec).padStart(2, '0')}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5 text-xs text-stone-200">
+                        {ord.items.map((it, idx) => (
+                          <div key={idx} className="flex justify-between font-semibold">
+                            <span>
+                              {it.quantity}x {it.foodName}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={() => onUpdateOrderStatus(ord.id, 'ready', 'Manual override ready')}
+                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl transition-all shadow flex items-center justify-center gap-1.5"
+                      >
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Mark Ready at Express Counter 1</span>
+                      </button>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>

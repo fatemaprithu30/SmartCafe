@@ -133,6 +133,9 @@ export interface Order {
   updatedAt: string;
   estimatedReadyTime: string; // e.g., "12:15 PM"
   kitchenNotes?: string;
+  cookingStation?: string; // e.g. "Stove Station 1", "Grill Station A", "Fryer / Express"
+  cookingStartedAt?: string; // ISO string when cooking started
+  prepDurationMinutes?: number; // Minutes allocated for cooking
 }
 
 export interface Review {

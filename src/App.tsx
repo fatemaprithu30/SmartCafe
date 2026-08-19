@@ -711,10 +711,15 @@ export default function App() {
   };
 
   // Kitchen Bump Bar Status Shift
-  const handleUpdateOrderStatus = async (orderId: string, status: OrderStatus, notes?: string) => {
+  const handleUpdateOrderStatus = async (
+    orderId: string,
+    status: OrderStatus,
+    notes?: string,
+    extraFields?: { cookingStation?: string; cookingStartedAt?: string; prepDurationMinutes?: number }
+  ) => {
     try {
       const { dbService } = await import('./services/dbService');
-      const updated = await dbService.updateOrderStatus(orderId, status, notes);
+      const updated = await dbService.updateOrderStatus(orderId, status, notes, extraFields);
       setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
 
       // Trigger user notifications for important order status changes
