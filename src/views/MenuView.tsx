@@ -9,6 +9,9 @@ import {
   X,
   Check,
   Utensils,
+  Egg,
+  CookingPot,
+  Cookie,
 } from 'lucide-react';
 import { FoodCategory, FoodItem, UserProfile } from '../types';
 import { FoodCard } from '../components/FoodCard';
@@ -56,12 +59,6 @@ export const MenuView: React.FC<MenuViewProps> = ({
 
   const filteredFoods = useMemo(() => {
     return foods.filter((food) => {
-      // Category match
-      if (activeCategory !== 'all') {
-        const cat = categories.find((c) => c.slug === activeCategory);
-        if (cat && food.categoryId !== cat.id) return false;
-      }
-
       // Search query (Strictly match food item name, case-insensitive)
       if (searchQuery.trim()) {
         const q = searchQuery.trim().toLowerCase();
@@ -92,7 +89,56 @@ export const MenuView: React.FC<MenuViewProps> = ({
       if (sortBy === 'prep_speed') return a.prepTimeMinutes - b.prepTimeMinutes;
       return 0;
     });
-  }, [foods, activeCategory, searchQuery, selectedDietaryTags, maxPrepMinutes, maxPrice, sortBy, categories]);
+  }, [foods, searchQuery, selectedDietaryTags, maxPrepMinutes, maxPrice, sortBy]);
+
+  // Defined target sections for University Cafeteria
+  const targetCategorySections = [
+    {
+      slug: 'breakfast',
+      name: 'Breakfast',
+      description: 'Morning quick bites, oats, parathas, eggs & hot drinks (8:30 AM – 10:00 AM)',
+      icon: Egg,
+      color: 'from-amber-500/10 to-orange-500/10 border-amber-200 text-amber-700',
+      badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
+    },
+    {
+      slug: 'lunch',
+      name: 'Lunch',
+      description: 'Hearty rice bowls, biryanis, curries & balanced entrees (12:00 PM – 3:00 PM)',
+      icon: CookingPot,
+      color: 'from-blue-500/10 to-indigo-500/10 border-blue-200 text-blue-700',
+      badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
+    },
+    {
+      slug: 'snacks',
+      name: 'Snacks',
+      description: 'Burgers, wraps, samosas & tea-time snacks (10:00 AM–12:00 PM & 3:00 PM–4:30 PM)',
+      icon: Cookie,
+      color: 'from-emerald-500/10 to-teal-500/10 border-emerald-200 text-emerald-700',
+      badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    },
+  ];
+
+  // Group filtered foods into their respective sections
+  const categorizedFoods = useMemo(() => {
+    return targetCategorySections.map((sec) => {
+      const catMatch = categories.find((c) => c.slug.toLowerCase() === sec.slug.toLowerCase());
+      const catId = catMatch?.id;
+
+      const items = filteredFoods.filter((f) => {
+        if (catId && f.categoryId === catId) return true;
+        if (f.categoryName && f.categoryName.toLowerCase() === sec.name.toLowerCase()) return true;
+        if (f.categoryId && f.categoryId.toLowerCase().includes(sec.slug.toLowerCase())) return true;
+        return false;
+      });
+
+      return {
+        ...sec,
+        categoryInfo: catMatch,
+        items,
+      };
+    });
+  }, [filteredFoods, categories]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -288,7 +334,7 @@ export const MenuView: React.FC<MenuViewProps> = ({
             </span>
           </div>
 
-          {/* Foods Grid */}
+          {/* Categorized Food Sections */}
           {filteredFoods.length === 0 ? (
             <div className="bg-white border border-slate-200 rounded-xl p-12 text-center space-y-4 shadow-sm">
               <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
@@ -300,15 +346,53 @@ export const MenuView: React.FC<MenuViewProps> = ({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredFoods.map((food) => (
-                <FoodCard
-                  key={food.id}
-                  food={food}
-                  onSelect={onSelectFood}
-                  onQuickAdd={onQuickAdd}
-                />
-              ))}
+            <div className="space-y-10">
+              {categorizedFoods
+                .filter((section) => activeCategory === 'all' || activeCategory === section.slug)
+                .map((section) => {
+                  const Icon = section.icon;
+                  return (
+                    <section key={section.slug} className="space-y-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                      {/* Section Header Card */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                        <div className="flex items-start sm:items-center gap-3">
+                          <div className={`p-3 rounded-xl bg-gradient-to-br ${section.color} border shadow-xs`}>
+                            <Icon className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h2 className="text-xl font-extrabold text-slate-900">{section.name}</h2>
+                              <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${section.badgeColor}`}>
+                                {section.items.length} {section.items.length === 1 ? 'item' : 'items'}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-0.5">{section.description}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Items Grid for this Category Section */}
+                      {section.items.length === 0 ? (
+                        <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                          <p className="text-xs text-slate-400 font-medium">
+                            No {section.name.toLowerCase()} items match your current filter criteria.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+                          {section.items.map((food) => (
+                            <FoodCard
+                              key={food.id}
+                              food={food}
+                              onSelect={onSelectFood}
+                              onQuickAdd={onQuickAdd}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  );
+                })}
             </div>
           )}
         </main>
