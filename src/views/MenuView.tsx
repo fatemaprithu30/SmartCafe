@@ -45,18 +45,10 @@ export const MenuView: React.FC<MenuViewProps> = ({
   const [activeCategory, setActiveCategory] = useState<string>(selectedCategorySlug || 'all');
   const [showCalculatorTab, setShowCalculatorTab] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDietaryTags, setSelectedDietaryTags] = useState<string[]>([]);
   const [maxPrepMinutes, setMaxPrepMinutes] = useState<number>(30);
   const [maxPrice, setMaxPrice] = useState<number>(1000);
   const [maxCalories, setMaxCalories] = useState<number>(2000);
   const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'price_asc' | 'price_desc' | 'prep_speed'>('popular');
-  const [showFiltersMobile, setShowFiltersMobile] = useState(false);
-
-  const toggleDietaryTag = (tag: string) => {
-    setSelectedDietaryTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
-  };
 
   const filteredFoods = useMemo(() => {
     return foods.filter((food) => {
@@ -67,12 +59,15 @@ export const MenuView: React.FC<MenuViewProps> = ({
         if (!matchName) return false;
       }
 
-      // Dietary tags match (must match all selected tags)
-      if (selectedDietaryTags.length > 0) {
-        const hasAllTags = selectedDietaryTags.every((tag) =>
-          food.dietaryTags.some((t) => t.toLowerCase() === tag.toLowerCase())
-        );
-        if (!hasAllTags) return false;
+      // Category filter
+      if (activeCategory !== 'all') {
+        const catMatch = categories.find((c) => c.slug.toLowerCase() === activeCategory.toLowerCase());
+        const catId = catMatch?.id;
+        const matchCat =
+          (catId && food.categoryId === catId) ||
+          (food.categoryName && food.categoryName.toLowerCase() === activeCategory.toLowerCase()) ||
+          (food.categoryId && food.categoryId.toLowerCase().includes(activeCategory.toLowerCase()));
+        if (!matchCat) return false;
       }
 
       // Prep time filter
@@ -93,7 +88,7 @@ export const MenuView: React.FC<MenuViewProps> = ({
       if (sortBy === 'prep_speed') return a.prepTimeMinutes - b.prepTimeMinutes;
       return 0;
     });
-  }, [foods, searchQuery, selectedDietaryTags, maxPrepMinutes, maxPrice, maxCalories, sortBy]);
+  }, [foods, searchQuery, activeCategory, categories, maxPrepMinutes, maxPrice, maxCalories, sortBy]);
 
   // Defined target sections for University Cafeteria
   const targetCategorySections = [
@@ -184,12 +179,11 @@ export const MenuView: React.FC<MenuViewProps> = ({
                 <SlidersHorizontal className="w-4 h-4 text-blue-600" />
                 Menu Filters
               </span>
-              {(selectedDietaryTags.length > 0 || activeCategory !== 'all' || searchQuery || maxPrice !== 1000 || maxCalories !== 2000 || maxPrepMinutes !== 30) && (
+              {(activeCategory !== 'all' || searchQuery || maxPrice !== 1000 || maxCalories !== 2000 || maxPrepMinutes !== 30) && (
                 <button
                   onClick={() => {
                     setActiveCategory('all');
                     setSearchQuery('');
-                    setSelectedDietaryTags([]);
                     setMaxPrepMinutes(30);
                     setMaxPrice(1000);
                     setMaxCalories(2000);
@@ -213,32 +207,37 @@ export const MenuView: React.FC<MenuViewProps> = ({
               />
             </div>
 
-            {/* Food Type Filters */}
+            {/* Categories Filter */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
-                Food Type Filters
+                Categories
               </label>
               <div className="space-y-1.5">
-                {['Vegetarian', 'Non-Vegetarian', 'High Protein'].map((tag) => {
-                  const isChecked = selectedDietaryTags.includes(tag);
+                {[
+                  { slug: 'all', name: 'All Categories' },
+                  { slug: 'breakfast', name: 'Breakfast' },
+                  { slug: 'lunch', name: 'Lunch' },
+                  { slug: 'snacks', name: 'Snacks' },
+                ].map((cat) => {
+                  const isActive = activeCategory === cat.slug;
                   return (
                     <button
-                      key={tag}
+                      key={cat.slug}
                       type="button"
-                      onClick={() => toggleDietaryTag(tag)}
+                      onClick={() => setActiveCategory(cat.slug)}
                       className={`w-full flex items-center justify-between p-2 rounded-lg text-xs transition-colors border ${
-                        isChecked
+                        isActive
                           ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold'
                           : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900'
                       }`}
                     >
-                      <span>{tag}</span>
+                      <span>{cat.name}</span>
                       <div
-                        className={`w-4 h-4 rounded border flex items-center justify-center ${
-                          isChecked ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300'
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                          isActive ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300'
                         }`}
                       >
-                        {isChecked && <Check className="w-3 h-3 stroke-[3]" />}
+                        {isActive && <Check className="w-3 h-3 stroke-[3]" />}
                       </div>
                     </button>
                   );
@@ -305,37 +304,14 @@ export const MenuView: React.FC<MenuViewProps> = ({
 
         {/* Menu Items Grid */}
         <main className="lg:col-span-3 space-y-6">
-          {/* Category Tabs & Sorting row */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-3 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
-            {/* Category Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 sm:pb-0">
-              <button
-                onClick={() => setActiveCategory('all')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
-                  activeCategory === 'all'
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                }`}
-              >
-                All Items
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.slug)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
-                    activeCategory === cat.slug
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
+          {/* Results Info & Sort Selector Bar */}
+          <div className="flex items-center justify-between gap-4 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+            <span className="text-xs text-slate-500">
+              Showing <strong className="text-slate-900 font-bold">{filteredFoods.length}</strong> menu items
+            </span>
 
             {/* Sort Selector */}
-            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto text-xs">
+            <div className="flex items-center gap-2 shrink-0 text-xs">
               <span className="text-slate-500 font-medium">Sort:</span>
               <select
                 value={sortBy}
@@ -349,13 +325,6 @@ export const MenuView: React.FC<MenuViewProps> = ({
                 <option value="prep_speed">Fastest Kitchen Prep</option>
               </select>
             </div>
-          </div>
-
-          {/* Results Info */}
-          <div className="text-xs text-slate-500 flex items-center justify-between px-1">
-            <span>
-              Showing <strong className="text-slate-900 font-bold">{filteredFoods.length}</strong> menu items
-            </span>
           </div>
 
           {/* Categorized Food Sections */}
