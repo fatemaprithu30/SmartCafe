@@ -207,11 +207,10 @@ export default function App() {
       // Load foods
       try {
         const f = await dbService.getFoods();
-        if (f && f.length > 0) {
-          setFoods(f);
-        }
+        setFoods(f || []);
       } catch (err) {
         console.error('Failed to load menu items:', err);
+        setFoods([]);
       }
 
       // Load categories

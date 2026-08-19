@@ -86,7 +86,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [showFoodModal, setShowFoodModal] = useState(false);
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
   const [foodName, setFoodName] = useState('');
-  const [foodCategory, setFoodCategory] = useState(categories[0]?.id || 'cat_rice_bowls');
+  const [foodCategory, setFoodCategory] = useState('');
   const [foodPrice, setFoodPrice] = useState('240.00');
   const [foodPrepTime, setFoodPrepTime] = useState('10');
   const [foodImage, setFoodImage] = useState('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=80');
@@ -129,11 +129,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     { hour: '3 PM', count: 28 },
   ];
 
+  const availableCategories = categories.filter((c) =>
+    ['breakfast', 'lunch', 'snacks'].includes(c.slug.toLowerCase())
+  ).length > 0
+    ? categories.filter((c) => ['breakfast', 'lunch', 'snacks'].includes(c.slug.toLowerCase()))
+    : [
+        { id: 'cat_breakfast', name: 'Breakfast', slug: 'breakfast', description: '', icon: '', image: '' },
+        { id: 'cat_lunch', name: 'Lunch', slug: 'lunch', description: '', icon: '', image: '' },
+        { id: 'cat_snacks', name: 'Snacks', slug: 'snacks', description: '', icon: '', image: '' },
+      ];
+
   const handleOpenAddFood = () => {
     setEditingFoodId(null);
     setFoodName('');
-    const defaultCatId = categories.find((c) => c.slug === 'breakfast')?.id || categories[0]?.id || 'cat_breakfast';
-    setFoodCategory(defaultCatId);
+    setFoodCategory('');
     setFoodPrice('240.00');
     setFoodPrepTime('10');
     setFoodImage('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=80');
@@ -168,10 +177,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleCreateOrUpdateFood = (e: React.FormEvent) => {
     e.preventDefault();
-    const selectedCatObj = categories.find((c) => c.id === foodCategory || c.slug === foodCategory);
+    if (!foodCategory) {
+      alert('Please select a category');
+      return;
+    }
+    const selectedCatObj = availableCategories.find((c) => c.id === foodCategory || c.slug === foodCategory);
     const payload = {
       name: foodName,
-      categoryId: foodCategory,
+      categoryId: selectedCatObj?.id || foodCategory,
       categoryName: selectedCatObj?.name || 'Breakfast',
       price: Number(foodPrice),
       prepTimeMinutes: Number(foodPrepTime),
@@ -846,15 +859,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <select
                     value={foodCategory}
                     onChange={(e) => setFoodCategory(e.target.value)}
+                    required
                     className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2 text-white font-semibold"
                   >
-                    {categories
-                      .filter((c) => ['breakfast', 'lunch', 'snacks'].includes(c.slug.toLowerCase()))
-                      .map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
+                    <option value="" disabled>Select Category</option>
+                    {availableCategories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
