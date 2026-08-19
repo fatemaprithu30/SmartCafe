@@ -80,7 +80,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
               <div>
                 <span className="font-bold text-lg tracking-tight text-white flex items-center gap-1">
-                  GUB<span className="text-blue-400 font-extrabold">Café</span>
+                  Smart<span className="text-blue-400 font-extrabold">Cafe</span>
                 </span>
                 <span className="text-[10px] uppercase tracking-wider text-slate-400 block -mt-1 font-semibold">
                   Green University

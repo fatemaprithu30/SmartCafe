@@ -71,24 +71,23 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
           {/* Top Pill */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-blue-400 text-xs font-semibold shadow-sm">
-            <Sparkles className="w-4 h-4 text-blue-400" />
-            <span>Official Green University of Bangladesh Cafeteria Pre-Ordering Platform</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-blue-400 text-xs font-semibold shadow-sm">
+            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+            <span>SmartCafe • Campus Cafeteria Pre-Ordering</span>
           </div>
 
           {/* Main Headline */}
-          <div className="max-w-4xl mx-auto space-y-4">
-            <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-tight text-white">
-              Skip the <span className="text-blue-400 underline decoration-blue-500/40">25-Minute Lines</span>.
-              <br className="hidden sm:inline" /> Pre-Order & Pickup Hot.
+          <div className="max-w-4xl mx-auto space-y-3">
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight text-white">
+              Skip the Line. Pre-Order Hot Meals.
             </h1>
-            <p className="text-slate-300 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
-              Select your pickup time slot, customize dietary preferences, pay with your mobile wallet, and grab your meal instantly with a live QR code at the GUB Campus Cafeteria.
+            <p className="text-slate-300 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
+              Order fresh food, choose your pickup time, and grab your meal instantly with a QR code.
             </p>
           </div>
 
-          {/* Search & AI Assistant Quick Bar */}
-          <div className="max-w-2xl mx-auto bg-slate-800/90 border border-slate-700 p-2 rounded-xl shadow-xl backdrop-blur-xl flex flex-col sm:flex-row items-center gap-2">
+          {/* Search Bar */}
+          <div className="max-w-xl mx-auto bg-slate-800/90 border border-slate-700 p-2 rounded-xl shadow-xl backdrop-blur-xl flex flex-col sm:flex-row items-center gap-2">
             <div className="relative flex-1 w-full">
               <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-3" />
               <input
@@ -98,7 +97,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') onNavigateToMenu();
                 }}
-                placeholder="Search chicken zinger, teriyaki rice bowl, karak chai..."
+                placeholder="enter the food you like"
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-11 pr-4 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500"
               />
             </div>
@@ -107,19 +106,19 @@ export const HomeView: React.FC<HomeViewProps> = ({
               onClick={() => onNavigateToMenu()}
               className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm transition-all shrink-0 flex items-center justify-center gap-2 shadow-sm shadow-blue-500/20 active:scale-98"
             >
-              <span>Explore GUB Menu</span>
+              <span>Explore SmartCafe Menu</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
-          {/* GUB Operating Hours Window Banner */}
-          <div className="bg-slate-800/90 border border-slate-700 p-4 rounded-xl text-left space-y-3 max-w-2xl mx-auto shadow-md">
+          {/* Operating Hours Window Banner */}
+          <div className="bg-slate-800/90 border border-slate-700 p-3.5 rounded-xl text-left space-y-2.5 max-w-xl mx-auto shadow-md">
             <div className="flex items-center justify-between border-b border-slate-700 pb-2">
               <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
                 <Clock className="w-4 h-4 text-amber-400" />
-                <span>GUB Cafe Operating Hours: 8:30 AM – 4:30 PM</span>
+                <span>SmartCafe Operating Hours: 8:30 AM – 4:30 PM</span>
               </div>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">Active Ordering Window</span>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">Active</span>
             </div>
             <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
               <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-700">
