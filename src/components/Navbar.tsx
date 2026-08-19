@@ -53,6 +53,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   const activeReadyOrders = currentUser ? orders.filter(
     (o) => o.studentId === currentUser.id && o.orderStatus === 'ready'
   ) : [];
+  const activePreparingOrders = currentUser ? orders.filter(
+    (o) => o.studentId === currentUser.id && o.orderStatus === 'preparing'
+  ) : [];
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-slate-900/95 border-b border-slate-800 text-slate-100 transition-all shadow-md">
@@ -142,14 +145,24 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Right Action Items */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Active Ready Order Badge Banner */}
-            {activeReadyOrders.length > 0 && activeRole === 'student' && (
+            {/* Active Order Tracking Badges */}
+            {activeRole === 'student' && activeReadyOrders.length > 0 && (
               <button
                 onClick={() => setActiveTab('student-orders')}
                 className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 animate-pulse"
               >
                 <div className="w-2 h-2 rounded-full bg-emerald-400" />
                 <span>Order Ready! Show QR</span>
+              </button>
+            )}
+
+            {activeRole === 'student' && activeReadyOrders.length === 0 && activePreparingOrders.length > 0 && (
+              <button
+                onClick={() => setActiveTab('student-orders')}
+                className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/20 border border-amber-500/40 text-amber-300 animate-pulse"
+              >
+                <div className="w-2 h-2 rounded-full bg-amber-400" />
+                <span>Cooking in Kitchen 🔥</span>
               </button>
             )}
 
