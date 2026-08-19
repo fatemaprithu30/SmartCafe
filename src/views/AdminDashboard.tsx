@@ -132,7 +132,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleOpenAddFood = () => {
     setEditingFoodId(null);
     setFoodName('');
-    setFoodCategory(categories[0]?.id || '');
+    const defaultCatId = categories.find((c) => c.slug === 'breakfast')?.id || categories[0]?.id || 'cat_breakfast';
+    setFoodCategory(defaultCatId);
     setFoodPrice('240.00');
     setFoodPrepTime('10');
     setFoodImage('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=80');
@@ -167,10 +168,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const handleCreateOrUpdateFood = (e: React.FormEvent) => {
     e.preventDefault();
+    const selectedCatObj = categories.find((c) => c.id === foodCategory || c.slug === foodCategory);
     const payload = {
       name: foodName,
       categoryId: foodCategory,
-      categoryName: categories.find((c) => c.id === foodCategory)?.name || 'Mains',
+      categoryName: selectedCatObj?.name || 'Breakfast',
       price: Number(foodPrice),
       prepTimeMinutes: Number(foodPrepTime),
       imageUrl: foodImage,
@@ -846,11 +848,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     onChange={(e) => setFoodCategory(e.target.value)}
                     className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2 text-white font-semibold"
                   >
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
+                    {categories
+                      .filter((c) => ['breakfast', 'lunch', 'snacks'].includes(c.slug.toLowerCase()))
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
                   </select>
                 </div>
               </div>
