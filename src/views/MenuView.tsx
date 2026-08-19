@@ -48,6 +48,7 @@ export const MenuView: React.FC<MenuViewProps> = ({
   const [selectedDietaryTags, setSelectedDietaryTags] = useState<string[]>([]);
   const [maxPrepMinutes, setMaxPrepMinutes] = useState<number>(30);
   const [maxPrice, setMaxPrice] = useState<number>(1000);
+  const [maxCalories, setMaxCalories] = useState<number>(2000);
   const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'price_asc' | 'price_desc' | 'prep_speed'>('popular');
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
 
@@ -80,6 +81,9 @@ export const MenuView: React.FC<MenuViewProps> = ({
       // Price filter
       if (food.price > maxPrice) return false;
 
+      // Calorie filter
+      if (food.nutrition?.calories && food.nutrition.calories > maxCalories) return false;
+
       return true;
     }).sort((a, b) => {
       if (sortBy === 'popular') return b.reviewCount - a.reviewCount;
@@ -89,7 +93,7 @@ export const MenuView: React.FC<MenuViewProps> = ({
       if (sortBy === 'prep_speed') return a.prepTimeMinutes - b.prepTimeMinutes;
       return 0;
     });
-  }, [foods, searchQuery, selectedDietaryTags, maxPrepMinutes, maxPrice, sortBy]);
+  }, [foods, searchQuery, selectedDietaryTags, maxPrepMinutes, maxPrice, maxCalories, sortBy]);
 
   // Defined target sections for University Cafeteria
   const targetCategorySections = [
@@ -180,7 +184,7 @@ export const MenuView: React.FC<MenuViewProps> = ({
                 <SlidersHorizontal className="w-4 h-4 text-blue-600" />
                 Menu Filters
               </span>
-              {(selectedDietaryTags.length > 0 || activeCategory !== 'all' || searchQuery || maxPrice !== 1000) && (
+              {(selectedDietaryTags.length > 0 || activeCategory !== 'all' || searchQuery || maxPrice !== 1000 || maxCalories !== 2000 || maxPrepMinutes !== 30) && (
                 <button
                   onClick={() => {
                     setActiveCategory('all');
@@ -188,6 +192,7 @@ export const MenuView: React.FC<MenuViewProps> = ({
                     setSelectedDietaryTags([]);
                     setMaxPrepMinutes(30);
                     setMaxPrice(1000);
+                    setMaxCalories(2000);
                   }}
                   className="text-[11px] text-blue-600 hover:underline font-semibold"
                 >
@@ -274,6 +279,25 @@ export const MenuView: React.FC<MenuViewProps> = ({
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
                 className="w-full accent-blue-600 bg-slate-200 rounded-lg cursor-pointer h-2"
+              />
+            </div>
+
+            {/* Calorie-based Filter Slider */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-semibold text-slate-700 flex items-center gap-1">
+                  <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Max Calories
+                </span>
+                <span className="font-bold text-amber-600">{maxCalories} kcal</span>
+              </div>
+              <input
+                type="range"
+                min={50}
+                max={2000}
+                step={25}
+                value={maxCalories}
+                onChange={(e) => setMaxCalories(Number(e.target.value))}
+                className="w-full accent-amber-500 bg-slate-200 rounded-lg cursor-pointer h-2"
               />
             </div>
           </div>
