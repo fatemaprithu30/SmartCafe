@@ -93,7 +93,7 @@ export default function App() {
 
   // Cart State
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [selectedPickupSlot, setSelectedPickupSlot] = useState<string>('12:10 PM - 12:20 PM');
+  const [selectedPickupSlot, setSelectedPickupSlot] = useState<string>('Lunch: 12:00 PM - 12:30 PM');
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
 
   // Modal Toggles
