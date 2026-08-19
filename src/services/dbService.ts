@@ -193,14 +193,44 @@ export const dbService = {
     } as Order;
   },
 
-  async updateOrderStatus(id: string, status: string, notes?: string): Promise<Order> {
+  async updateOrderStatus(
+    id: string,
+    status: string,
+    notes?: string,
+    extraFields?: { cookingStation?: string; cookingStartedAt?: string; prepDurationMinutes?: number }
+  ): Promise<Order> {
+    const updatePayload: any = { order_status: status, kitchen_notes: notes };
+    if (extraFields?.cookingStation !== undefined) updatePayload.cooking_station = extraFields.cookingStation;
+    if (extraFields?.cookingStartedAt !== undefined) updatePayload.cooking_started_at = extraFields.cookingStartedAt;
+    if (extraFields?.prepDurationMinutes !== undefined) updatePayload.prep_duration_minutes = extraFields.prepDurationMinutes;
+
     const { data, error } = await supabase
       .from('orders')
-      .update({ order_status: status, kitchen_notes: notes })
+      .update(updatePayload)
       .eq('id', id)
       .select('*, order_items(*)')
       .single();
-    if (error) throw error;
+
+    if (error) {
+      // If table missing dynamic columns on fallback DB, perform update without custom station columns
+      const { data: fallbackData, error: fallbackErr } = await supabase
+        .from('orders')
+        .update({ order_status: status, kitchen_notes: notes })
+        .eq('id', id)
+        .select('*, order_items(*)')
+        .single();
+
+      if (fallbackErr) throw fallbackErr;
+      const camelFallback = toCamel(fallbackData) as any;
+      return {
+        ...camelFallback,
+        cookingStation: extraFields?.cookingStation || camelFallback.cookingStation,
+        cookingStartedAt: extraFields?.cookingStartedAt || camelFallback.cookingStartedAt,
+        prepDurationMinutes: extraFields?.prepDurationMinutes || camelFallback.prepDurationMinutes,
+        items: camelFallback.orderItems || []
+      } as Order;
+    }
+
     const camelOrder = toCamel(data) as any;
     return {
       ...camelOrder,
