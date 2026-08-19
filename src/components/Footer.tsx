@@ -17,7 +17,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <UtensilsCrossed className="w-4 h-4" />
               </div>
               <span className="font-bold text-lg text-white">
-                GUB Smart<span className="text-blue-400">Café</span>
+                Smart<span className="text-blue-400">Cafe</span>
               </span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
@@ -99,7 +99,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         </div>
 
         <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} GUB Smart Café. Built for Green University of Bangladesh Pre-Ordering.</p>
+          <p>© {new Date().getFullYear()} SmartCafe. Built for Green University of Bangladesh Pre-Ordering.</p>
           <div className="flex items-center gap-1 text-slate-400">
             <span>Designed for fast, queue-free campus dining</span>
           </div>

@@ -157,7 +157,7 @@ export const MenuView: React.FC<MenuViewProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search food name..."
+                placeholder="enter the food you like"
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500"
               />
             </div>
