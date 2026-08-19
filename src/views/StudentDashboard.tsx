@@ -52,6 +52,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   const completedOrders = myOrders.filter((o) => o.orderStatus === 'completed');
 
   const activeReadyOrder = activeOrders.find((o) => o.orderStatus === 'ready');
+  const activePreparingOrder = activeOrders.find((o) => o.orderStatus === 'preparing');
 
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
@@ -139,8 +140,8 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
         </div>
       </div>
 
-      {/* Ready Order Floating Alert Banner */}
-      {activeReadyOrder && (
+      {/* Active Order Alert Banners */}
+      {activeReadyOrder ? (
         <div className="bg-emerald-500/15 border-2 border-emerald-500/40 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse">
           <div className="flex items-center gap-3">
             <div className="p-3 rounded-xl bg-emerald-500 text-stone-950 font-bold">
@@ -161,7 +162,28 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
             <span>Open Pickup QR Code</span>
           </button>
         </div>
-      )}
+      ) : activePreparingOrder ? (
+        <div className="bg-amber-500/15 border-2 border-amber-500/40 p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-amber-500 text-stone-950 font-bold">
+              <Flame className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-bold text-amber-300 text-sm">Order #{activePreparingOrder.orderNumber} is Cooking! 🔥</h3>
+              <p className="text-xs text-stone-300">
+                Slot: {activePreparingOrder.pickupTimeSlot} • Kitchen is preparing your meal now. {activePreparingOrder.kitchenNotes ? `(${activePreparingOrder.kitchenNotes})` : ''}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setSelectedQrOrder(activePreparingOrder)}
+            className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-black text-xs transition-colors shrink-0 flex items-center gap-2"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>View Order Pass</span>
+          </button>
+        </div>
+      ) : null}
 
       {/* Dashboard Nav Tabs */}
       <div className="flex border-b border-stone-800 text-xs font-semibold gap-2 overflow-x-auto pb-1">

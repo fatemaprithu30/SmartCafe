@@ -96,11 +96,76 @@ export default function App() {
   const [selectedPickupSlot, setSelectedPickupSlot] = useState<string>('Lunch: 12:00 PM - 12:30 PM');
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
 
-  // Modal Toggles
+  // Modal Toggles & Toast Banner
   const [selectedFoodForDetail, setSelectedFoodForDetail] = useState<FoodItem | null>(null);
   const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [studentDashboardTab, setStudentDashboardTab] = useState<'orders' | 'favorites' | 'reviews' | 'profile'>('orders');
+  const [activeToast, setActiveToast] = useState<{ id: string; title: string; message: string; type: 'preparing' | 'ready' | 'info' } | null>(null);
+
+  // Track previous order statuses to trigger sound and toast alerts
+  const prevOrderStatusesRef = React.useRef<{ [orderId: string]: string }>({});
+
+  // Web Audio API Audio Chime Synthesizer
+  const playAudioChime = (type: 'preparing' | 'ready') => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      if (type === 'ready') {
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.3); // A5
+      } else {
+        osc.frequency.setValueAtTime(440, ctx.currentTime); // A4
+        osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.3); // E5
+      }
+
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch (e) {
+      console.log('Audio chime error:', e);
+    }
+  };
+
+  // Monitor order status changes for current student and trigger toast & chime
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'student') return;
+
+    orders.forEach((ord) => {
+      if (ord.studentId === currentUser.id) {
+        const prevStatus = prevOrderStatusesRef.current[ord.id];
+        if (prevStatus && prevStatus !== ord.orderStatus) {
+          if (ord.orderStatus === 'preparing') {
+            playAudioChime('preparing');
+            setActiveToast({
+              id: `toast_${Date.now()}`,
+              title: `Order #${ord.orderNumber} Cooking! 🍳`,
+              message: `The kitchen has started preparing your order! ${ord.kitchenNotes || ''}`,
+              type: 'preparing',
+            });
+          } else if (ord.orderStatus === 'ready') {
+            playAudioChime('ready');
+            setActiveToast({
+              id: `toast_${Date.now()}`,
+              title: `Order #${ord.orderNumber} Ready! 🎉`,
+              message: `Your food is ready for pickup at Express Counter 1! Show your QR code.`,
+              type: 'ready',
+            });
+          }
+        }
+        prevOrderStatusesRef.current[ord.id] = ord.orderStatus;
+      }
+    });
+  }, [orders, currentUser]);
 
   // Sync route on popstate and pushstate manually
   useEffect(() => {
@@ -430,38 +495,72 @@ export default function App() {
     };
     checkSession();
 
-    // Wire up real-time status subscription from Supabase Realtime channel
+    // Wire up real-time status subscription from Supabase Realtime channel and backup polling
     let orderSubscription: any;
+    let notifSubscription: any;
+    let pollInterval: any;
+
     const initializeRealtime = async () => {
       if (!currentUser) return;
       const { supabase } = await import('./supabaseClient');
+      const { toCamel, dbService } = await import('./services/dbService');
+
       orderSubscription = supabase
         .channel('order-status-bumps')
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, (payload) => {
-          const updatedOrder = payload.new as Order;
-          setOrders((prev) => prev.map((o) => o.id === updatedOrder.id ? { ...o, orderStatus: updatedOrder.orderStatus, kitchenNotes: updatedOrder.kitchenNotes } : o));
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+          if (!payload.new) return;
+          const camelPayload = toCamel(payload.new) as Order;
 
-          // Trigger local browser alert simulation
-          if (updatedOrder.studentId === currentUser.id) {
-            const nextNotif = {
-              id: `notif_${Date.now()}`,
-              userId: currentUser.id,
-              title: `Order #${updatedOrder.orderNumber} status update`,
-              message: `Your food has updated to state: ${updatedOrder.orderStatus.toUpperCase()}`,
-              type: 'order_status' as any,
-              read: false,
-              createdAt: new Date().toISOString()
-            };
-            setNotifications((prev) => [nextNotif, ...prev]);
+          setOrders((prev) => {
+            const exists = prev.some((o) => o.id === camelPayload.id);
+            if (exists) {
+              return prev.map((o) => (o.id === camelPayload.id ? { ...o, ...camelPayload, items: o.items || camelPayload.items || [] } : o));
+            } else {
+              return [camelPayload, ...prev];
+            }
+          });
+
+          // Fetch notifications for user if order belongs to current user
+          if (currentUser && camelPayload.studentId === currentUser.id) {
+            fetchUserNotifications(currentUser.id);
           }
         })
         .subscribe();
+
+      notifSubscription = supabase
+        .channel('user-notifs')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
+          if (!payload.new) return;
+          const camelNotif = toCamel(payload.new) as AppNotification;
+          if (camelNotif.userId === currentUser.id) {
+            setNotifications((prev) => {
+              if (prev.some((n) => n.id === camelNotif.id)) return prev;
+              return [camelNotif, ...prev];
+            });
+          }
+        })
+        .subscribe();
+
+      // Short backup polling interval every 3.5 seconds
+      pollInterval = setInterval(async () => {
+        try {
+          const freshOrders = await dbService.getOrders();
+          setOrders(freshOrders);
+          if (currentUser?.id) {
+            fetchUserNotifications(currentUser.id);
+          }
+        } catch (err) {
+          // silent fallback
+        }
+      }, 3500);
     };
 
     initializeRealtime();
 
     return () => {
       if (orderSubscription) orderSubscription.unsubscribe();
+      if (notifSubscription) notifSubscription.unsubscribe();
+      if (pollInterval) clearInterval(pollInterval);
     };
   }, [currentUser]);
 
@@ -1382,6 +1481,22 @@ export default function App() {
           setActiveTab('home');
         }}
       />
+
+      {/* Real-time Order Toast Notification Banner */}
+      {activeToast && (
+        <div className="fixed bottom-5 right-5 z-50 max-w-sm w-full bg-slate-900 border-2 border-blue-500 text-white p-4 rounded-2xl shadow-2xl animate-bounce flex items-start justify-between gap-3">
+          <div>
+            <h4 className="font-bold text-sm text-blue-400">{activeToast.title}</h4>
+            <p className="text-xs text-slate-200 mt-0.5">{activeToast.message}</p>
+          </div>
+          <button
+            onClick={() => setActiveToast(null)}
+            className="text-slate-400 hover:text-white font-bold p-1 rounded-lg"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 }
