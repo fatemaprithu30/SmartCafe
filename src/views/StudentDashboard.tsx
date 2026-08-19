@@ -25,6 +25,7 @@ interface StudentDashboardProps {
   onTopUpWallet: (amount: number) => void;
   activeTabSub: 'orders' | 'favorites' | 'reviews' | 'profile';
   setActiveTabSub: (tab: 'orders' | 'favorites' | 'reviews' | 'profile') => void;
+  onUpdateCalorieTarget?: (newTarget: number) => Promise<void> | void;
 }
 
 export const StudentDashboard: React.FC<StudentDashboardProps> = ({
@@ -35,11 +36,16 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   onTopUpWallet,
   activeTabSub,
   setActiveTabSub,
+  onUpdateCalorieTarget,
 }) => {
   const [selectedQrOrder, setSelectedQrOrder] = useState<Order | null>(null);
   const [reviewModalOrder, setReviewModalOrder] = useState<Order | null>(null);
   const [ratingInput, setRatingInput] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
+  const [calorieInputVal, setCalorieInputVal] = useState(
+    String(currentUser.dietaryPreferences?.dailyCalorieTarget || 2000)
+  );
+  const [calorieSaveSuccess, setCalorieSaveSuccess] = useState('');
 
   const myOrders = orders.filter((o) => o.studentId === currentUser.id);
   const activeOrders = myOrders.filter((o) => ['pending', 'preparing', 'ready'].includes(o.orderStatus));
@@ -363,11 +369,29 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
                 <Flame className="w-5 h-5 text-orange-400 shrink-0" />
                 <input
                   type="number"
-                  defaultValue={currentUser.dietaryPreferences.dailyCalorieTarget}
+                  value={calorieInputVal}
+                  onChange={(e) => setCalorieInputVal(e.target.value)}
                   className="bg-stone-900 border border-stone-700 rounded-lg p-2 text-xs text-white font-bold w-32 focus:outline-none focus:border-amber-500"
                 />
                 <span className="text-stone-400">kcal / day</span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const val = parseInt(calorieInputVal, 10);
+                    if (!isNaN(val) && val > 0 && onUpdateCalorieTarget) {
+                      await onUpdateCalorieTarget(val);
+                      setCalorieSaveSuccess('Goal saved!');
+                      setTimeout(() => setCalorieSaveSuccess(''), 3000);
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold rounded-lg text-xs transition-colors"
+                >
+                  Save Goal
+                </button>
               </div>
+              {calorieSaveSuccess && (
+                <p className="text-emerald-400 text-[11px] font-bold">{calorieSaveSuccess}</p>
+              )}
             </div>
           </div>
         </div>
