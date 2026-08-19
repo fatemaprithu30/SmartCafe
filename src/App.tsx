@@ -760,6 +760,38 @@ export default function App() {
     }
   };
 
+  const handleUpdateCalorieTarget = async (newTarget: number) => {
+    if (!currentUser) return;
+    try {
+      const { dbService } = await import('./services/dbService');
+      const updatedProfile = await dbService.updateUserCalorieTarget(currentUser.id, newTarget);
+      setCurrentUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              dietaryPreferences: {
+                ...prev.dietaryPreferences,
+                dailyCalorieTarget: newTarget,
+              },
+            }
+          : null
+      );
+    } catch (err) {
+      console.error('Failed to save calorie target to backend:', err);
+      setCurrentUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              dietaryPreferences: {
+                ...prev.dietaryPreferences,
+                dailyCalorieTarget: newTarget,
+              },
+            }
+          : null
+      );
+    }
+  };
+
   const handleToggleSuspendUser = async (userId: string, currentIsActive: boolean) => {
     try {
       const { supabase } = await import('./supabaseClient');
@@ -1244,6 +1276,10 @@ export default function App() {
             onSelectFood={(food) => setSelectedFoodForDetail(food)}
             onOpenAiAssistant={() => {}}
             onQuickAdd={handleQuickAdd}
+            currentUser={currentUser}
+            onUpdateCalorieTarget={handleUpdateCalorieTarget}
+            onAddToCart={handleAddToCart}
+            onOpenAuth={() => setIsAuthOpen(true)}
           />
         )}
 
@@ -1287,6 +1323,7 @@ export default function App() {
             onTopUpWallet={() => {}}
             activeTabSub={studentDashboardTab}
             setActiveTabSub={setStudentDashboardTab}
+            onUpdateCalorieTarget={handleUpdateCalorieTarget}
           />
         )}
       </div>

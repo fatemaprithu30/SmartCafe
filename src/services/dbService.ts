@@ -265,5 +265,38 @@ export const dbService = {
       .update({ read: true })
       .eq('user_id', userId);
     if (error) throw error;
+  },
+
+  // User Profile Dietary Preferences & Calorie Target
+  async updateUserCalorieTarget(userId: string, newTarget: number): Promise<UserProfile> {
+    // First retrieve current profile
+    const { data: current, error: fetchErr } = await supabase
+      .from('profiles')
+      .select('dietary_preferences')
+      .eq('id', userId)
+      .single();
+
+    const existingPrefs = current?.dietary_preferences || {
+      allergens: [],
+      isVegetarian: false,
+      isNonVegetarian: false,
+      isHighProtein: false,
+      dailyCalorieTarget: 2000
+    };
+
+    const updatedPrefs = {
+      ...existingPrefs,
+      dailyCalorieTarget: newTarget
+    };
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ dietary_preferences: updatedPrefs })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return toCamel(data) as UserProfile;
   }
 };

@@ -10,8 +10,9 @@ import {
   Check,
   Utensils,
 } from 'lucide-react';
-import { FoodCategory, FoodItem } from '../types';
+import { FoodCategory, FoodItem, UserProfile } from '../types';
 import { FoodCard } from '../components/FoodCard';
+import { NutritionCalculator } from '../components/NutritionCalculator';
 
 interface MenuViewProps {
   categories: FoodCategory[];
@@ -20,6 +21,10 @@ interface MenuViewProps {
   onSelectFood: (food: FoodItem) => void;
   onOpenAiAssistant: () => void;
   onQuickAdd: (food: FoodItem) => void;
+  currentUser?: UserProfile | null;
+  onUpdateCalorieTarget?: (newTarget: number) => Promise<void> | void;
+  onAddToCart?: (food: FoodItem, quantity: number, selectedOptions: any[], specialInstructions: string) => void;
+  onOpenAuth?: () => void;
 }
 
 export const MenuView: React.FC<MenuViewProps> = ({
@@ -29,8 +34,13 @@ export const MenuView: React.FC<MenuViewProps> = ({
   onSelectFood,
   onOpenAiAssistant,
   onQuickAdd,
+  currentUser = null,
+  onUpdateCalorieTarget = () => {},
+  onAddToCart,
+  onOpenAuth,
 }) => {
   const [activeCategory, setActiveCategory] = useState<string>(selectedCategorySlug || 'all');
+  const [showCalculatorTab, setShowCalculatorTab] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDietaryTags, setSelectedDietaryTags] = useState<string[]>([]);
   const [maxPrepMinutes, setMaxPrepMinutes] = useState<number>(30);
@@ -94,7 +104,25 @@ export const MenuView: React.FC<MenuViewProps> = ({
             Browse all hot meals, wraps, salads, breakfast & cold brews. Pre-order in advance.
           </p>
         </div>
+        <button
+          onClick={() => setShowCalculatorTab((prev) => !prev)}
+          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-stone-950 font-black text-xs transition-all shadow-md flex items-center justify-center gap-2 shrink-0"
+        >
+          <Flame className="w-4 h-4 fill-stone-950" />
+          <span>{showCalculatorTab ? 'Hide Nutrition Calculator' : 'Open Nutrition Calculator'}</span>
+        </button>
       </div>
+
+      {/* Embedded Nutrition Calculator */}
+      {showCalculatorTab && (
+        <NutritionCalculator
+          foods={foods}
+          currentUser={currentUser}
+          onUpdateCalorieTarget={onUpdateCalorieTarget}
+          onAddToCart={onAddToCart}
+          onOpenAuth={onOpenAuth}
+        />
+      )}
 
       {/* Main Layout Grid (Filters sidebar + Menu items) */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
