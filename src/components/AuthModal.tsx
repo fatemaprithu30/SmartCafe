@@ -41,10 +41,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Green University Branding Banner */}
         <div className="text-center space-y-2 border-b border-slate-100 pb-4">
           <div className="flex items-center justify-center gap-3">
-            {/* GUB Tree Logo SVG */}
-            <svg className="w-10 h-10 text-emerald-600 shrink-0" viewBox="0 0 100 100" fill="currentColor">
-              <path d="M50 5 L20 35 H35 L10 65 H30 L5 90 H95 L70 65 H90 L65 35 H80 Z" />
-            </svg>
+            {/* GUB Custom Green Palm/Leaf Logo */}
+            <img
+              src="/gub-logo.png"
+              alt="GUB Logo"
+              className="w-10 h-12 object-contain shrink-0"
+            />
             <div className="text-left">
               <span className="text-2xl font-black italic tracking-tight block">
                 <span className="text-emerald-600">Green</span> <span className="text-sky-600">University of Bangladesh</span>
