@@ -60,6 +60,37 @@ export const dbService = {
     return toCamel(data) as FoodItem;
   },
 
+  async toggleSpecial(id: string, isSpecial: boolean): Promise<FoodItem> {
+    const { data, error } = await supabase
+      .from('menu_items')
+      .update({ is_special: isSpecial })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return toCamel(data) as FoodItem;
+  },
+
+  async incrementOrderCounts(items: { foodId: string; quantity: number }[]): Promise<void> {
+    for (const item of items) {
+      if (!item.foodId) continue;
+      try {
+        const { data } = await supabase
+          .from('menu_items')
+          .select('order_count')
+          .eq('id', item.foodId)
+          .single();
+        const currentCount = data?.order_count || 0;
+        await supabase
+          .from('menu_items')
+          .update({ order_count: currentCount + (item.quantity || 1) })
+          .eq('id', item.foodId);
+      } catch (err) {
+        console.error('Failed to increment order count for food item:', item.foodId, err);
+      }
+    }
+  },
+
   async deleteFood(id: string): Promise<void> {
     const { error } = await supabase
       .from('menu_items')
@@ -185,6 +216,11 @@ export const dbService = {
         .insert(dbItems);
 
       if (itemsErr) throw itemsErr;
+
+      // Increment food order counts in menu_items table
+      await dbService.incrementOrderCounts(
+        order.items.map((it) => ({ foodId: it.foodId, quantity: it.quantity }))
+      );
     }
 
     return {

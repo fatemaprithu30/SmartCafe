@@ -916,6 +916,16 @@ export default function App() {
     await handleUpdateStock(foodId, stockQuantity > 0, stockQuantity);
   };
 
+  const handleToggleSpecial = async (foodId: string, isSpecial: boolean) => {
+    try {
+      const { dbService } = await import('./services/dbService');
+      const updated = await dbService.toggleSpecial(foodId, isSpecial);
+      setFoods((prev) => prev.map((f) => (f.id === foodId ? updated : f)));
+    } catch (err) {
+      setFoods((prev) => prev.map((f) => (f.id === foodId ? { ...f, isSpecial } : f)));
+    }
+  };
+
   const handleAdminPortalLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setPortalError('');
@@ -1147,6 +1157,7 @@ export default function App() {
             onStaffCreated={fetchUsersDirectory}
             onToggleSuspendUser={handleToggleSuspendUser}
             onDeleteUser={handleDeleteUser}
+            onToggleSpecial={handleToggleSpecial}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center p-4">
