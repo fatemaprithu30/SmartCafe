@@ -125,7 +125,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     { hour: '3 PM', count: 28 },
   ];
 
-  const availableCategories = [
+  const availableCategories = categories && categories.length > 0 ? categories : [
     { id: 'cat_breakfast', name: 'Breakfast', slug: 'breakfast', description: '', icon: '', image: '' },
     { id: 'cat_lunch', name: 'Lunch', slug: 'lunch', description: '', icon: '', image: '' },
     { id: 'cat_snacks', name: 'Snacks', slug: 'snacks', description: '', icon: '', image: '' },
@@ -169,7 +169,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setShowFoodModal(true);
   };
 
-  const handleCreateOrUpdateFood = (e: React.FormEvent) => {
+  const handleCreateOrUpdateFood = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!foodCategory) {
       alert('Please select a category');
@@ -179,7 +179,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const payload = {
       name: foodName,
       categoryId: selectedCatObj?.id || foodCategory,
-      categoryName: selectedCatObj?.name || (foodCategory.charAt(0).toUpperCase() + foodCategory.slice(1)),
+      categoryName: selectedCatObj?.name || (foodCategory ? foodCategory.charAt(0).toUpperCase() + foodCategory.slice(1) : ''),
       price: Number(foodPrice),
       prepTimeMinutes: Number(foodPrepTime),
       imageUrl: foodImage,
@@ -200,12 +200,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       minStockAlert: Number(foodMinAlert),
     };
 
-    if (editingFoodId) {
-      onEditFood(editingFoodId, payload);
-    } else {
-      onAddFood(payload);
+    try {
+      if (editingFoodId) {
+        await onEditFood(editingFoodId, payload);
+      } else {
+        await onAddFood(payload);
+      }
+      setShowFoodModal(false);
+    } catch (err: any) {
+      alert(`Error saving food item: ${err?.message || 'Failed to save food item to database.'}`);
     }
-    setShowFoodModal(false);
   };
 
   const handleCreateCoupon = (e: React.FormEvent) => {
