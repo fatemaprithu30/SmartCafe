@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   BarChart3,
   Utensils,
-  Layers,
   Boxes,
   Ticket,
   Users,
@@ -11,12 +10,6 @@ import {
   Plus,
   Trash2,
   Edit2,
-  TrendingUp,
-  DollarSign,
-  Clock,
-  ShieldCheck,
-  CheckCircle2,
-  AlertTriangle,
   UserCheck,
 } from 'lucide-react';
 import {
@@ -238,8 +231,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL || '';
       const supabaseAnonKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || '';
 
-      // Create a temporary client with public anon key and persistSession: false
-      // so we can sign up the staff user without logging out the currently logged in admin user.
       const tempClient = createClient(supabaseUrl, supabaseAnonKey, {
         auth: {
           autoRefreshToken: false,
@@ -247,7 +238,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         }
       });
 
-      // Sign up the new kitchen staff user safely
       const { data, error } = await tempClient.auth.signUp({
         email: staffRegistrationEmail,
         password: staffRegistrationPassword,
@@ -256,8 +246,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       if (error) throw error;
 
       if (data.user) {
-        // Since Admin is logged in on the primary client, use 'supabase' primary client
-        // to insert the profile row. The Admin insert RLS policy will permit this securely.
         const { error: insertErr } = await supabase
           .from('profiles')
           .insert([{
@@ -276,7 +264,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         setStaffRegistrationPassword('');
         setStaffRegistrationName('');
         setStaffRegistrationPhone('');
-        alert('GUB Kitchen staff account securely generated & synchronized directly inside the authentication directory successfully!');
+        alert('GUB Kitchen staff account generated & synchronized successfully!');
         if (onStaffCreated) {
           onStaffCreated();
         }
@@ -291,19 +279,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Admin Panel Header */}
-      <div className="bg-stone-900 border border-stone-800 p-6 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="glass-modal p-8 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
         <div>
-          <h1 className="text-2xl font-black text-white">GUB Cafeteria Admin Dashboard</h1>
-          <p className="text-xs text-stone-400">Green University Of Bangladesh Campus Operations</p>
+          <h1 className="text-3xl font-black text-slate-900">GUB Cafeteria Admin Dashboard</h1>
+          <p className="text-xs text-slate-600 font-medium mt-0.5">Green University Of Bangladesh Campus Operations</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="px-3 py-1.5 rounded-xl bg-blue-500/20 border border-blue-500/40 text-blue-300 font-bold text-xs">
+        <div className="flex items-center gap-3">
+          <span className="px-3.5 py-1.5 rounded-2xl bg-[#006A4E]/10 border border-[#006A4E]/30 text-[#006A4E] font-extrabold text-xs">
             Role: GUB Director
           </span>
           <button
             onClick={onLogOut}
-            className="px-4 py-1.5 rounded-xl bg-red-950 text-red-400 border border-red-900/30 font-bold text-xs hover:bg-red-900/50"
+            className="px-4 py-2 rounded-2xl bg-red-500/10 text-red-600 border border-red-500/30 font-bold text-xs hover:bg-red-500/20 transition-all cursor-pointer"
           >
             Log Out
           </button>
@@ -311,11 +299,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       </div>
 
       {/* Admin Nav Tabs */}
-      <div className="flex border-b border-stone-800 text-xs font-semibold gap-1 overflow-x-auto pb-1">
+      <div className="flex glass-panel p-1.5 rounded-2xl text-xs font-bold gap-1.5 overflow-x-auto">
         <button
           onClick={() => setActiveTab('analytics')}
-          className={`px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === 'analytics' ? 'bg-blue-600 text-white font-bold' : 'text-stone-400 hover:text-white'
+          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+            activeTab === 'analytics' ? 'bg-[#006A4E] text-white shadow-md' : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
           <BarChart3 className="w-4 h-4" />
@@ -324,8 +312,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <button
           onClick={() => setActiveTab('foods')}
-          className={`px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === 'foods' ? 'bg-blue-600 text-white font-bold' : 'text-stone-400 hover:text-white'
+          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+            activeTab === 'foods' ? 'bg-[#006A4E] text-white shadow-md' : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
           <Utensils className="w-4 h-4" />
@@ -334,8 +322,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <button
           onClick={() => setActiveTab('approvals')}
-          className={`px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === 'approvals' ? 'bg-blue-600 text-white font-bold' : 'text-stone-400 hover:text-white'
+          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+            activeTab === 'approvals' ? 'bg-[#006A4E] text-white shadow-md' : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
           <UserCheck className="w-4 h-4" />
@@ -344,8 +332,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <button
           onClick={() => setActiveTab('inventory')}
-          className={`px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === 'inventory' ? 'bg-blue-600 text-white font-bold' : 'text-stone-400 hover:text-white'
+          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+            activeTab === 'inventory' ? 'bg-[#006A4E] text-white shadow-md' : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
           <Boxes className="w-4 h-4" />
@@ -354,8 +342,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <button
           onClick={() => setActiveTab('coupons')}
-          className={`px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === 'coupons' ? 'bg-blue-600 text-white font-bold' : 'text-stone-400 hover:text-white'
+          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+            activeTab === 'coupons' ? 'bg-[#006A4E] text-white shadow-md' : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
           <Ticket className="w-4 h-4" />
@@ -364,8 +352,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <button
           onClick={() => setActiveTab('users')}
-          className={`px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === 'users' ? 'bg-blue-600 text-white font-bold' : 'text-stone-400 hover:text-white'
+          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+            activeTab === 'users' ? 'bg-[#006A4E] text-white shadow-md' : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
           <Users className="w-4 h-4" />
@@ -374,8 +362,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <button
           onClick={() => setActiveTab('feedback')}
-          className={`px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === 'feedback' ? 'bg-blue-600 text-white font-bold' : 'text-stone-400 hover:text-white'
+          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+            activeTab === 'feedback' ? 'bg-[#006A4E] text-white shadow-md' : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
           <FileText className="w-4 h-4" />
@@ -384,8 +372,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <button
           onClick={() => setActiveTab('audit')}
-          className={`px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === 'audit' ? 'bg-blue-600 text-white font-bold' : 'text-stone-400 hover:text-white'
+          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+            activeTab === 'audit' ? 'bg-[#006A4E] text-white shadow-md' : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
           <FileText className="w-4 h-4" />
@@ -394,8 +382,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         <button
           onClick={() => setActiveTab('settings')}
-          className={`px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap ${
-            activeTab === 'settings' ? 'bg-blue-600 text-white font-bold' : 'text-stone-400 hover:text-white'
+          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+            activeTab === 'settings' ? 'bg-[#006A4E] text-white shadow-md' : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
           <Settings className="w-4 h-4" />
@@ -408,36 +396,36 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <div className="space-y-6">
           {/* Top Metrics Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="bg-stone-900 border border-stone-800 p-4 rounded-2xl space-y-1">
-              <span className="text-[11px] text-stone-400 font-semibold uppercase">Total Cafeteria Revenue</span>
-              <span className="text-2xl font-black text-amber-400 block">৳{totalRevenue.toFixed(2)}</span>
+            <div className="glass-card p-5 rounded-3xl space-y-1">
+              <span className="text-[11px] text-slate-500 font-extrabold uppercase">Total Cafeteria Revenue</span>
+              <span className="text-3xl font-black text-[#006A4E] block">৳{totalRevenue.toFixed(2)}</span>
             </div>
-            <div className="bg-stone-900 border border-stone-800 p-4 rounded-2xl space-y-1">
-              <span className="text-[11px] text-stone-400 font-semibold uppercase">Today Pre-Orders</span>
-              <span className="text-2xl font-black text-white block">{orders.length}</span>
+            <div className="glass-card p-5 rounded-3xl space-y-1">
+              <span className="text-[11px] text-slate-500 font-extrabold uppercase">Today Pre-Orders</span>
+              <span className="text-3xl font-black text-slate-900 block">{orders.length}</span>
             </div>
-            <div className="bg-stone-900 border border-stone-800 p-4 rounded-2xl space-y-1">
-              <span className="text-[11px] text-stone-400 font-semibold uppercase">Avg Kitchen Prep</span>
-              <span className="text-2xl font-black text-emerald-400 block">8.2 Mins</span>
+            <div className="glass-card p-5 rounded-3xl space-y-1">
+              <span className="text-[11px] text-slate-500 font-extrabold uppercase">Avg Kitchen Prep</span>
+              <span className="text-3xl font-black text-[#22C55E] block">8.2 Mins</span>
             </div>
-            <div className="bg-stone-900 border border-stone-800 p-4 rounded-2xl space-y-1">
-              <span className="text-[11px] text-stone-400 font-semibold uppercase">Active Users</span>
-              <span className="text-2xl font-black text-blue-400 block">{users.length} Users</span>
+            <div className="glass-card p-5 rounded-3xl space-y-1">
+              <span className="text-[11px] text-slate-500 font-extrabold uppercase">Active Users</span>
+              <span className="text-3xl font-black text-[#006A4E] block">{users.length} Users</span>
             </div>
           </div>
 
           {/* Recharts Bar Graph: Hourly Order Distribution */}
-          <div className="bg-stone-900 border border-stone-800 p-6 rounded-3xl space-y-4">
-            <h3 className="font-bold text-white text-base">Peak Cafeteria Order Distribution (Hourly Spike)</h3>
+          <div className="glass-modal p-6 rounded-3xl space-y-4 shadow-lg">
+            <h3 className="font-extrabold text-slate-900 text-base">Peak Cafeteria Order Distribution (Hourly Spike)</h3>
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={hourlyChartData}>
-                  <XAxis dataKey="hour" stroke="#a8a29e" fontSize={12} />
-                  <YAxis stroke="#a8a29e" fontSize={12} />
+                  <XAxis dataKey="hour" stroke="#64748b" fontSize={12} />
+                  <YAxis stroke="#64748b" fontSize={12} />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#1c1917', borderColor: '#44403c', color: '#fff' }}
+                    contentStyle={{ backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: '12px', borderColor: '#e2e8f0', color: '#0f172a' }}
                   />
-                  <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="count" fill="#006A4E" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -449,50 +437,50 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {activeTab === 'foods' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="font-bold text-lg text-white">Menu Item Catalog</h2>
+            <h2 className="font-black text-xl text-slate-900">Menu Item Catalog</h2>
             <button
               onClick={handleOpenAddFood}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5"
+              className="px-5 py-2.5 glass-button font-bold text-xs rounded-2xl flex items-center gap-1.5 cursor-pointer shadow-md"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
               <span>Add New Food Item</span>
             </button>
           </div>
 
-          <div className="bg-stone-900 border border-stone-800 rounded-2xl overflow-hidden">
-            <table className="w-full text-left text-xs text-stone-300">
-              <thead className="bg-stone-950 text-stone-400 font-bold uppercase border-b border-stone-800">
+          <div className="glass-table rounded-3xl overflow-hidden shadow-sm">
+            <table className="w-full text-left text-xs text-slate-700">
+              <thead className="bg-white/80 text-slate-900 font-black uppercase border-b border-slate-200/60">
                 <tr>
-                  <th className="p-3">Item</th>
-                  <th className="p-3">Category</th>
-                  <th className="p-3">Price</th>
-                  <th className="p-3">Prep Time</th>
-                  <th className="p-3">Stock</th>
-                  <th className="p-3 text-right">Actions</th>
+                  <th className="p-4">Item</th>
+                  <th className="p-4">Category</th>
+                  <th className="p-4">Price</th>
+                  <th className="p-4">Prep Time</th>
+                  <th className="p-4">Stock</th>
+                  <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-800">
+              <tbody className="divide-y divide-slate-200/50">
                 {foods.map((food) => (
-                  <tr key={food.id} className="hover:bg-stone-800/50">
-                    <td className="p-3 flex items-center gap-3">
-                      <img src={food.imageUrl} alt={food.name} className="w-10 h-10 object-cover rounded-lg bg-stone-800" />
-                      <span className="font-bold text-white">{food.name}</span>
+                  <tr key={food.id} className="hover:bg-white/60 transition-colors">
+                    <td className="p-4 flex items-center gap-3">
+                      <img src={food.imageUrl} alt={food.name} className="w-10 h-10 object-cover rounded-xl bg-slate-100" />
+                      <span className="font-extrabold text-slate-900">{food.name}</span>
                     </td>
-                    <td className="p-3">{food.categoryName}</td>
-                    <td className="p-3 font-bold text-amber-400">৳{food.price.toFixed(2)}</td>
-                    <td className="p-3">{food.prepTimeMinutes} mins</td>
-                    <td className="p-3">{food.stockQuantity}</td>
-                    <td className="p-3 text-right flex items-center justify-end gap-2">
+                    <td className="p-4 font-medium">{food.categoryName}</td>
+                    <td className="p-4 font-black text-[#006A4E]">৳{food.price.toFixed(2)}</td>
+                    <td className="p-4 font-medium">{food.prepTimeMinutes} mins</td>
+                    <td className="p-4 font-bold">{food.stockQuantity}</td>
+                    <td className="p-4 text-right flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleOpenEditFood(food)}
-                        className="text-stone-400 hover:text-blue-400 p-1"
+                        className="text-slate-500 hover:text-[#006A4E] p-1.5 rounded-lg hover:bg-white cursor-pointer"
                         title="Edit Food Details"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => onDeleteFood(food.id)}
-                        className="text-stone-500 hover:text-red-400 p-1"
+                        className="text-slate-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-white cursor-pointer"
                         title="Delete Food Item"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -509,44 +497,46 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {/* Tab 2.5: Student Approvals */}
       {activeTab === 'approvals' && (
         <div className="space-y-6">
-          <h2 className="font-bold text-lg text-white">Pending Student Registration Approvals</h2>
-          <p className="text-xs text-stone-400">These student accounts have registered and are waiting to be accepted into GUB Smart Café.</p>
+          <div>
+            <h2 className="font-black text-xl text-slate-900">Pending Student Registration Approvals</h2>
+            <p className="text-xs text-slate-600 font-medium mt-0.5">These student accounts have registered and are waiting to be accepted into GUB Smart Café.</p>
+          </div>
 
-          <div className="bg-stone-900 border border-stone-800 rounded-2xl overflow-hidden">
-            <table className="w-full text-left text-xs text-stone-300">
-              <thead className="bg-stone-950 text-stone-400 font-bold uppercase border-b border-stone-800">
+          <div className="glass-table rounded-3xl overflow-hidden shadow-sm">
+            <table className="w-full text-left text-xs text-slate-700">
+              <thead className="bg-white/80 text-slate-900 font-black uppercase border-b border-slate-200/60">
                 <tr>
-                  <th className="p-3">Name</th>
-                  <th className="p-3">Student ID</th>
-                  <th className="p-3">Department</th>
-                  <th className="p-3">Email</th>
-                  <th className="p-3 text-right">Actions</th>
+                  <th className="p-4">Name</th>
+                  <th className="p-4">Student ID</th>
+                  <th className="p-4">Department</th>
+                  <th className="p-4">Email</th>
+                  <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-800">
+              <tbody className="divide-y divide-slate-200/50">
                 {users.filter((u) => u.isActive === false).length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-stone-500">
+                    <td colSpan={5} className="p-8 text-center text-slate-500 font-medium">
                       No student registration requests are currently pending approval.
                     </td>
                   </tr>
                 ) : (
                   users.filter((u) => u.isActive === false).map((u) => (
-                    <tr key={u.id} className="hover:bg-stone-800/50">
-                      <td className="p-3 font-bold text-white">{u.name}</td>
-                      <td className="p-3 text-amber-400 font-semibold">{u.studentId || 'N/A'}</td>
-                      <td className="p-3">{u.department || 'N/A'}</td>
-                      <td className="p-3">{u.email}</td>
-                      <td className="p-3 text-right flex items-center justify-end gap-2">
+                    <tr key={u.id} className="hover:bg-white/60 transition-colors">
+                      <td className="p-4 font-extrabold text-slate-900">{u.name}</td>
+                      <td className="p-4 text-[#006A4E] font-bold">{u.studentId || 'N/A'}</td>
+                      <td className="p-4 font-medium">{u.department || 'N/A'}</td>
+                      <td className="p-4 font-medium">{u.email}</td>
+                      <td className="p-4 text-right flex items-center justify-end gap-2">
                         <button
                           onClick={() => onApproveStudent(u.id)}
-                          className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px]"
+                          className="px-3.5 py-1.5 rounded-xl bg-[#22C55E] hover:bg-[#16a34a] text-white font-extrabold text-[11px] cursor-pointer shadow-xs"
                         >
                           Accept
                         </button>
                         <button
                           onClick={() => onRejectStudent(u.id)}
-                          className="px-3 py-1.5 rounded-lg bg-red-950 hover:bg-red-900 text-red-400 font-bold text-[10px]"
+                          className="px-3.5 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 font-bold text-[11px] border border-red-500/20 cursor-pointer"
                         >
                           Reject
                         </button>
@@ -562,29 +552,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Tab 3: Inventory */}
       {activeTab === 'inventory' && (
-        <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 space-y-4">
-          <h2 className="font-bold text-lg text-white">Cafeteria Food Item stock quantities</h2>
-          <p className="text-xs text-stone-400">Directly track and edit the current stocks of menu items below.</p>
+        <div className="glass-modal rounded-3xl p-6 space-y-4 shadow-xl">
+          <h2 className="font-black text-xl text-slate-900">Cafeteria Food Item Stock Quantities</h2>
+          <p className="text-xs text-slate-600 font-medium">Directly track and edit the current stocks of menu items below.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {foods.map((food) => (
-              <div key={food.id} className="bg-stone-950 border border-stone-800 p-4 rounded-xl space-y-3">
+              <div key={food.id} className="glass-card p-4 rounded-2xl space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="font-bold text-white text-xs block truncate max-w-[150px]">{food.name}</span>
+                  <span className="font-extrabold text-slate-900 text-xs block truncate max-w-[150px]">{food.name}</span>
                   <span
-                    className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                      food.stockQuantity <= food.minStockAlert ? 'bg-red-950 text-red-400 border border-red-900/30' : 'bg-emerald-950 text-emerald-400'
+                    className={`px-2.5 py-0.5 rounded-full text-[9px] font-black ${
+                      food.stockQuantity <= food.minStockAlert ? 'bg-red-500/10 text-red-600 border border-red-500/20' : 'bg-[#22C55E]/10 text-[#006A4E]'
                     }`}
                   >
-                    {food.stockQuantity <= food.minStockAlert ? 'Low' : 'OK'}
+                    {food.stockQuantity <= food.minStockAlert ? 'Low Stock' : 'OK'}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between text-xs gap-3">
-                  <span className="text-stone-400 text-[10px]">Stock level:</span>
-                  <div className="flex items-center gap-1 bg-stone-900 border border-stone-800 p-1 rounded-lg">
+                  <span className="text-slate-500 text-[10px] font-bold">Stock level:</span>
+                  <div className="flex items-center gap-1 bg-white/80 border border-slate-200/80 p-1 rounded-xl">
                     <button
                       onClick={() => onUpdateStock(food.id, Math.max(0, food.stockQuantity - 1))}
-                      className="w-6 h-6 bg-stone-950 hover:bg-stone-850 rounded text-stone-200 font-bold"
+                      className="w-6 h-6 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-800 font-bold cursor-pointer"
                     >
                       -
                     </button>
@@ -592,11 +582,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       type="number"
                       value={food.stockQuantity}
                       onChange={(e) => onUpdateStock(food.id, Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-10 text-center bg-stone-950 text-white font-bold text-xs border-0 outline-none p-0"
+                      className="w-10 text-center bg-transparent text-slate-900 font-black text-xs border-0 outline-none p-0"
                     />
                     <button
                       onClick={() => onUpdateStock(food.id, food.stockQuantity + 1)}
-                      className="w-6 h-6 bg-stone-950 hover:bg-stone-850 rounded text-stone-200 font-bold"
+                      className="w-6 h-6 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-800 font-bold cursor-pointer"
                     >
                       +
                     </button>
@@ -612,10 +602,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {activeTab === 'coupons' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h2 className="font-bold text-lg text-white">Active Student Coupons</h2>
+            <h2 className="font-black text-xl text-slate-900">Active Student Coupons</h2>
             <button
               onClick={() => setShowAddCouponModal(true)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5"
+              className="px-5 py-2.5 glass-button font-bold text-xs rounded-2xl flex items-center gap-1.5 cursor-pointer shadow-md"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
               <span>Create Coupon</span>
@@ -624,12 +614,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {coupons.map((c) => (
-              <div key={c.id} className="bg-stone-900 border border-stone-800 p-4 rounded-2xl space-y-2">
-                <span className="font-black text-amber-400 text-base block">{c.code}</span>
-                <p className="text-xs text-stone-300">
+              <div key={c.id} className="glass-panel p-5 rounded-3xl space-y-2">
+                <span className="font-black text-[#006A4E] text-lg block">{c.code}</span>
+                <p className="text-xs text-slate-700 font-medium">
                   {c.discountValue}% Off on orders above ৳{c.minOrderValue.toFixed(2)}
                 </p>
-                <span className="text-[10px] text-stone-500 block">Used {c.usageCount} times</span>
+                <span className="text-[10px] text-slate-500 font-bold block">Used {c.usageCount} times</span>
               </div>
             ))}
           </div>
@@ -640,53 +630,53 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {activeTab === 'users' && (
         <div className="space-y-6">
           {/* Staff Creation Form */}
-          <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 space-y-4">
-            <h2 className="font-bold text-lg text-white">Create programmatically registered GUB Kitchen Staff</h2>
-            <p className="text-xs text-stone-400">Programmatically register a clean user inside the Supabase authentication dictionary securely.</p>
+          <div className="glass-modal rounded-3xl p-6 sm:p-8 space-y-4 shadow-xl">
+            <h2 className="font-black text-xl text-slate-900">Create GUB Kitchen Staff Profile</h2>
+            <p className="text-xs text-slate-600 font-medium">Register a kitchen staff account directly into the authentication directory.</p>
             <form onSubmit={handleCreateStaff} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-stone-300 font-semibold mb-1">Staff Full Name</label>
+                  <label className="block text-slate-700 font-bold mb-1.5">Staff Full Name</label>
                   <input
                     type="text"
                     required
                     value={staffRegistrationName}
                     onChange={(e) => setStaffRegistrationName(e.target.value)}
                     placeholder="e.g. Chef Rahat"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none"
+                    className="w-full glass-input rounded-2xl p-3 text-slate-900 font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-stone-300 font-semibold mb-1">Kitchen Email (Username)</label>
+                  <label className="block text-slate-700 font-bold mb-1.5">Kitchen Email (Username)</label>
                   <input
                     type="email"
                     required
                     value={staffRegistrationEmail}
                     onChange={(e) => setStaffRegistrationEmail(e.target.value)}
                     placeholder="chef.rahat@green.edu.bd"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none"
+                    className="w-full glass-input rounded-2xl p-3 text-slate-900 font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-stone-300 font-semibold mb-1">Initial Password</label>
+                  <label className="block text-slate-700 font-bold mb-1.5">Initial Password</label>
                   <input
                     type="password"
                     required
                     value={staffRegistrationPassword}
                     onChange={(e) => setStaffRegistrationPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none"
+                    className="w-full glass-input rounded-2xl p-3 text-slate-900 font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-stone-300 font-semibold mb-1">Contact Phone</label>
+                  <label className="block text-slate-700 font-bold mb-1.5">Contact Phone</label>
                   <input
                     type="text"
                     required
                     value={staffRegistrationPhone}
                     onChange={(e) => setStaffRegistrationPhone(e.target.value)}
                     placeholder="+88017XXXXXXXX"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none"
+                    className="w-full glass-input rounded-2xl p-3 text-slate-900 font-medium"
                   />
                 </div>
               </div>
@@ -694,27 +684,27 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <button
                 type="submit"
                 disabled={staffRegistering}
-                className="w-full py-3 rounded-xl text-white font-black text-xs bg-blue-600 hover:bg-blue-500 transition-colors"
+                className="w-full py-3.5 rounded-2xl glass-button font-black text-xs transition-all cursor-pointer shadow-md"
               >
-                {staffRegistering ? 'Registering Staff Securely...' : 'Register GUB Kitchen Staff & Sync DB Profile'}
+                {staffRegistering ? 'Registering Staff Securely...' : 'Register GUB Kitchen Staff & Sync Profile'}
               </button>
             </form>
           </div>
 
-          <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 space-y-4">
-            <h2 className="font-bold text-lg text-white">Campus User Directory</h2>
+          <div className="glass-panel rounded-3xl p-6 space-y-4">
+            <h2 className="font-black text-xl text-slate-900">Campus User Directory</h2>
             <div className="space-y-3">
               {users.map((u) => (
-                <div key={u.id} className="p-3 bg-stone-950 rounded-xl border border-stone-800 flex items-center justify-between text-xs">
+                <div key={u.id} className="p-3.5 glass-card rounded-2xl flex items-center justify-between text-xs">
                   <div>
-                    <span className="font-bold text-white block">{u.name}</span>
-                    <span className="text-[10px] text-stone-400">{u.email} • Role: <span className="capitalize text-amber-400 font-bold">{u.role}</span></span>
+                    <span className="font-extrabold text-slate-900 block">{u.name}</span>
+                    <span className="text-[11px] text-slate-500 font-medium">{u.email} • Role: <span className="capitalize text-[#006A4E] font-extrabold">{u.role}</span></span>
                   </div>
                   <div className="flex items-center gap-2">
                     <select
                       value={u.role === 'super_admin' ? 'admin' : u.role}
                       onChange={(e) => onUpdateUserRole(u.id, e.target.value)}
-                      className="bg-stone-900 border border-stone-800 text-xs text-amber-400 font-bold p-1 rounded"
+                      className="glass-input rounded-xl p-1.5 text-xs text-[#006A4E] font-bold"
                     >
                       <option value="student">Student</option>
                       <option value="staff">Staff</option>
@@ -725,7 +715,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       onClick={() => {
                         alert(`Successfully triggered GUB Staff Password Reset invitation link to ${u.email}`);
                       }}
-                      className="px-2.5 py-1 bg-stone-800 text-stone-300 font-semibold rounded hover:bg-stone-700"
+                      className="px-3 py-1.5 bg-white/80 border border-slate-200/80 text-slate-700 font-bold rounded-xl hover:bg-white cursor-pointer"
                     >
                       Reset Pass
                     </button>
@@ -735,10 +725,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           onToggleSuspendUser(u.id, u.isActive !== false);
                         }
                       }}
-                      className={`px-2.5 py-1 font-semibold rounded hover:brightness-110 ${
+                      className={`px-3 py-1.5 font-extrabold rounded-xl cursor-pointer ${
                         u.isActive === false
-                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-900/40'
-                          : 'bg-amber-950 text-amber-300 border border-amber-900/40'
+                          ? 'bg-emerald-500/15 text-[#006A4E] border border-emerald-500/30'
+                          : 'bg-amber-500/15 text-amber-900 border border-amber-500/30'
                       }`}
                     >
                       {u.isActive === false ? 'Unsuspend' : 'Suspend'}
@@ -749,7 +739,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           onDeleteUser(u.id);
                         }
                       }}
-                      className="px-2.5 py-1 bg-red-950 text-red-300 font-semibold rounded hover:bg-red-900"
+                      className="px-3 py-1.5 bg-red-500/10 text-red-600 font-bold rounded-xl border border-red-500/20 hover:bg-red-500/20 cursor-pointer"
                     >
                       Delete
                     </button>
@@ -763,26 +753,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Tab 5.5: Student & Order Feedback */}
       {activeTab === 'feedback' && (
-        <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 space-y-4">
-          <h2 className="font-bold text-lg text-white">Student Meal & Service Feedback</h2>
-          <p className="text-xs text-stone-400">Ratings & feedback submitted by students regarding food items and orders.</p>
+        <div className="glass-modal rounded-3xl p-6 space-y-4 shadow-xl">
+          <h2 className="font-black text-xl text-slate-900">Student Meal & Service Feedback</h2>
+          <p className="text-xs text-slate-600 font-medium">Ratings & feedback submitted by students regarding food items and orders.</p>
           <div className="space-y-3">
             {reviews.length === 0 ? (
-              <p className="text-xs text-stone-500 text-center py-8">No feedback submitted yet.</p>
+              <p className="text-xs text-slate-500 text-center py-8 font-medium">No feedback submitted yet.</p>
             ) : (
               reviews.map((rev) => (
-                <div key={rev.id} className="p-4 bg-stone-950 rounded-2xl border border-stone-800 space-y-2">
+                <div key={rev.id} className="p-4 glass-card rounded-2xl space-y-2">
                   <div className="flex justify-between items-start text-xs">
                     <div>
-                      <span className="font-bold text-white block">{rev.studentName}</span>
-                      <span className="text-amber-400 font-semibold">{rev.foodName}</span>
+                      <span className="font-extrabold text-slate-900 block">{rev.studentName}</span>
+                      <span className="text-[#006A4E] font-bold">{rev.foodName}</span>
                     </div>
                     <div className="text-right">
-                      <span className="text-amber-400 font-bold block">{rev.rating} ★</span>
-                      <span className="text-[10px] text-stone-500">{new Date(rev.createdAt).toLocaleDateString()}</span>
+                      <span className="text-[#F59E0B] font-black block">{rev.rating} ★</span>
+                      <span className="text-[10px] text-slate-500 font-medium">{new Date(rev.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
-                  <p className="text-xs text-stone-300 bg-stone-900 p-2.5 rounded-xl border border-stone-800">
+                  <p className="text-xs text-slate-700 bg-white/70 p-3 rounded-xl border border-white/80 font-medium">
                     "{rev.comment}"
                   </p>
                 </div>
@@ -794,16 +784,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Tab 6: Audit Logs */}
       {activeTab === 'audit' && (
-        <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 space-y-4">
-          <h2 className="font-bold text-lg text-white">System Audit Logs</h2>
+        <div className="glass-modal rounded-3xl p-6 space-y-4 shadow-xl">
+          <h2 className="font-black text-xl text-slate-900">System Audit Logs</h2>
           <div className="space-y-2 max-h-96 overflow-y-auto pr-1 text-xs">
             {auditLogs.map((log) => (
-              <div key={log.id} className="p-3 bg-stone-950 rounded-xl border border-stone-800 flex justify-between items-center">
+              <div key={log.id} className="p-3.5 glass-card rounded-2xl flex justify-between items-center">
                 <div>
-                  <span className="font-bold text-amber-400 block">{log.action}</span>
-                  <span className="text-stone-300">{log.details}</span>
+                  <span className="font-black text-[#006A4E] block">{log.action}</span>
+                  <span className="text-slate-700 font-medium">{log.details}</span>
                 </div>
-                <span className="text-[10px] text-stone-500">
+                <span className="text-[10px] text-slate-500 font-bold">
                   {new Date(log.timestamp).toLocaleTimeString()}
                 </span>
               </div>
@@ -814,20 +804,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Tab 7: Settings */}
       {activeTab === 'settings' && (
-        <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 space-y-4 text-xs">
-          <h2 className="font-bold text-lg text-white">Cafeteria Operating Parameters</h2>
+        <div className="glass-modal rounded-3xl p-6 space-y-4 text-xs shadow-xl">
+          <h2 className="font-black text-xl text-slate-900">Cafeteria Operating Parameters</h2>
           <div>
-            <label className="block text-stone-300 font-semibold mb-1">Announcement Banner</label>
+            <label className="block text-slate-700 font-bold mb-1.5">Announcement Banner</label>
             <input
               type="text"
               value={announcementInput}
               onChange={(e) => setAnnouncementInput(e.target.value)}
-              className="w-full bg-stone-950 border border-stone-800 rounded-xl p-3 text-xs text-white focus:outline-none"
+              className="w-full glass-input rounded-2xl p-3.5 text-xs text-slate-900 font-medium"
             />
           </div>
           <button
             onClick={() => onUpdateSettings({ announcementBanner: announcementInput })}
-            className="px-4 py-2 bg-blue-600 text-white font-bold rounded-xl"
+            className="px-6 py-3 glass-button font-black text-xs rounded-2xl cursor-pointer"
           >
             Save Announcement
           </button>
@@ -836,31 +826,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Add/Edit Food Modal */}
       {showFoodModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-          <div className="w-full max-w-xl bg-stone-900 border border-stone-800 rounded-2xl p-6 space-y-4 text-xs my-8 max-h-[90vh] overflow-y-auto">
-            <h3 className="font-bold text-white text-base">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md overflow-y-auto">
+          <div className="w-full max-w-xl glass-modal rounded-3xl p-6 sm:p-8 space-y-4 text-xs my-8 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 className="font-black text-slate-900 text-lg">
               {editingFoodId ? 'Edit Menu Item Details' : 'Add New Menu Item'}
             </h3>
             <form onSubmit={handleCreateOrUpdateFood} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-stone-300 mb-1">Food Name</label>
+                  <label className="block text-slate-700 font-bold mb-1">Food Name</label>
                   <input
                     type="text"
                     required
                     value={foodName}
                     onChange={(e) => setFoodName(e.target.value)}
                     placeholder="e.g. Grilled Chicken Wrap"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2 text-white"
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-stone-300 mb-1">Category</label>
+                  <label className="block text-slate-700 font-bold mb-1">Category</label>
                   <select
                     value={foodCategory}
                     onChange={(e) => setFoodCategory(e.target.value)}
                     required
-                    className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2 text-white font-semibold"
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-bold"
                   >
                     <option value="" disabled>Select Category</option>
                     {availableCategories.map((c) => (
@@ -874,131 +864,131 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-stone-300 mb-1">Price (৳)</label>
+                  <label className="block text-slate-700 font-bold mb-1">Price (৳)</label>
                   <input
                     type="number"
                     step="5"
                     value={foodPrice}
                     onChange={(e) => setFoodPrice(e.target.value)}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2 text-white"
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-stone-300 mb-1">Prep Time (Mins)</label>
+                  <label className="block text-slate-700 font-bold mb-1">Prep Time (Mins)</label>
                   <input
                     type="number"
                     value={foodPrepTime}
                     onChange={(e) => setFoodPrepTime(e.target.value)}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2 text-white"
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-stone-300 mb-1">Image URL</label>
+                  <label className="block text-slate-700 font-bold mb-1">Image URL</label>
                   <input
                     type="text"
                     value={foodImage}
                     onChange={(e) => setFoodImage(e.target.value)}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2 text-white font-mono"
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-mono text-[11px]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-stone-300 mb-1">Description</label>
+                <label className="block text-slate-700 font-bold mb-1">Description</label>
                 <textarea
                   rows={2}
                   value={foodDesc}
                   onChange={(e) => setFoodDesc(e.target.value)}
                   placeholder="Describe ingredients, cooking style, etc."
-                  className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2 text-white"
+                  className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-medium"
                 />
               </div>
 
               {/* Nutrition details */}
-              <div className="bg-stone-950 p-3 rounded-xl border border-stone-800 space-y-3">
-                <span className="font-bold text-amber-400 uppercase tracking-wider block">Nutrition Details</span>
+              <div className="glass-panel p-4 rounded-2xl space-y-3">
+                <span className="font-extrabold text-[#006A4E] uppercase tracking-wider block">Nutrition Details</span>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                   <div>
-                    <label className="block text-stone-400 text-[10px] mb-1">Calories (kcal)</label>
+                    <label className="block text-slate-500 text-[10px] font-bold mb-1">Calories (kcal)</label>
                     <input
                       type="number"
                       value={foodCalories}
                       onChange={(e) => setFoodCalories(e.target.value)}
-                      className="w-full bg-stone-900 border border-stone-800 rounded p-1.5 text-center text-white"
+                      className="w-full glass-input rounded-lg p-1.5 text-center text-slate-900 font-bold"
                     />
                   </div>
                   <div>
-                    <label className="block text-stone-400 text-[10px] mb-1">Protein (g)</label>
+                    <label className="block text-slate-500 text-[10px] font-bold mb-1">Protein (g)</label>
                     <input
                       type="number"
                       value={foodProtein}
                       onChange={(e) => setFoodProtein(e.target.value)}
-                      className="w-full bg-stone-900 border border-stone-800 rounded p-1.5 text-center text-white"
+                      className="w-full glass-input rounded-lg p-1.5 text-center text-slate-900 font-bold"
                     />
                   </div>
                   <div>
-                    <label className="block text-stone-400 text-[10px] mb-1">Carbs (g)</label>
+                    <label className="block text-slate-500 text-[10px] font-bold mb-1">Carbs (g)</label>
                     <input
                       type="number"
                       value={foodCarbs}
                       onChange={(e) => setFoodCarbs(e.target.value)}
-                      className="w-full bg-stone-900 border border-stone-800 rounded p-1.5 text-center text-white"
+                      className="w-full glass-input rounded-lg p-1.5 text-center text-slate-900 font-bold"
                     />
                   </div>
                   <div>
-                    <label className="block text-stone-400 text-[10px] mb-1">Fats (g)</label>
+                    <label className="block text-slate-500 text-[10px] font-bold mb-1">Fats (g)</label>
                     <input
                       type="number"
                       value={foodFats}
                       onChange={(e) => setFoodFats(e.target.value)}
-                      className="w-full bg-stone-900 border border-stone-800 rounded p-1.5 text-center text-white"
+                      className="w-full glass-input rounded-lg p-1.5 text-center text-slate-900 font-bold"
                     />
                   </div>
                   <div>
-                    <label className="block text-stone-400 text-[10px] mb-1">Sodium (mg)</label>
+                    <label className="block text-slate-500 text-[10px] font-bold mb-1">Sodium (mg)</label>
                     <input
                       type="number"
                       value={foodSodium}
                       onChange={(e) => setFoodSodium(e.target.value)}
-                      className="w-full bg-stone-900 border border-stone-800 rounded p-1.5 text-center text-white"
+                      className="w-full glass-input rounded-lg p-1.5 text-center text-slate-900 font-bold"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Initial stock and alert level */}
-              <div className="grid grid-cols-2 gap-3 bg-stone-950 p-3 rounded-xl border border-stone-800">
+              <div className="grid grid-cols-2 gap-3 glass-panel p-4 rounded-2xl">
                 <div>
-                  <label className="block text-stone-300 mb-1">Stock Quantity</label>
+                  <label className="block text-slate-700 font-bold mb-1">Stock Quantity</label>
                   <input
                     type="number"
                     value={foodStock}
                     onChange={(e) => setFoodStock(e.target.value)}
-                    className="w-full bg-stone-900 border border-stone-800 rounded-lg p-2 text-white"
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-bold"
                   />
                 </div>
                 <div>
-                  <label className="block text-stone-300 mb-1">Low Stock Alert Quantity</label>
+                  <label className="block text-slate-700 font-bold mb-1">Low Stock Alert Quantity</label>
                   <input
                     type="number"
                     value={foodMinAlert}
                     onChange={(e) => setFoodMinAlert(e.target.value)}
-                    className="w-full bg-stone-900 border border-stone-800 rounded-lg p-2 text-white"
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-bold"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-3 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg"
+                  className="flex-1 py-3 glass-button font-black rounded-xl cursor-pointer"
                 >
                   Save Item Details
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowFoodModal(false)}
-                  className="px-4 py-2.5 bg-stone-800 text-stone-300 font-bold rounded-lg"
+                  className="px-5 py-3 bg-white/80 border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-white cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1010,41 +1000,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Add Coupon Modal */}
       {showAddCouponModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-sm bg-stone-900 border border-stone-800 rounded-2xl p-6 space-y-4 text-xs">
-            <h3 className="font-bold text-white text-base">Create Student Promo Coupon</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md">
+          <div className="w-full max-w-sm glass-modal rounded-3xl p-6 space-y-4 text-xs shadow-2xl">
+            <h3 className="font-black text-slate-900 text-base">Create Student Promo Coupon</h3>
             <form onSubmit={handleCreateCoupon} className="space-y-3">
               <div>
-                <label className="block text-stone-300 mb-1">Coupon Code</label>
+                <label className="block text-slate-700 font-bold mb-1">Coupon Code</label>
                 <input
                   type="text"
                   required
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value)}
                   placeholder="e.g. MIDTERM15"
-                  className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2 text-white uppercase"
+                  className="w-full glass-input rounded-xl p-2.5 text-slate-900 uppercase font-bold"
                 />
               </div>
               <div>
-                <label className="block text-stone-300 mb-1">Discount %</label>
+                <label className="block text-slate-700 font-bold mb-1">Discount %</label>
                 <input
                   type="number"
                   value={couponValue}
                   onChange={(e) => setCouponValue(e.target.value)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2 text-white"
+                  className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-bold"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 py-2 bg-blue-600 text-white font-bold rounded-lg"
+                  className="flex-1 py-2.5 glass-button font-bold rounded-xl cursor-pointer"
                 >
                   Create
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddCouponModal(false)}
-                  className="px-4 py-2 bg-stone-800 text-stone-300 font-bold rounded-lg"
+                  className="px-4 py-2.5 bg-white/80 border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-white cursor-pointer"
                 >
                   Cancel
                 </button>

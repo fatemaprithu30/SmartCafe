@@ -326,7 +326,6 @@ export default function App() {
         setDbUsers(mappedUsers);
       }
     } catch (err) {
-      // Local Fallback list is empty to avoid showing demo/mock users
       setDbUsers([]);
     }
   };
@@ -400,7 +399,6 @@ export default function App() {
               } catch (updErr) {
                 console.error('Failed to update admin profile role, using fallback:', updErr);
               }
-              // Ensure role is updated in-memory
               profile.role = 'admin';
               profile.is_active = true;
             }
@@ -438,7 +436,6 @@ export default function App() {
               } catch (updErr) {
                 console.error('Failed to update kitchen profile role, using fallback:', updErr);
               }
-              // Ensure role is updated in-memory
               profile.role = 'staff';
               profile.is_active = true;
             }
@@ -470,7 +467,6 @@ export default function App() {
               }
             };
 
-            // Double check portal protection match
             if (window.location.pathname === '/admin' && profile.role !== 'admin') {
               await supabase.auth.signOut();
               return;
@@ -494,7 +490,6 @@ export default function App() {
     };
     checkSession();
 
-    // Wire up real-time status subscription from Supabase Realtime channel and backup polling
     let orderSubscription: any;
     let notifSubscription: any;
     let pollInterval: any;
@@ -519,7 +514,6 @@ export default function App() {
             }
           });
 
-          // Fetch notifications for user if order belongs to current user
           if (currentUser && camelPayload.studentId === currentUser.id) {
             fetchUserNotifications(currentUser.id);
           }
@@ -540,7 +534,6 @@ export default function App() {
         })
         .subscribe();
 
-      // Short backup polling interval every 3.5 seconds
       pollInterval = setInterval(async () => {
         try {
           const freshOrders = await dbService.getOrders();
@@ -648,7 +641,6 @@ export default function App() {
         throw new Error('No active coupon matching this code was found.');
       }
     } catch (err) {
-      // Local fallback
       if (code.toUpperCase() === 'WELCOME10') {
         const disc = subtotal * 0.1;
         setAppliedCoupon({ code: 'WELCOME10', discountAmount: disc });
@@ -662,7 +654,6 @@ export default function App() {
     setAppliedCoupon(null);
   };
 
-  // Helper to send DB notification
   const sendNotification = async (userId: string, title: string, message: string) => {
     try {
       const { supabase } = await import('./supabaseClient');
@@ -681,7 +672,6 @@ export default function App() {
     }
   };
 
-  // Handle Order Placed
   const handleOrderPlaced = (newOrder: Order) => {
     setOrders((prev) => [newOrder, ...prev]);
     setCartItems([]);
@@ -698,7 +688,6 @@ export default function App() {
     }
   };
 
-  // Re-Order Same Meal
   const handleReOrder = (items: any[]) => {
     items.forEach((it) => {
       const foodMatch = foods.find((f) => f.id === it.foodId);
@@ -709,7 +698,6 @@ export default function App() {
     setIsCartOpen(true);
   };
 
-  // Kitchen Bump Bar Status Shift
   const handleUpdateOrderStatus = async (
     orderId: string,
     status: OrderStatus,
@@ -721,7 +709,6 @@ export default function App() {
       const updated = await dbService.updateOrderStatus(orderId, status, notes, extraFields);
       setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
 
-      // Trigger user notifications for important order status changes
       if (updated.studentId) {
         if (status === 'preparing') {
           sendNotification(
@@ -750,7 +737,6 @@ export default function App() {
     }
   };
 
-  // Kitchen Quick Stock Toggle
   const handleUpdateStock = async (foodId: string, isAvailable: boolean, stockQuantity?: number) => {
     try {
       const { dbService } = await import('./services/dbService');
@@ -763,7 +749,6 @@ export default function App() {
     }
   };
 
-  // Admin Actions
   const handleAddFood = async (newFood: Partial<FoodItem>) => {
     try {
       const { dbService } = await import('./services/dbService');
@@ -830,7 +815,6 @@ export default function App() {
     }
   };
 
-  // Student registration approvals
   const handleApproveStudent = async (userId: string) => {
     try {
       const { supabase } = await import('./supabaseClient');
@@ -867,7 +851,7 @@ export default function App() {
     if (!currentUser) return;
     try {
       const { dbService } = await import('./services/dbService');
-      const updatedProfile = await dbService.updateUserCalorieTarget(currentUser.id, newTarget);
+      await dbService.updateUserCalorieTarget(currentUser.id, newTarget);
       setCurrentUser((prev) =>
         prev
           ? {
@@ -928,12 +912,10 @@ export default function App() {
     }
   };
 
-  // Direct Stock editor tracker
   const handleUpdateStockQuantity = async (foodId: string, stockQuantity: number) => {
     await handleUpdateStock(foodId, stockQuantity > 0, stockQuantity);
   };
 
-  // Portal specialized logins
   const handleAdminPortalLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setPortalError('');
@@ -962,7 +944,6 @@ export default function App() {
           console.error('Failed to query profiles in admin login portal:', profileQueryErr);
         }
 
-        // Check if admin matches VITE_ADMIN_EMAIL config directly
         if (userEmail === adminEmailEnv.toLowerCase()) {
           if (!profile) {
             try {
@@ -997,7 +978,6 @@ export default function App() {
             } catch (updErr) {
               console.error('Failed to update admin profile role on login, utilizing fallback:', updErr);
             }
-            // Ensure role and active properties are applied to fallback
             profile.role = 'admin';
             profile.is_active = true;
           }
@@ -1062,7 +1042,6 @@ export default function App() {
           console.error('Failed to query profiles in kitchen login portal:', profileQueryErr);
         }
 
-        // Check if kitchen matches VITE_KITCHEN_EMAIL config directly
         if (userEmail === kitchenEmailEnv.toLowerCase()) {
           if (!profile) {
             try {
@@ -1097,7 +1076,6 @@ export default function App() {
             } catch (updErr) {
               console.error('Failed to update kitchen profile role on login, utilizing fallback:', updErr);
             }
-            // Ensure role and active properties are applied to fallback
             profile.role = 'staff';
             profile.is_active = true;
           }
@@ -1137,7 +1115,14 @@ export default function App() {
   // Path Routing Rendering router switch
   if (currentPath === '/admin') {
     return (
-      <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
+      <div className="min-h-screen text-slate-900 flex flex-col font-sans antialiased selection:bg-[#006A4E] selection:text-white relative">
+        {/* Persistent background mesh elements */}
+        <div className="bg-mesh-container">
+          <div className="mesh-blob-1" />
+          <div className="mesh-blob-2" />
+          <div className="mesh-blob-3" />
+        </div>
+
         {currentUser && activeRole === 'admin' ? (
           <AdminDashboard
             foods={foods}
@@ -1165,47 +1150,47 @@ export default function App() {
           />
         ) : (
           <div className="flex-1 flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-stone-900 border border-stone-800 rounded-2xl p-6 space-y-6">
-              <div className="text-center space-y-1">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center mx-auto text-white font-black shadow-lg">
+            <div className="w-full max-w-md glass-modal rounded-3xl p-8 space-y-6">
+              <div className="text-center space-y-2">
+                <div className="w-14 h-14 rounded-2xl bg-[#006A4E] flex items-center justify-center mx-auto text-white font-black text-lg shadow-lg shadow-emerald-900/20">
                   GUB
                 </div>
-                <h2 className="text-xl font-bold text-white">GUB Director Admin Portal</h2>
-                <p className="text-xs text-stone-400">Campus Dining Operations & Menu Control Directory</p>
+                <h2 className="text-2xl font-black text-slate-900">GUB Admin Portal</h2>
+                <p className="text-xs text-slate-600 font-medium">Campus Dining Operations & Management Directory</p>
               </div>
 
               {portalError && (
-                <div className="p-3 bg-red-950 border border-red-800 text-red-300 text-xs rounded-xl">
+                <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-700 text-xs rounded-2xl font-medium">
                   {portalError}
                 </div>
               )}
 
               <form onSubmit={handleAdminPortalLogin} className="space-y-4 text-xs">
                 <div>
-                  <label className="block text-stone-300 font-semibold mb-1">Director Email Address</label>
+                  <label className="block text-slate-700 font-bold mb-1">Director Email Address</label>
                   <input
                     type="email"
                     required
                     value={adminEmail}
                     onChange={(e) => setAdminEmail(e.target.value)}
                     placeholder="director@green.edu.bd"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl p-3 text-slate-900 font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-stone-300 font-semibold mb-1">Security Password</label>
+                  <label className="block text-slate-700 font-bold mb-1">Security Password</label>
                   <input
                     type="password"
                     required
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full glass-input rounded-xl p-3 text-slate-900 font-medium"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs transition-colors shadow-lg"
+                  className="w-full py-3.5 rounded-xl glass-button font-black text-xs transition-all cursor-pointer"
                 >
                   Verify Credentials & Enter Panel
                 </button>
@@ -1214,9 +1199,9 @@ export default function App() {
               <div className="text-center pt-2">
                 <button
                   onClick={() => navigateToPath('/')}
-                  className="text-xs text-blue-400 hover:underline font-semibold"
+                  className="text-xs text-[#006A4E] hover:underline font-bold"
                 >
-                  &larr; Back to Student Website
+                  &larr; Back to Student Portal
                 </button>
               </div>
             </div>
@@ -1228,7 +1213,14 @@ export default function App() {
 
   if (currentPath === '/kitchenstaff' || currentPath === '/kitchenstuff') {
     return (
-      <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
+      <div className="min-h-screen text-slate-900 flex flex-col font-sans antialiased selection:bg-[#006A4E] selection:text-white relative">
+        {/* Persistent background mesh elements */}
+        <div className="bg-mesh-container">
+          <div className="mesh-blob-1" />
+          <div className="mesh-blob-2" />
+          <div className="mesh-blob-3" />
+        </div>
+
         {currentUser && activeRole === 'staff' ? (
           <StaffKitchenDashboard
             orders={orders}
@@ -1240,58 +1232,58 @@ export default function App() {
           />
         ) : (
           <div className="flex-1 flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-stone-900 border border-stone-800 rounded-2xl p-6 space-y-6">
-              <div className="text-center space-y-1">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center mx-auto text-white font-black shadow-lg">
+            <div className="w-full max-w-md glass-modal rounded-3xl p-8 space-y-6">
+              <div className="text-center space-y-2">
+                <div className="w-14 h-14 rounded-2xl bg-[#006A4E] flex items-center justify-center mx-auto text-white font-black text-lg shadow-lg shadow-emerald-900/20">
                   KDS
                 </div>
-                <h2 className="text-xl font-bold text-white">GUB Kitchen Display System</h2>
-                <p className="text-xs text-stone-400">Order Bump Bar & Express Prep Operations Queue</p>
+                <h2 className="text-2xl font-black text-slate-900">GUB Kitchen Display System</h2>
+                <p className="text-xs text-slate-600 font-medium">Order Bump Bar & Food Prep Queue</p>
               </div>
 
               {portalError && (
-                <div className="p-3 bg-red-950 border border-red-800 text-red-300 text-xs rounded-xl">
+                <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-700 text-xs rounded-2xl font-medium">
                   {portalError}
                 </div>
               )}
 
               <form onSubmit={handleKitchenPortalLogin} className="space-y-4 text-xs">
                 <div>
-                  <label className="block text-stone-300 font-semibold mb-1">Staff Email Address</label>
+                  <label className="block text-slate-700 font-bold mb-1">Kitchen Staff Email Address</label>
                   <input
                     type="email"
                     required
                     value={kitchenEmail}
                     onChange={(e) => setKitchenEmail(e.target.value)}
                     placeholder="kitchen@green.edu.bd"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full glass-input rounded-xl p-3 text-slate-900 font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-stone-300 font-semibold mb-1">Kitchen PIN/Password</label>
+                  <label className="block text-slate-700 font-bold mb-1">Kitchen Security Password</label>
                   <input
                     type="password"
                     required
                     value={kitchenPassword}
                     onChange={(e) => setKitchenPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full glass-input rounded-xl p-3 text-slate-900 font-medium"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-colors shadow-lg"
+                  className="w-full py-3.5 rounded-xl glass-button font-black text-xs transition-all cursor-pointer"
                 >
-                  Verify Credentials & Enter Screen
+                  Verify Credentials & Enter KDS
                 </button>
               </form>
 
               <div className="text-center pt-2">
                 <button
                   onClick={() => navigateToPath('/')}
-                  className="text-xs text-emerald-400 hover:underline font-semibold"
+                  className="text-xs text-[#006A4E] hover:underline font-bold"
                 >
-                  &larr; Back to Student Website
+                  &larr; Back to Student Portal
                 </button>
               </div>
             </div>
@@ -1303,7 +1295,14 @@ export default function App() {
 
   // Fallback to '/' Student Portal (Primary Website)
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans antialiased selection:bg-blue-500 selection:text-white">
+    <div className="min-h-screen text-slate-900 flex flex-col font-sans antialiased selection:bg-[#006A4E] selection:text-white relative">
+      {/* Persistent background mesh elements */}
+      <div className="bg-mesh-container">
+        <div className="mesh-blob-1" />
+        <div className="mesh-blob-2" />
+        <div className="mesh-blob-3" />
+      </div>
+
       {/* Sticky Top Navbar */}
       <Navbar
         currentUser={currentUser}
@@ -1404,12 +1403,12 @@ export default function App() {
               onOrderPlaced={handleOrderPlaced}
             />
           ) : (
-            <div className="max-w-md mx-auto my-12 p-8 bg-white border border-slate-200 rounded-2xl text-center space-y-4 shadow-sm">
-              <h2 className="text-xl font-bold text-slate-900">Authentication Required</h2>
-              <p className="text-xs text-slate-600">Please sign in to place an order and proceed to checkout.</p>
+            <div className="max-w-md mx-auto my-16 p-8 glass-modal rounded-3xl text-center space-y-4 shadow-xl">
+              <h2 className="text-xl font-black text-slate-900">Authentication Required</h2>
+              <p className="text-xs text-slate-600 font-medium">Please sign in to place an order and proceed to checkout.</p>
               <button
                 onClick={() => setIsAuthOpen(true)}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-md transition-colors"
+                className="w-full py-3.5 glass-button font-bold text-xs rounded-2xl shadow-md transition-all cursor-pointer"
               >
                 Sign In / Login
               </button>
@@ -1488,14 +1487,14 @@ export default function App() {
 
       {/* Real-time Order Toast Notification Banner */}
       {activeToast && (
-        <div className="fixed bottom-5 right-5 z-50 max-w-sm w-full bg-slate-900 border-2 border-blue-500 text-white p-4 rounded-2xl shadow-2xl animate-bounce flex items-start justify-between gap-3">
+        <div className="fixed bottom-5 right-5 z-50 max-w-sm w-full glass-modal border-2 border-[#006A4E] text-slate-900 p-4 rounded-2xl shadow-2xl animate-bounce flex items-start justify-between gap-3">
           <div>
-            <h4 className="font-bold text-sm text-blue-400">{activeToast.title}</h4>
-            <p className="text-xs text-slate-200 mt-0.5">{activeToast.message}</p>
+            <h4 className="font-bold text-sm text-[#006A4E]">{activeToast.title}</h4>
+            <p className="text-xs text-slate-700 mt-0.5">{activeToast.message}</p>
           </div>
           <button
             onClick={() => setActiveToast(null)}
-            className="text-slate-400 hover:text-white font-bold p-1 rounded-lg"
+            className="text-slate-400 hover:text-slate-700 font-bold p-1 rounded-lg"
           >
             ✕
           </button>

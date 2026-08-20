@@ -4,7 +4,6 @@ import {
   QrCode,
   ShieldCheck,
   Smartphone,
-  Wallet,
   Clock,
   ArrowLeft,
   CheckCircle2,
@@ -39,7 +38,6 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   // Dynamic manual gateway MFS details & dynamic SSLCommerz setup
   const [mfsGateway, setMfsGateway] = useState<'bKash' | 'Nagad' | 'Rocket'>('bKash');
   const [mfsMerchantNum, setMfsMerchantNum] = useState('017XXXXXXXX (Merchant)');
-  const [sslCommerzSimulated, setSslCommerzSimulated] = useState(false);
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.totalPrice, 0);
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
@@ -54,14 +52,14 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       return;
     }
 
-    // Operating hours check (8:30 AM to 4:30 PM)
+    // Operating hours check (8:00 AM to 4:30 PM)
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    const openMinutes = 8 * 60 + 30; // 8:30 AM = 510
-    const closeMinutes = 16 * 60 + 30; // 4:30 PM = 990
+    const openMinutes = 8 * 60; // 8:00 AM
+    const closeMinutes = 16 * 60 + 30; // 4:30 PM
 
     if (currentMinutes < openMinutes || currentMinutes > closeMinutes) {
-      setErrorMessage('Ordering is closed. The GUB Café operates strictly between 8:30 AM and 4:30 PM.');
+      setErrorMessage('Ordering is closed. The GUB Café operates strictly between 8:00 AM and 4:30 PM.');
       return;
     }
 
@@ -83,7 +81,6 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
         }
       }
 
-      // Simulate real SSLCommerz transaction details if card
       let simulatedTxId = 'TXN_' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
       const orderPayload = {
@@ -128,13 +125,13 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       <div className="flex items-center gap-3">
         <button
           onClick={onBackToMenu}
-          className="p-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-stone-300 transition-colors border border-stone-800"
+          className="p-2.5 rounded-2xl glass-card text-slate-700 hover:text-slate-900 transition-all cursor-pointer"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-black text-white">Pre-Order Checkout</h1>
-          <p className="text-xs text-stone-400">Confirm pickup slot & campus payment method</p>
+          <h1 className="text-3xl font-black text-slate-900">Pre-Order Checkout</h1>
+          <p className="text-xs text-slate-600 font-medium">Confirm pickup slot & campus payment method</p>
         </div>
       </div>
 
@@ -142,32 +139,32 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
         {/* Left Column - Checkout Steps */}
         <div className="md:col-span-2 space-y-6">
           {/* Step 1: Student Identity & Slot */}
-          <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 space-y-4">
-            <h3 className="font-bold text-sm text-amber-400 flex items-center gap-2 uppercase tracking-wider">
-              <ShieldCheck className="w-4 h-4" />
+          <div className="glass-panel rounded-3xl p-6 space-y-4">
+            <h3 className="font-black text-xs text-[#006A4E] flex items-center gap-2 uppercase tracking-wider">
+              <ShieldCheck className="w-4 h-4 text-[#006A4E]" />
               1. Student Identity & Express Pickup Slot
             </h3>
 
-            <div className="grid grid-cols-2 gap-3 text-xs bg-stone-950 p-3 rounded-xl border border-stone-800/80">
+            <div className="grid grid-cols-2 gap-3 text-xs glass-card p-4 rounded-2xl">
               <div>
-                <span className="text-stone-400 block text-[10px]">Student Name</span>
-                <span className="font-bold text-stone-100">{currentUser.name}</span>
+                <span className="text-slate-500 block text-[10px] font-bold">Student Name</span>
+                <span className="font-extrabold text-slate-900">{currentUser.name}</span>
               </div>
               <div>
-                <span className="text-stone-400 block text-[10px]">Student ID Card #</span>
-                <span className="font-bold text-amber-400">{currentUser.studentId || 'UG-2024-8842'}</span>
+                <span className="text-slate-500 block text-[10px] font-bold">Student ID Card #</span>
+                <span className="font-extrabold text-[#006A4E]">{currentUser.studentId || 'N/A'}</span>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-stone-300 mb-1 flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-amber-400" />
+              <label className="block text-xs font-bold text-slate-800 mb-1.5 flex items-center gap-1.5">
+                <Clock className="w-4 h-4 text-[#F59E0B]" />
                 Select Cafeteria Express Pickup Window
               </label>
               <select
                 value={selectedPickupSlot}
                 onChange={(e) => onSelectPickupSlot(e.target.value)}
-                className="w-full bg-stone-950 border border-stone-700 rounded-xl p-3 text-xs text-white font-bold focus:border-amber-500 focus:outline-none"
+                className="w-full glass-input rounded-2xl p-3.5 text-xs text-slate-900 font-bold"
               >
                 {[
                   'Breakfast: 08:30 AM - 09:00 AM',
@@ -185,7 +182,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                   'Snacks: 03:45 PM - 04:30 PM',
                 ].map((slot) => (
                   <option key={slot} value={slot}>
-                    {slot} (Express Counter 1)
+                    {slot} (Express Pickup Counter)
                   </option>
                 ))}
               </select>
@@ -193,38 +190,38 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
           </div>
 
           {/* Step 2: Payment Method */}
-          <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 space-y-4">
-            <h3 className="font-bold text-sm text-amber-400 flex items-center gap-2 uppercase tracking-wider">
-              <CreditCard className="w-4 h-4" />
+          <div className="glass-panel rounded-3xl p-6 space-y-4">
+            <h3 className="font-black text-xs text-[#006A4E] flex items-center gap-2 uppercase tracking-wider">
+              <CreditCard className="w-4 h-4 text-[#006A4E]" />
               2. Select Payment Architecture
             </h3>
 
             <div className="space-y-3">
               {/* Option A: bKash / Nagad / Rocket MFS with Manual configuration */}
-              <div className="bg-stone-950 border border-stone-800 rounded-xl p-4 space-y-3">
+              <div className="glass-card rounded-2xl p-4 space-y-3">
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('bkash_nagad')}
-                  className={`w-full p-3 rounded-xl border text-left flex items-start justify-between transition-all ${
+                  className={`w-full p-3.5 rounded-2xl border text-left flex items-start justify-between transition-all cursor-pointer ${
                     paymentMethod === 'bkash_nagad'
-                      ? 'bg-amber-500/15 border-amber-500 text-amber-300'
-                      : 'bg-stone-900 border-stone-800 text-stone-300 hover:bg-stone-800/60'
+                      ? 'bg-[#006A4E]/10 border-[#006A4E] text-[#006A4E]'
+                      : 'bg-white/60 border-slate-200/80 text-slate-800 hover:bg-white'
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-stone-950 border border-stone-800 text-pink-400">
+                    <div className="p-2.5 rounded-xl bg-pink-500/10 border border-pink-500/30 text-pink-600">
                       <Smartphone className="w-5 h-5" />
                     </div>
                     <div>
-                      <span className="font-bold text-xs text-white block">MFS (bKash / Nagad / Rocket)</span>
-                      <span className="text-[11px] text-stone-400">Manual MFS payment setup</span>
+                      <span className="font-black text-xs text-slate-900 block">MFS (bKash / Nagad / Rocket)</span>
+                      <span className="text-[11px] text-slate-500 font-medium">Manual MFS payment setup</span>
                     </div>
                   </div>
-                  {paymentMethod === 'bkash_nagad' && <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />}
+                  {paymentMethod === 'bkash_nagad' && <CheckCircle2 className="w-5 h-5 text-[#006A4E] shrink-0" />}
                 </button>
 
                 {paymentMethod === 'bkash_nagad' && (
-                  <div className="p-3 bg-stone-900 border border-stone-800 rounded-xl space-y-2.5 text-xs">
+                  <div className="p-4 bg-white/70 border border-slate-200/80 rounded-2xl space-y-3 text-xs">
                     <div className="flex gap-2">
                       {['bKash', 'Nagad', 'Rocket'].map((gatewayOption) => (
                         <button
@@ -234,32 +231,32 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                             setMfsGateway(gatewayOption as any);
                             setMfsMerchantNum(gatewayOption === 'bKash' ? '01711223344 (Merchant)' : gatewayOption === 'Nagad' ? '01855667788 (Merchant)' : '01999887766 (SendMoney)');
                           }}
-                          className={`flex-1 py-1 px-2 rounded-md font-bold text-center border ${
-                            mfsGateway === gatewayOption ? 'bg-pink-600 border-pink-500 text-white' : 'bg-stone-950 border-stone-800 text-stone-400'
+                          className={`flex-1 py-1.5 px-2 rounded-xl font-extrabold text-center border cursor-pointer ${
+                            mfsGateway === gatewayOption ? 'bg-[#006A4E] border-[#006A4E] text-white shadow-sm' : 'bg-white/80 border-slate-200 text-slate-600'
                           }`}
                         >
                           {gatewayOption}
                         </button>
                       ))}
                     </div>
-                    <div className="space-y-1 bg-stone-950 p-2.5 rounded-lg border border-stone-800">
-                      <div className="flex justify-between text-stone-400 text-[10px]">
+                    <div className="space-y-1 bg-white/80 p-3 rounded-xl border border-slate-200/80">
+                      <div className="flex justify-between text-slate-600 text-[11px] font-medium">
                         <span>Manual Pay To:</span>
-                        <span className="font-bold text-amber-400">{mfsMerchantNum}</span>
+                        <span className="font-extrabold text-[#006A4E]">{mfsMerchantNum}</span>
                       </div>
-                      <div className="flex justify-between text-stone-400 text-[10px]">
+                      <div className="flex justify-between text-slate-600 text-[11px] font-medium">
                         <span>Amount to pay:</span>
-                        <span className="font-bold text-white">৳{total.toFixed(2)}</span>
+                        <span className="font-black text-slate-900">৳{total.toFixed(2)}</span>
                       </div>
                     </div>
                     <div>
-                      <label className="block text-stone-300 text-[10px] font-semibold mb-1">Enter your {mfsGateway} Account Number (01XXXXXXXXX)</label>
+                      <label className="block text-slate-800 text-[11px] font-bold mb-1">Enter your {mfsGateway} Account Number (01XXXXXXXXX)</label>
                       <input
                         type="text"
                         value={mobileWalletNumber}
                         onChange={(e) => setMobileWalletNumber(e.target.value)}
                         placeholder="e.g. 017XXXXXXXX"
-                        className="w-full bg-stone-950 border border-stone-800 rounded-lg p-2 text-white text-xs focus:outline-none"
+                        className="w-full glass-input rounded-xl p-3 text-slate-900 text-xs font-bold"
                       />
                     </div>
                   </div>
@@ -267,37 +264,37 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
               </div>
 
               {/* Option B: SSLCommerz Visa/MasterCard Credit/Debit Card */}
-              <div className="bg-stone-950 border border-stone-800 rounded-xl p-4 space-y-3">
+              <div className="glass-card rounded-2xl p-4 space-y-3">
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('card')}
-                  className={`w-full p-3 rounded-xl border text-left flex items-start justify-between transition-all ${
+                  className={`w-full p-3.5 rounded-2xl border text-left flex items-start justify-between transition-all cursor-pointer ${
                     paymentMethod === 'card'
-                      ? 'bg-blue-500/15 border-blue-500 text-blue-300'
-                      : 'bg-stone-900 border-stone-800 text-stone-300 hover:bg-stone-800/60'
+                      ? 'bg-[#006A4E]/10 border-[#006A4E] text-[#006A4E]'
+                      : 'bg-white/60 border-slate-200/80 text-slate-800 hover:bg-white'
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-stone-950 border border-stone-800 text-blue-400">
+                    <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-600">
                       <CreditCard className="w-5 h-5" />
                     </div>
                     <div>
-                      <span className="font-bold text-xs text-white block">Credit / Debit Card (SSLCommerz)</span>
-                      <span className="text-[11px] text-stone-400">Secure gateway payment configuration</span>
+                      <span className="font-black text-xs text-slate-900 block">Credit / Debit Card (SSLCommerz)</span>
+                      <span className="text-[11px] text-slate-500 font-medium">Secure gateway payment configuration</span>
                     </div>
                   </div>
-                  {paymentMethod === 'card' && <CheckCircle2 className="w-5 h-5 text-blue-400 shrink-0" />}
+                  {paymentMethod === 'card' && <CheckCircle2 className="w-5 h-5 text-[#006A4E] shrink-0" />}
                 </button>
 
                 {paymentMethod === 'card' && (
-                  <div className="p-3 bg-stone-900 border border-stone-800 rounded-xl space-y-2 text-xs">
-                    <div className="flex items-center gap-2 text-stone-300 text-[10px] bg-stone-950 p-2 rounded-lg border border-stone-800">
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                      <span>SSLCommerz Secured Payment Gateway (Sandbox active)</span>
+                  <div className="p-4 bg-white/70 border border-slate-200/80 rounded-2xl space-y-2 text-xs">
+                    <div className="flex items-center gap-2 text-slate-800 text-[11px] bg-white/80 p-2.5 rounded-xl border border-slate-200/80 font-bold">
+                      <ShieldCheck className="w-4 h-4 text-[#22C55E]" />
+                      <span>SSLCommerz Secured Payment Gateway Active</span>
                     </div>
-                    <div className="space-y-1">
-                      <span className="block text-[10px] text-stone-400">Cardholder Name: {currentUser.name}</span>
-                      <span className="block text-[10px] text-stone-400">Total amount to charge: ৳{total.toFixed(2)}</span>
+                    <div className="space-y-1 font-medium">
+                      <span className="block text-[11px] text-slate-600">Cardholder Name: {currentUser.name}</span>
+                      <span className="block text-[11px] text-slate-600">Total amount to charge: ৳{total.toFixed(2)}</span>
                     </div>
                   </div>
                 )}
@@ -305,8 +302,8 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
             </div>
 
             {errorMessage && (
-              <div className="p-3 bg-red-950/80 border border-red-800 text-red-300 text-xs rounded-xl flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+              <div className="p-3.5 bg-red-500/10 border border-red-500/30 text-red-700 text-xs rounded-2xl flex items-center gap-2 font-medium">
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
             )}
@@ -315,53 +312,53 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
 
         {/* Right Column - Tray Summary & Submit */}
         <div className="space-y-4">
-          <div className="bg-stone-900 border border-stone-800 rounded-2xl p-5 space-y-4">
-            <h3 className="font-bold text-sm text-white border-b border-stone-800 pb-2">
+          <div className="glass-modal rounded-3xl p-6 space-y-4 shadow-xl">
+            <h3 className="font-black text-sm text-slate-900 border-b border-slate-200/60 pb-3">
               Order Summary ({cartItems.length} items)
             </h3>
 
             <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
               {cartItems.map((item) => (
-                <div key={item.id} className="flex justify-between items-start text-xs text-stone-300">
+                <div key={item.id} className="flex justify-between items-start text-xs text-slate-700">
                   <div>
-                    <span className="font-semibold text-stone-100">{item.food.name}</span>
-                    <span className="text-stone-500 block text-[10px]">Qty: {item.quantity}</span>
+                    <span className="font-bold text-slate-900">{item.food.name}</span>
+                    <span className="text-slate-500 block text-[10px] font-medium">Qty: {item.quantity}</span>
                   </div>
-                  <span className="font-bold text-amber-400">৳{item.totalPrice.toFixed(2)}</span>
+                  <span className="font-black text-[#006A4E]">৳{item.totalPrice.toFixed(2)}</span>
                 </div>
               ))}
             </div>
 
-            <div className="pt-3 border-t border-stone-800 space-y-1.5 text-xs">
-              <div className="flex justify-between text-stone-400">
+            <div className="pt-3 border-t border-slate-200/60 space-y-2 text-xs font-medium">
+              <div className="flex justify-between text-slate-600">
                 <span>Subtotal</span>
-                <span>৳{subtotal.toFixed(2)}</span>
+                <span className="font-bold text-slate-900">৳{subtotal.toFixed(2)}</span>
               </div>
               {discount > 0 && (
-                <div className="flex justify-between text-emerald-400 font-semibold">
+                <div className="flex justify-between text-[#006A4E] font-extrabold">
                   <span>Discount</span>
                   <span>-৳{discount.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-stone-100 font-black text-base pt-2 border-t border-stone-800">
+              <div className="flex justify-between text-slate-900 font-black text-base pt-2 border-t border-slate-200/60">
                 <span>Total Due</span>
-                <span className="text-amber-400">৳{total.toFixed(2)}</span>
+                <span className="text-[#006A4E]">৳{total.toFixed(2)}</span>
               </div>
             </div>
 
             <button
               onClick={handleConfirmOrder}
               disabled={isSubmitting || cartItems.length === 0}
-              className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-stone-950 font-black text-sm rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+              className="w-full py-4 glass-button font-black text-xs rounded-2xl shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 cursor-pointer"
             >
               {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-stone-950 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>Processing Pre-Order...</span>
                 </>
               ) : (
                 <>
-                  <QrCode className="w-5 h-5" />
+                  <QrCode className="w-5 h-5 text-white" />
                   <span>Confirm & Generate QR Code</span>
                 </>
               )}

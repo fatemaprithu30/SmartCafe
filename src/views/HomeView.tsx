@@ -3,8 +3,6 @@ import {
   Sparkles,
   Search,
   Clock,
-  QrCode,
-  ShieldCheck,
   Flame,
   ArrowRight,
   CookingPot,
@@ -14,7 +12,6 @@ import {
   Coffee,
   Cookie,
   Star,
-  Users,
   ChevronRight,
 } from 'lucide-react';
 import { FoodCategory, FoodItem } from '../types';
@@ -45,51 +42,49 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const getCategoryIcon = (iconName: string) => {
     switch (iconName) {
       case 'Sparkles':
-        return <Sparkles className="w-5 h-5 text-blue-600" />;
+        return <Sparkles className="w-5 h-5 text-[#006A4E]" />;
       case 'CookingPot':
-        return <CookingPot className="w-5 h-5 text-blue-600" />;
+        return <CookingPot className="w-5 h-5 text-[#006A4E]" />;
       case 'Sandwich':
-        return <Sandwich className="w-5 h-5 text-blue-600" />;
+        return <Sandwich className="w-5 h-5 text-[#006A4E]" />;
       case 'Salad':
-        return <Salad className="w-5 h-5 text-emerald-600" />;
+        return <Salad className="w-5 h-5 text-[#22C55E]" />;
       case 'Egg':
-        return <Egg className="w-5 h-5 text-blue-600" />;
+        return <Egg className="w-5 h-5 text-[#006A4E]" />;
       case 'Coffee':
-        return <Coffee className="w-5 h-5 text-blue-600" />;
+        return <Coffee className="w-5 h-5 text-[#006A4E]" />;
       case 'Cookie':
-        return <Cookie className="w-5 h-5 text-orange-500" />;
+        return <Cookie className="w-5 h-5 text-[#F59E0B]" />;
       default:
-        return <Sparkles className="w-5 h-5 text-blue-600" />;
+        return <Sparkles className="w-5 h-5 text-[#006A4E]" />;
     }
   };
 
   return (
     <div className="space-y-16 pb-16">
       {/* Hero Section */}
-      <section className="relative pt-12 pb-20 overflow-hidden bg-slate-900 border-b border-slate-800 text-white">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-blue-600/10 blur-3xl rounded-full pointer-events-none" />
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
+      <section className="relative pt-12 pb-20 overflow-hidden text-slate-900">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8 z-10">
           {/* Top Pill */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/90 border border-slate-700 text-blue-400 text-xs font-semibold shadow-sm">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-card text-[#006A4E] text-xs font-bold shadow-sm">
+            <Sparkles className="w-4 h-4 text-[#F59E0B]" />
             <span>SmartCafe • Campus Cafeteria Pre-Ordering</span>
           </div>
 
           {/* Main Headline */}
           <div className="max-w-4xl mx-auto space-y-3">
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight text-white">
-              Skip the Line. Pre-Order Hot Meals.
+            <h1 className="text-4xl sm:text-6xl font-black tracking-tight leading-tight text-slate-900">
+              Skip the Line. <span className="text-[#006A4E]">Pre-Order Hot Meals.</span>
             </h1>
-            <p className="text-slate-300 text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
-              Order fresh food, choose your pickup time, and grab your meal instantly with a QR code.
+            <p className="text-slate-600 text-sm sm:text-base max-w-xl mx-auto leading-relaxed font-medium">
+              Order fresh food, choose your pickup time slot, and grab your meal instantly with a QR code.
             </p>
           </div>
 
           {/* Search Bar */}
-          <div className="max-w-xl mx-auto bg-slate-800/90 border border-slate-700 p-2 rounded-xl shadow-xl backdrop-blur-xl flex flex-col sm:flex-row items-center gap-2">
+          <div className="max-w-xl mx-auto glass-modal p-2.5 rounded-3xl shadow-xl flex flex-col sm:flex-row items-center gap-2.5">
             <div className="relative flex-1 w-full">
-              <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-3" />
+              <Search className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
               <input
                 type="text"
                 value={searchQuery}
@@ -98,13 +93,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
                   if (e.key === 'Enter') onNavigateToMenu();
                 }}
                 placeholder="enter the food you like"
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-11 pr-4 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                className="w-full glass-input rounded-2xl pl-11 pr-4 py-3 text-xs sm:text-sm text-slate-900 font-medium placeholder-slate-400"
               />
             </div>
 
             <button
               onClick={() => onNavigateToMenu()}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm transition-all shrink-0 flex items-center justify-center gap-2 shadow-sm shadow-blue-500/20 active:scale-98"
+              className="w-full sm:w-auto px-6 py-3 rounded-2xl glass-button font-extrabold text-xs sm:text-sm transition-all shrink-0 flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20 cursor-pointer active:scale-98"
             >
               <span>Explore SmartCafe Menu</span>
               <ArrowRight className="w-4 h-4" />
@@ -112,47 +107,47 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
 
           {/* Operating Hours Window Banner */}
-          <div className="bg-slate-800/90 border border-slate-700 p-3.5 rounded-xl text-left space-y-2.5 max-w-xl mx-auto shadow-md">
-            <div className="flex items-center justify-between border-b border-slate-700 pb-2">
-              <div className="flex items-center gap-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
-                <Clock className="w-4 h-4 text-amber-400" />
-                <span>SmartCafe Operating Hours: 8:30 AM – 4:30 PM</span>
+          <div className="glass-panel p-5 rounded-3xl text-left space-y-3 max-w-xl mx-auto shadow-md">
+            <div className="flex items-center justify-between border-b border-slate-200/60 pb-3">
+              <div className="flex items-center gap-2 text-[#006A4E] font-extrabold text-xs uppercase tracking-wider">
+                <Clock className="w-4 h-4 text-[#F59E0B]" />
+                <span>SmartCafe Operating Hours: 8:00 AM – 4:30 PM</span>
               </div>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">Active</span>
+              <span className="text-[10px] bg-[#22C55E]/15 border border-[#22C55E]/30 text-[#006A4E] px-2.5 py-0.5 rounded-full font-extrabold">Active</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
-              <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-700">
-                <span className="text-slate-400 block text-[10px]">Breakfast</span>
-                <span className="font-bold text-white">8:30 AM – 10:00 AM</span>
+            <div className="grid grid-cols-3 gap-2.5 text-center text-[11px]">
+              <div className="bg-white/70 p-2.5 rounded-2xl border border-white/80">
+                <span className="text-slate-500 block text-[10px] font-bold">Breakfast</span>
+                <span className="font-extrabold text-slate-900">8:00 AM – 10:00 AM</span>
               </div>
-              <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-700">
-                <span className="text-slate-400 block text-[10px]">Snacks</span>
-                <span className="font-bold text-white">10:00 AM – 12:00 PM<br/>&amp; 3:00 PM – 4:30 PM</span>
+              <div className="bg-white/70 p-2.5 rounded-2xl border border-white/80">
+                <span className="text-slate-500 block text-[10px] font-bold">Snacks</span>
+                <span className="font-extrabold text-slate-900">10:00 AM – 12:00 PM<br/>&amp; 3:00 PM – 4:30 PM</span>
               </div>
-              <div className="bg-slate-900/80 p-2 rounded-lg border border-slate-700">
-                <span className="text-slate-400 block text-[10px]">Lunch</span>
-                <span className="font-bold text-white">12:00 PM – 3:00 PM</span>
+              <div className="bg-white/70 p-2.5 rounded-2xl border border-white/80">
+                <span className="text-slate-500 block text-[10px] font-bold">Lunch</span>
+                <span className="font-extrabold text-slate-900">12:00 PM – 3:00 PM</span>
               </div>
             </div>
           </div>
 
           {/* Stats Bar */}
-          <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto text-slate-300 text-xs">
-            <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80 text-center">
-              <span className="block font-black text-blue-400 text-xl sm:text-2xl">0 Mins</span>
-              <span className="text-slate-400 text-[11px] font-medium">Waiting Time at Counter</span>
+          <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto text-slate-800 text-xs">
+            <div className="p-4 rounded-3xl glass-card text-center">
+              <span className="block font-black text-[#006A4E] text-2xl sm:text-3xl">0 Mins</span>
+              <span className="text-slate-600 text-[11px] font-bold">Waiting Time at Counter</span>
             </div>
-            <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80 text-center">
-              <span className="block font-black text-blue-400 text-xl sm:text-2xl">100%</span>
-              <span className="text-slate-400 text-[11px] font-medium">Daily Fresh Nutrition</span>
+            <div className="p-4 rounded-3xl glass-card text-center">
+              <span className="block font-black text-[#006A4E] text-2xl sm:text-3xl">100%</span>
+              <span className="text-slate-600 text-[11px] font-bold">Daily Fresh Nutrition</span>
             </div>
-            <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80 text-center">
-              <span className="block font-black text-blue-400 text-xl sm:text-2xl">1,400+</span>
-              <span className="text-slate-400 text-[11px] font-medium">Pre-Orders Served Daily</span>
+            <div className="p-4 rounded-3xl glass-card text-center">
+              <span className="block font-black text-[#006A4E] text-2xl sm:text-3xl">1,400+</span>
+              <span className="text-slate-600 text-[11px] font-bold">Pre-Orders Served Daily</span>
             </div>
-            <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80 text-center">
-              <span className="block font-black text-blue-400 text-xl sm:text-2xl">4.9 ★</span>
-              <span className="text-slate-400 text-[11px] font-medium">Student Satisfaction</span>
+            <div className="p-4 rounded-3xl glass-card text-center">
+              <span className="block font-black text-[#006A4E] text-2xl sm:text-3xl">4.9 ★</span>
+              <span className="text-slate-600 text-[11px] font-bold">Student Satisfaction</span>
             </div>
           </div>
         </div>
@@ -162,29 +157,29 @@ export const HomeView: React.FC<HomeViewProps> = ({
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Cafeteria Menu Categories</h2>
-            <p className="text-xs text-slate-500">Freshly made every morning in our campus kitchen</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Cafeteria Menu Categories</h2>
+            <p className="text-xs text-slate-600 font-medium">Freshly made every morning in our campus kitchen</p>
           </div>
           <button
             onClick={() => onNavigateToMenu()}
-            className="text-xs text-blue-600 hover:underline font-semibold flex items-center gap-1"
+            className="text-xs text-[#006A4E] hover:underline font-bold flex items-center gap-1 cursor-pointer"
           >
             <span>View All</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4">
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => onNavigateToMenu(cat.slug)}
-              className="p-4 rounded-xl bg-white border border-slate-200 hover:border-blue-500/50 hover:shadow-sm text-center transition-all group flex flex-col items-center gap-2"
+              className="p-5 rounded-3xl glass-card glass-card-hover text-center transition-all group flex flex-col items-center gap-3 cursor-pointer"
             >
-              <div className="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-2xl bg-white/80 border border-slate-200/80 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
                 {getCategoryIcon(cat.icon)}
               </div>
-              <span className="font-bold text-xs text-slate-800 group-hover:text-blue-600 line-clamp-1">
+              <span className="font-extrabold text-sm text-slate-900 group-hover:text-[#006A4E]">
                 {cat.name}
               </span>
             </button>
@@ -195,13 +190,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {/* Chef's Daily Specials Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-blue-50 text-blue-600 border border-blue-200">
-              <Sparkles className="w-5 h-5" />
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-[#006A4E] text-white shadow-md shadow-emerald-900/20">
+              <Sparkles className="w-5 h-5 text-[#F59E0B]" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Chef's Today Specials</h2>
-              <p className="text-xs text-slate-500">Limited quantities prepared for peak lunch hours</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Chef's Today Specials</h2>
+              <p className="text-xs text-slate-600 font-medium">Limited quantities prepared for peak lunch hours</p>
             </div>
           </div>
         </div>
@@ -219,43 +214,43 @@ export const HomeView: React.FC<HomeViewProps> = ({
       </section>
 
       {/* How Smart Café Works - 3-Step Feature Cards */}
-      <section className="bg-white border-y border-slate-200 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
           <div className="text-center space-y-2 max-w-xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900">How Pre-Ordering Works</h2>
-            <p className="text-xs sm:text-sm text-slate-500">
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900">How Pre-Ordering Works</h2>
+            <p className="text-xs sm:text-sm text-slate-600 font-medium">
               Designed specifically for GUB students' schedules between lecture halls.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center space-y-3 relative">
-              <div className="w-10 h-10 rounded-lg bg-blue-600 text-white font-bold text-base flex items-center justify-center mx-auto shadow-sm shadow-blue-500/20">
+            <div className="glass-panel p-8 rounded-3xl text-center space-y-4 relative">
+              <div className="w-12 h-12 rounded-2xl bg-[#006A4E] text-white font-black text-lg flex items-center justify-center mx-auto shadow-md shadow-emerald-900/20">
                 1
               </div>
-              <h3 className="font-bold text-slate-900 text-base">Select Meal & Time Slot</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Choose your favorite meals, customize spice/extras, and pick a 10-minute pickup window (e.g. 12:10 PM).
+              <h3 className="font-extrabold text-slate-900 text-lg">Select Meal & Time Slot</h3>
+              <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                Choose your favorite meals, customize options, and pick a pickup time slot.
               </p>
             </div>
 
-            <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center space-y-3 relative">
-              <div className="w-10 h-10 rounded-lg bg-blue-600 text-white font-bold text-base flex items-center justify-center mx-auto shadow-sm shadow-blue-500/20">
+            <div className="glass-panel p-8 rounded-3xl text-center space-y-4 relative">
+              <div className="w-12 h-12 rounded-2xl bg-[#006A4E] text-white font-black text-lg flex items-center justify-center mx-auto shadow-md shadow-emerald-900/20">
                 2
               </div>
-              <h3 className="font-bold text-slate-900 text-base">Kitchen Cooks & Alerts</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Our kitchen staff receives your order on their bump bar screen, prepares it hot, and sends a live alert.
+              <h3 className="font-extrabold text-slate-900 text-lg">Kitchen Cooks & Alerts</h3>
+              <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                Our kitchen staff receives your order on their display system, cooks it fresh, and alerts you.
               </p>
             </div>
 
-            <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 text-center space-y-3 relative">
-              <div className="w-10 h-10 rounded-lg bg-emerald-600 text-white font-bold text-base flex items-center justify-center mx-auto shadow-sm shadow-emerald-500/20">
+            <div className="glass-panel p-8 rounded-3xl text-center space-y-4 relative">
+              <div className="w-12 h-12 rounded-2xl bg-[#22C55E] text-white font-black text-lg flex items-center justify-center mx-auto shadow-md shadow-green-900/20">
                 3
               </div>
-              <h3 className="font-bold text-slate-900 text-base">Scan QR & Express Pickup</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Walk up to GUB Express Counter 1, show your order QR code on your phone, and grab your packaged meal immediately.
+              <h3 className="font-extrabold text-slate-900 text-lg">Scan QR & Express Pickup</h3>
+              <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                Walk up to FoodZone Express Counter, show your order QR code, and grab your packaged meal.
               </p>
             </div>
           </div>
@@ -265,11 +260,13 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {/* Popular Campus Meals */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Flame className="w-5 h-5 text-orange-500" />
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-[#F59E0B]/20 text-[#F59E0B]">
+              <Flame className="w-5 h-5" />
+            </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Most Loved GUB Campus Favorites</h2>
-              <p className="text-xs text-slate-500">High rating & fast turnaround time</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900">Most Loved GUB Campus Favorites</h2>
+              <p className="text-xs text-slate-600 font-medium">High rating & fast turnaround time</p>
             </div>
           </div>
         </div>
@@ -288,25 +285,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
       {/* Student Testimonials Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-900 p-8 rounded-2xl border border-slate-800 text-white flex flex-col md:flex-row items-center justify-between gap-8 shadow-md">
+        <div className="glass-modal p-8 rounded-3xl text-slate-900 flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
           <div className="space-y-3 max-w-xl">
-            <div className="flex items-center gap-1 text-amber-400">
-              <Star className="w-4 h-4 fill-amber-400" />
-              <Star className="w-4 h-4 fill-amber-400" />
-              <Star className="w-4 h-4 fill-amber-400" />
-              <Star className="w-4 h-4 fill-amber-400" />
-              <Star className="w-4 h-4 fill-amber-400" />
+            <div className="flex items-center gap-1 text-[#F59E0B]">
+              <Star className="w-4 h-4 fill-[#F59E0B]" />
+              <Star className="w-4 h-4 fill-[#F59E0B]" />
+              <Star className="w-4 h-4 fill-[#F59E0B]" />
+              <Star className="w-4 h-4 fill-[#F59E0B]" />
+              <Star className="w-4 h-4 fill-[#F59E0B]" />
             </div>
-            <p className="text-slate-200 text-sm italic leading-relaxed">
-              "Pre-ordering my Teriyaki Rice Bowl at 11:45 AM before my CSE lecture ends means I walk past a 40-person line straight to GUB Express Counter 1. Total game changer!"
+            <p className="text-slate-800 text-sm italic leading-relaxed font-medium">
+              "Pre-ordering my meal at 11:45 AM before my CSE lecture ends means I walk past a 40-person line straight to GUB Express Counter 1. Total game changer!"
             </p>
-            <span className="text-xs font-bold text-blue-400 block">— Aria R., Computer Science '26</span>
+            <span className="text-xs font-bold text-[#006A4E] block">— Aria R., Computer Science '26</span>
           </div>
 
           <div className="shrink-0 space-y-2 text-center sm:text-right">
             <button
               onClick={() => onNavigateToMenu()}
-              className="px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all shadow-sm shadow-blue-500/30"
+              className="px-8 py-3.5 rounded-2xl glass-button font-black text-sm transition-all shadow-lg shadow-emerald-900/20 cursor-pointer"
             >
               Order Meal Now
             </button>

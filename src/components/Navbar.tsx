@@ -5,7 +5,6 @@ import {
   Bell,
   User,
   Sparkles,
-  Search,
   Clock,
   LogOut,
   ChevronDown,
@@ -58,11 +57,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   ) : [];
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md bg-slate-900/95 border-b border-slate-800 text-slate-100 transition-all shadow-md">
+    <header className="sticky top-0 z-40 w-full glass-nav transition-all shadow-sm">
       {/* Announcement Banner */}
       {announcementText && (
-        <div className="bg-blue-900/40 border-b border-blue-800/50 px-4 py-1.5 text-xs text-blue-200 text-center flex items-center justify-center gap-2 font-medium">
-          <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+        <div className="bg-[#006A4E]/10 border-b border-[#006A4E]/20 px-4 py-1.5 text-xs text-[#006A4E] text-center flex items-center justify-center gap-2 font-bold">
+          <Sparkles className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" />
           <span>{announcementText}</span>
         </div>
       )}
@@ -73,73 +72,42 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-6">
             <button
               onClick={() => setActiveTab('home')}
-              className="flex items-center gap-2.5 group text-left focus:outline-none"
+              className="flex items-center gap-2.5 group text-left focus:outline-none cursor-pointer"
             >
-              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/30 group-hover:bg-blue-500 transition-colors">
-                <UtensilsCrossed className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-2xl bg-[#006A4E] flex items-center justify-center text-white shadow-md shadow-emerald-900/20 group-hover:scale-105 transition-transform">
+                <UtensilsCrossed className="w-5 h-5 text-white" />
               </div>
               <div>
-                <span className="font-bold text-lg tracking-tight text-white flex items-center gap-1">
-                  Smart<span className="text-blue-400 font-extrabold">Cafe</span>
+                <span className="font-black text-xl tracking-tight text-slate-900 flex items-center gap-1">
+                  Smart<span className="text-[#006A4E]">Cafe</span>
                 </span>
-                <span className="text-[10px] uppercase tracking-wider text-slate-400 block -mt-1 font-semibold">
+                <span className="text-[10px] uppercase tracking-wider text-slate-500 block -mt-1 font-bold">
                   Green University
                 </span>
               </div>
             </button>
 
             {/* Main Navigation Links */}
-            <nav className="hidden md:flex items-center gap-1">
-              <button
-                onClick={() => setActiveTab('home')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'home'
-                    ? 'bg-slate-800 text-blue-400 font-semibold'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                Home
-              </button>
-              <button
-                onClick={() => setActiveTab('menu')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'menu'
-                    ? 'bg-slate-800 text-blue-400 font-semibold'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                Menu
-              </button>
-              <button
-                onClick={() => setActiveTab('about')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'about'
-                    ? 'bg-slate-800 text-blue-400 font-semibold'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                About
-              </button>
-              <button
-                onClick={() => setActiveTab('contact')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'contact'
-                    ? 'bg-slate-800 text-blue-400 font-semibold'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                Contact
-              </button>
-              <button
-                onClick={() => setActiveTab('faq')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'faq'
-                    ? 'bg-slate-800 text-blue-400 font-semibold'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                FAQ
-              </button>
+            <nav className="hidden md:flex items-center gap-1.5">
+              {[
+                { id: 'home', label: 'Home' },
+                { id: 'menu', label: 'Menu' },
+                { id: 'about', label: 'About' },
+                { id: 'contact', label: 'Contact' },
+                { id: 'faq', label: 'FAQ' },
+              ].map((link) => (
+                <button
+                  key={link.id}
+                  onClick={() => setActiveTab(link.id)}
+                  className={`px-3.5 py-1.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                    activeTab === link.id
+                      ? 'bg-[#006A4E] text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                  }`}
+                >
+                  {link.label}
+                </button>
+              ))}
             </nav>
           </div>
 
@@ -149,9 +117,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             {activeRole === 'student' && activeReadyOrders.length > 0 && (
               <button
                 onClick={() => setActiveTab('student-orders')}
-                className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 animate-pulse"
+                className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-emerald-500/15 border border-emerald-500/40 text-emerald-800 animate-pulse shadow-sm cursor-pointer"
               >
-                <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                <div className="w-2 h-2 rounded-full bg-emerald-500" />
                 <span>Order Ready! Show QR</span>
               </button>
             )}
@@ -159,9 +127,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             {activeRole === 'student' && activeReadyOrders.length === 0 && activePreparingOrders.length > 0 && (
               <button
                 onClick={() => setActiveTab('student-orders')}
-                className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/20 border border-amber-500/40 text-amber-300 animate-pulse"
+                className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-500/15 border border-amber-500/40 text-amber-800 animate-pulse shadow-sm cursor-pointer"
               >
-                <div className="w-2 h-2 rounded-full bg-amber-400" />
+                <div className="w-2 h-2 rounded-full bg-[#F59E0B]" />
                 <span>Cooking in Kitchen 🔥</span>
               </button>
             )}
@@ -170,12 +138,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             {activeRole === 'student' && (
               <button
                 onClick={onOpenCart}
-                className="relative p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors focus:outline-none border border-slate-700/50"
+                className="relative p-2.5 rounded-2xl glass-card hover:bg-white/80 text-slate-800 transition-all focus:outline-none cursor-pointer"
                 title="View Cart"
               >
-                <ShoppingBag className="w-5 h-5 text-blue-400" />
+                <ShoppingBag className="w-5 h-5 text-[#006A4E]" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-blue-600 text-white font-bold text-[11px] w-5 h-5 rounded-full flex items-center justify-center shadow">
+                  <span className="absolute -top-1.5 -right-1.5 bg-[#006A4E] text-white font-extrabold text-[11px] w-5 h-5 rounded-full flex items-center justify-center shadow-md">
                     {cartCount}
                   </span>
                 )}
@@ -187,25 +155,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div className="relative">
                 <button
                   onClick={() => setShowNotificationsPopover(!showNotificationsPopover)}
-                  className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors relative border border-slate-700/50"
+                  className="p-2.5 rounded-2xl glass-card hover:bg-white/80 text-slate-800 transition-all relative cursor-pointer"
                 >
-                  <Bell className="w-5 h-5 text-slate-300" />
+                  <Bell className="w-5 h-5 text-slate-700" />
                   {unreadNotifications.length > 0 && (
-                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-orange-500 ring-2 ring-slate-900" />
+                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-[#F59E0B] ring-2 ring-white" />
                   )}
                 </button>
 
                 {/* Notifications Popover */}
                 {showNotificationsPopover && (
-                  <div className="absolute right-0 mt-2 w-80 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 p-3 text-xs">
-                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800">
-                      <span className="font-semibold text-xs text-slate-200">
+                  <div className="absolute right-0 mt-2 w-80 glass-modal rounded-3xl shadow-2xl z-50 p-4 text-xs">
+                    <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-200/60">
+                      <span className="font-extrabold text-xs text-slate-900">
                         Notifications ({notifications.length})
                       </span>
                       {unreadNotifications.length > 0 && onMarkAllNotificationsAsRead && (
                         <button
                           onClick={() => onMarkAllNotificationsAsRead()}
-                          className="text-[10px] text-blue-400 hover:text-blue-300 font-semibold"
+                          className="text-[11px] text-[#006A4E] hover:underline font-bold cursor-pointer"
                         >
                           Mark all read
                         </button>
@@ -213,26 +181,26 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </div>
                     <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
                       {notifications.length === 0 ? (
-                        <p className="text-xs text-slate-500 text-center py-4">No notifications yet</p>
+                        <p className="text-xs text-slate-500 text-center py-4 font-medium">No notifications yet</p>
                       ) : (
                         notifications.map((n) => (
                           <div
                             key={n.id}
                             onClick={() => !n.read && onMarkNotificationAsRead && onMarkNotificationAsRead(n.id)}
-                            className={`p-2.5 rounded-lg border text-xs cursor-pointer transition-colors ${
+                            className={`p-3 rounded-2xl border text-xs cursor-pointer transition-all ${
                               n.read
-                                ? 'bg-slate-900/40 border-slate-800/80 text-slate-400'
-                                : 'bg-slate-800/90 border-slate-700/60 text-slate-200 hover:bg-slate-800'
+                                ? 'bg-white/40 border-slate-200/50 text-slate-500'
+                                : 'bg-white/90 border-[#006A4E]/30 text-slate-900 font-medium shadow-sm'
                             }`}
                           >
                             <div className="flex justify-between items-start gap-1">
-                              <p className="font-semibold">{n.title}</p>
+                              <p className="font-bold">{n.title}</p>
                               {!n.read && (
-                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 mt-1" />
+                                <span className="w-2 h-2 rounded-full bg-[#006A4E] shrink-0 mt-1" />
                               )}
                             </div>
-                            <p className="text-[11px] text-slate-400 mt-0.5">{n.message}</p>
-                            <span className="text-[9px] text-slate-500 mt-1 block">
+                            <p className="text-[11px] text-slate-600 mt-0.5">{n.message}</p>
+                            <span className="text-[9px] text-slate-400 mt-1.5 block font-semibold">
                               {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
@@ -248,7 +216,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {currentUser && activeRole === 'student' && (
               <button
                 onClick={() => setActiveTab('student-orders')}
-                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 transition-colors border border-slate-700/50"
+                className="p-2.5 rounded-2xl glass-card hover:bg-white/80 text-[#006A4E] transition-all cursor-pointer"
                 title="Student Pre-Orders & QR Codes"
               >
                 <Clock className="w-5 h-5" />
@@ -257,17 +225,17 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Auth / Profile or Logout trigger */}
             {currentUser ? (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={onOpenAuth}
-                  className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors border border-slate-700/50"
+                  className="p-2.5 rounded-2xl glass-card hover:bg-white/80 text-slate-800 transition-all cursor-pointer"
                   title={`Logged in as ${currentUser.name}`}
                 >
-                  <User className="w-5 h-5 text-blue-400" />
+                  <User className="w-5 h-5 text-[#006A4E]" />
                 </button>
                 <button
                   onClick={onLogOut}
-                  className="p-2 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-400 transition-colors border border-red-900/30"
+                  className="p-2.5 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-600 transition-all border border-red-500/20 cursor-pointer"
                   title="Log Out"
                 >
                   <LogOut className="w-5 h-5" />
@@ -276,7 +244,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             ) : (
               <button
                 onClick={onOpenAuth}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors shadow-sm"
+                className="px-5 py-2.5 rounded-2xl glass-button font-bold text-xs transition-all cursor-pointer"
               >
                 Sign In
               </button>

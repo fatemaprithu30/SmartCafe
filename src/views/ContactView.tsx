@@ -15,113 +15,113 @@ export const ContactView: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
       <div className="text-center space-y-2">
-        <h1 className="text-3xl sm:text-4xl font-black text-slate-900">Green University Of Bangladesh Cafe</h1>
-        <p className="text-xs sm:text-sm text-slate-500 max-w-lg mx-auto">
+        <h1 className="text-3xl sm:text-5xl font-black text-slate-900">Green University Of Bangladesh Cafe</h1>
+        <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto font-medium">
           Have questions about your GUB pre-orders, dietary restrictions, or payment confirmation? Reach out below.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Contact Info */}
-        <div className="space-y-6 bg-white border border-slate-200 p-6 rounded-xl shadow-sm">
-          <h3 className="font-bold text-slate-900 text-lg">Dining Office Contact</h3>
+        <div className="space-y-6 glass-panel p-8 rounded-3xl">
+          <h3 className="font-black text-slate-900 text-xl">Dining Office Contact</h3>
 
-          <div className="space-y-4 text-xs text-slate-600">
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 shrink-0">
-                <MapPin className="w-5 h-5" />
+          <div className="space-y-5 text-xs text-slate-700 font-medium">
+            <div className="flex items-start gap-3.5">
+              <div className="p-3 rounded-2xl bg-[#006A4E] text-white shrink-0 shadow-md shadow-emerald-900/20">
+                <MapPin className="w-5 h-5 text-white" />
               </div>
               <div>
-                <span className="font-bold text-slate-900 block text-sm">GUB Location</span>
+                <span className="font-extrabold text-slate-900 block text-sm">GUB Location</span>
                 <span>Green University of Bangladesh Campus Cafeteria, Ground Floor</span>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 shrink-0">
-                <Phone className="w-5 h-5" />
+            <div className="flex items-start gap-3.5">
+              <div className="p-3 rounded-2xl bg-[#006A4E] text-white shrink-0 shadow-md shadow-emerald-900/20">
+                <Phone className="w-5 h-5 text-white" />
               </div>
               <div>
-                <span className="font-bold text-slate-900 block text-sm">GUB Cafe hotline</span>
+                <span className="font-extrabold text-slate-900 block text-sm">GUB Cafe Hotline</span>
                 <span>+880 1711223344 (Cafeteria Manager)</span>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 shrink-0">
-                <Mail className="w-5 h-5" />
+            <div className="flex items-start gap-3.5">
+              <div className="p-3 rounded-2xl bg-[#006A4E] text-white shrink-0 shadow-md shadow-emerald-900/20">
+                <Mail className="w-5 h-5 text-white" />
               </div>
               <div>
-                <span className="font-bold text-slate-900 block text-sm">Email Support</span>
+                <span className="font-extrabold text-slate-900 block text-sm">Email Support</span>
                 <span>cafe-support@green.edu.bd</span>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 shrink-0">
-                <Clock className="w-5 h-5" />
+            <div className="flex items-start gap-3.5">
+              <div className="p-3 rounded-2xl bg-[#006A4E] text-white shrink-0 shadow-md shadow-emerald-900/20">
+                <Clock className="w-5 h-5 text-white" />
               </div>
               <div>
-                <span className="font-bold text-slate-900 block text-sm">GUB Cafe operating window</span>
-                <span>Sunday - Saturday: 07:30 AM to 08:30 PM</span>
+                <span className="font-extrabold text-slate-900 block text-sm">GUB Cafe Operating Window</span>
+                <span>Sunday - Saturday: 08:00 AM to 04:30 PM</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Form */}
-        <div className="bg-white border border-slate-200 p-6 rounded-xl shadow-sm">
+        <div className="glass-modal p-8 rounded-3xl shadow-xl">
           {submitted ? (
             <div className="text-center py-12 space-y-3">
-              <CheckCircle2 className="w-12 h-12 text-emerald-600 mx-auto" />
-              <h3 className="font-bold text-slate-900 text-base">Message Sent to GUB Cafeteria Staff</h3>
-              <p className="text-xs text-slate-500">
+              <CheckCircle2 className="w-14 h-14 text-[#22C55E] mx-auto" />
+              <h3 className="font-black text-slate-900 text-lg">Message Sent to GUB Cafeteria Staff</h3>
+              <p className="text-xs text-slate-600 font-medium">
                 Thank you, {name}! Our cafeteria manager will review your feedback shortly.
               </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
-              <h3 className="font-bold text-slate-900 text-base">Send Feedback or Query</h3>
+              <h3 className="font-black text-slate-900 text-xl mb-4">Send Feedback or Query</h3>
 
               <div>
-                <label className="block text-slate-700 font-semibold mb-1">Your Name</label>
+                <label className="block text-slate-700 font-bold mb-1.5">Your Name</label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Aria Rahman"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                  className="w-full glass-input rounded-2xl p-3.5 text-xs text-slate-900 font-medium"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-700 font-semibold mb-1">GUB University Email</label>
+                <label className="block text-slate-700 font-bold mb-1.5">GUB University Email</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="student@green.edu.bd"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                  className="w-full glass-input rounded-2xl p-3.5 text-xs text-slate-900 font-medium"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-700 font-semibold mb-1">Message</label>
+                <label className="block text-slate-700 font-bold mb-1.5">Message</label>
                 <textarea
                   required
                   rows={4}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Tell us about food quality, pickup times, or dietary suggestions..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 text-xs text-slate-900 focus:border-blue-500 focus:outline-none"
+                  className="w-full glass-input rounded-2xl p-3.5 text-xs text-slate-900 font-medium"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm shadow-blue-500/20 active:scale-98"
+                className="w-full py-4 glass-button font-black text-xs rounded-2xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/20 cursor-pointer active:scale-98"
               >
                 <Send className="w-4 h-4" />
                 <span>Submit Message</span>
