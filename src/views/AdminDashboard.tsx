@@ -213,8 +213,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       setShowFoodModal(false);
       setTimeout(() => setToastNotification(null), 5000);
     } catch (err: any) {
-      setToastNotification({ type: 'error', message: `Error saving food item: ${err?.message || 'Failed to save food item to database.'}` });
-      setTimeout(() => setToastNotification(null), 6000);
+      const errCode = err?.code ? ` [Code: ${err.code}]` : '';
+      const errDetails = err?.details ? ` Details: ${err.details}` : '';
+      const errHint = err?.hint ? ` Hint: ${err.hint}` : '';
+      const fullMsg = `Database Error: ${err?.message || 'Failed to save food item.'}${errCode}${errDetails}${errHint}`;
+      setToastNotification({ type: 'error', message: fullMsg });
+      setTimeout(() => setToastNotification(null), 10000);
+    }
+  };
+
+  const handleDeleteFoodItem = async (foodId: string, foodName: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${foodName}"?`)) return;
+    try {
+      await onDeleteFood(foodId);
+      setToastNotification({ type: 'success', message: `"${foodName}" deleted successfully from database!` });
+      setTimeout(() => setToastNotification(null), 5000);
+    } catch (err: any) {
+      const errCode = err?.code ? ` [Code: ${err.code}]` : '';
+      const errDetails = err?.details ? ` Details: ${err.details}` : '';
+      const errHint = err?.hint ? ` Hint: ${err.hint}` : '';
+      const fullMsg = `Database Delete Error: ${err?.message || 'Failed to delete food item.'}${errCode}${errDetails}${errHint}`;
+      setToastNotification({ type: 'error', message: fullMsg });
+      setTimeout(() => setToastNotification(null), 10000);
     }
   };
 
@@ -542,7 +562,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => onDeleteFood(food.id)}
+                          onClick={() => handleDeleteFoodItem(food.id, food.name)}
                           className="text-slate-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-white cursor-pointer"
                           title="Delete Food Item"
                         >
@@ -868,23 +888,76 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       {/* Tab 7: Settings */}
       {activeTab === 'settings' && (
-        <div className="glass-modal rounded-3xl p-6 space-y-4 text-xs shadow-xl">
-          <h2 className="font-black text-xl text-slate-900">Cafeteria Operating Parameters</h2>
-          <div>
-            <label className="block text-slate-700 font-bold mb-1.5">Announcement Banner</label>
-            <input
-              type="text"
-              value={announcementInput}
-              onChange={(e) => setAnnouncementInput(e.target.value)}
-              className="w-full glass-input rounded-2xl p-3.5 text-xs text-slate-900 font-medium"
-            />
+        <div className="glass-modal rounded-3xl p-6 sm:p-8 space-y-6 text-xs shadow-xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200/60 pb-4">
+            <div>
+              <h2 className="font-black text-xl text-slate-900">Cafeteria Operating Parameters</h2>
+              <p className="text-xs text-slate-600 font-medium mt-0.5">Manage operational settings, announcement banners, and business logic parameters.</p>
+            </div>
           </div>
-          <button
-            onClick={() => onUpdateSettings({ announcementBanner: announcementInput })}
-            className="px-6 py-3 glass-button font-black text-xs rounded-2xl cursor-pointer"
-          >
-            Save Announcement
-          </button>
+
+          {/* Developer / Admin Explanation Notice regarding cafeteria settings row */}
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-slate-800 space-y-2">
+            <div className="flex items-center gap-2 font-black text-amber-900">
+              <Settings className="w-4 h-4 text-amber-600" />
+              <span>Developer Notice — Cafeteria Settings Database Initialization (ID: 'cafeteria')</span>
+            </div>
+            <p className="text-xs text-slate-700 font-medium leading-relaxed">
+              If the database query for cafeteria settings (<code className="bg-amber-100 px-1 py-0.5 rounded font-mono text-[11px]">settings?select=*&amp;id=eq.cafeteria</code>) returned no rows (PGRST116 / HTTP 406), click the button below to initialize or upsert the default settings row into the <code className="bg-amber-100 px-1 py-0.5 rounded font-mono text-[11px]">public.settings</code> table.
+            </p>
+            <button
+              onClick={async () => {
+                try {
+                  await onUpdateSettings({
+                    announcementBanner: announcementInput || 'Welcome to GUB Smart Café!',
+                    isAcceptingOrders: true,
+                    openingTime: '07:30 AM',
+                    closingTime: '08:30 PM',
+                    slotIntervalMinutes: 10,
+                    maxOrdersPerSlot: 20,
+                    taxRatePercent: 0,
+                    studentDiscountPercent: 5
+                  });
+                  setToastNotification({ type: 'success', message: "Successfully initialized cafeteria settings in 'public.settings' table!" });
+                  setTimeout(() => setToastNotification(null), 5000);
+                } catch (err: any) {
+                  setToastNotification({ type: 'error', message: `Initialization Error: ${err?.message || 'Failed to seed settings row in database.'}` });
+                  setTimeout(() => setToastNotification(null), 10000);
+                }
+              }}
+              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl cursor-pointer shadow-xs transition-all"
+            >
+              Initialize 'cafeteria' Settings Row in Supabase
+            </button>
+          </div>
+
+          <div className="space-y-4 pt-2">
+            <div>
+              <label className="block text-slate-700 font-bold mb-1.5">Announcement Banner</label>
+              <input
+                type="text"
+                value={announcementInput}
+                onChange={(e) => setAnnouncementInput(e.target.value)}
+                placeholder="e.g. Welcome to GUB Smart Café! Pre-order your lunch today."
+                className="w-full glass-input rounded-2xl p-3.5 text-xs text-slate-900 font-medium"
+              />
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  await onUpdateSettings({ announcementBanner: announcementInput });
+                  setToastNotification({ type: 'success', message: 'Announcement banner updated successfully!' });
+                  setTimeout(() => setToastNotification(null), 5000);
+                } catch (err: any) {
+                  setToastNotification({ type: 'error', message: `Failed to save announcement: ${err?.message || 'Database update error'}` });
+                  setTimeout(() => setToastNotification(null), 10000);
+                }
+              }}
+              className="px-6 py-3 glass-button font-black text-xs rounded-2xl cursor-pointer"
+            >
+              Save Announcement Banner
+            </button>
+          </div>
         </div>
       )}
 

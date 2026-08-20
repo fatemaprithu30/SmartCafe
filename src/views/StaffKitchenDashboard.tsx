@@ -155,8 +155,30 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
       setShowFoodModal(false);
       setTimeout(() => setToastNotification(null), 5000);
     } catch (err: any) {
-      setToastNotification({ type: 'error', message: `Error saving food item: ${err?.message || 'Failed to save food item to database.'}` });
-      setTimeout(() => setToastNotification(null), 6000);
+      const errCode = err?.code ? ` [Code: ${err.code}]` : '';
+      const errDetails = err?.details ? ` Details: ${err.details}` : '';
+      const errHint = err?.hint ? ` Hint: ${err.hint}` : '';
+      const fullMsg = `Database Error: ${err?.message || 'Failed to save food item.'}${errCode}${errDetails}${errHint}`;
+      setToastNotification({ type: 'error', message: fullMsg });
+      setTimeout(() => setToastNotification(null), 10000);
+    }
+  };
+
+  const handleDeleteFoodItem = async (foodId: string, foodName: string) => {
+    if (!window.confirm(`Are you sure you want to delete "${foodName}"?`)) return;
+    try {
+      if (onDeleteFood) {
+        await onDeleteFood(foodId);
+        setToastNotification({ type: 'success', message: `"${foodName}" deleted successfully from database!` });
+        setTimeout(() => setToastNotification(null), 5000);
+      }
+    } catch (err: any) {
+      const errCode = err?.code ? ` [Code: ${err.code}]` : '';
+      const errDetails = err?.details ? ` Details: ${err.details}` : '';
+      const errHint = err?.hint ? ` Hint: ${err.hint}` : '';
+      const fullMsg = `Database Delete Error: ${err?.message || 'Failed to delete food item.'}${errCode}${errDetails}${errHint}`;
+      setToastNotification({ type: 'error', message: fullMsg });
+      setTimeout(() => setToastNotification(null), 10000);
     }
   };
 
@@ -615,7 +637,7 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
                   )}
                   {onDeleteFood && (
                     <button
-                      onClick={() => onDeleteFood(food.id)}
+                      onClick={() => handleDeleteFoodItem(food.id, food.name)}
                       className="p-2 text-slate-400 hover:text-red-600 rounded-lg hover:bg-white cursor-pointer"
                       title="Delete Item"
                     >
