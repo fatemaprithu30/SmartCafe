@@ -122,15 +122,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     { hour: '3 PM', count: 28 },
   ];
 
-  const availableCategories = categories.filter((c) =>
-    ['breakfast', 'lunch', 'snacks'].includes(c.slug.toLowerCase())
-  ).length > 0
-    ? categories.filter((c) => ['breakfast', 'lunch', 'snacks'].includes(c.slug.toLowerCase()))
-    : [
-        { id: 'cat_breakfast', name: 'Breakfast', slug: 'breakfast', description: '', icon: '', image: '' },
-        { id: 'cat_lunch', name: 'Lunch', slug: 'lunch', description: '', icon: '', image: '' },
-        { id: 'cat_snacks', name: 'Snacks', slug: 'snacks', description: '', icon: '', image: '' },
-      ];
+  const availableCategories = [
+    { id: 'cat_breakfast', name: 'Breakfast', slug: 'breakfast', description: '', icon: '', image: '' },
+    { id: 'cat_lunch', name: 'Lunch', slug: 'lunch', description: '', icon: '', image: '' },
+    { id: 'cat_snacks', name: 'Snacks', slug: 'snacks', description: '', icon: '', image: '' },
+  ];
 
   const handleOpenAddFood = () => {
     setEditingFoodId(null);
@@ -174,11 +170,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       alert('Please select a category');
       return;
     }
-    const selectedCatObj = availableCategories.find((c) => c.id === foodCategory || c.slug === foodCategory);
+    const selectedCatObj = availableCategories.find((c) => c.id === foodCategory || c.slug.toLowerCase() === foodCategory.toLowerCase() || c.name.toLowerCase() === foodCategory.toLowerCase());
     const payload = {
       name: foodName,
       categoryId: selectedCatObj?.id || foodCategory,
-      categoryName: selectedCatObj?.name || 'Breakfast',
+      categoryName: selectedCatObj?.name || (foodCategory.charAt(0).toUpperCase() + foodCategory.slice(1)),
       price: Number(foodPrice),
       prepTimeMinutes: Number(foodPrepTime),
       imageUrl: foodImage,
@@ -460,34 +456,50 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/50">
-                {foods.map((food) => (
-                  <tr key={food.id} className="hover:bg-white/60 transition-colors">
-                    <td className="p-4 flex items-center gap-3">
-                      <img src={food.imageUrl} alt={food.name} className="w-10 h-10 object-cover rounded-xl bg-slate-100" />
-                      <span className="font-extrabold text-slate-900">{food.name}</span>
-                    </td>
-                    <td className="p-4 font-medium">{food.categoryName}</td>
-                    <td className="p-4 font-black text-[#006A4E]">৳{food.price.toFixed(2)}</td>
-                    <td className="p-4 font-medium">{food.prepTimeMinutes} mins</td>
-                    <td className="p-4 font-bold">{food.stockQuantity}</td>
-                    <td className="p-4 text-right flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleOpenEditFood(food)}
-                        className="text-slate-500 hover:text-[#006A4E] p-1.5 rounded-lg hover:bg-white cursor-pointer"
-                        title="Edit Food Details"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => onDeleteFood(food.id)}
-                        className="text-slate-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-white cursor-pointer"
-                        title="Delete Food Item"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                {foods.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-12 text-center">
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <div className="w-12 h-12 rounded-2xl bg-[#006A4E]/10 flex items-center justify-center text-[#006A4E]">
+                          <Utensils className="w-6 h-6" />
+                        </div>
+                        <p className="font-black text-slate-900 text-sm">No food items added yet</p>
+                        <p className="text-xs text-slate-500 max-w-sm font-medium">
+                          Click "Add New Food Item" above to add meals to the GUB Smart Café catalog.
+                        </p>
+                      </div>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  foods.map((food) => (
+                    <tr key={food.id} className="hover:bg-white/60 transition-colors">
+                      <td className="p-4 flex items-center gap-3">
+                        <img src={food.imageUrl} alt={food.name} className="w-10 h-10 object-cover rounded-xl bg-slate-100" />
+                        <span className="font-extrabold text-slate-900">{food.name}</span>
+                      </td>
+                      <td className="p-4 font-medium">{food.categoryName}</td>
+                      <td className="p-4 font-black text-[#006A4E]">৳{food.price.toFixed(2)}</td>
+                      <td className="p-4 font-medium">{food.prepTimeMinutes} mins</td>
+                      <td className="p-4 font-bold">{food.stockQuantity}</td>
+                      <td className="p-4 text-right flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleOpenEditFood(food)}
+                          className="text-slate-500 hover:text-[#006A4E] p-1.5 rounded-lg hover:bg-white cursor-pointer"
+                          title="Edit Food Details"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => onDeleteFood(food.id)}
+                          className="text-slate-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-white cursor-pointer"
+                          title="Delete Food Item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -852,7 +864,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     required
                     className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-bold"
                   >
-                    <option value="" disabled>Select Category</option>
+                    <option value="">Select Category</option>
                     {availableCategories.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}

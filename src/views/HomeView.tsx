@@ -39,20 +39,33 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const specials = foods.filter((f) => f.isSpecial);
   const populars = foods.filter((f) => f.isPopular);
 
+  const displayCategories = [
+    {
+      id: 'cat_breakfast',
+      name: 'Breakfast',
+      slug: 'breakfast',
+      icon: 'Egg',
+    },
+    {
+      id: 'cat_lunch',
+      name: 'Lunch',
+      slug: 'lunch',
+      icon: 'CookingPot',
+    },
+    {
+      id: 'cat_snacks',
+      name: 'Snacks',
+      slug: 'snacks',
+      icon: 'Cookie',
+    },
+  ];
+
   const getCategoryIcon = (iconName: string) => {
     switch (iconName) {
-      case 'Sparkles':
-        return <Sparkles className="w-5 h-5 text-[#006A4E]" />;
-      case 'CookingPot':
-        return <CookingPot className="w-5 h-5 text-[#006A4E]" />;
-      case 'Sandwich':
-        return <Sandwich className="w-5 h-5 text-[#006A4E]" />;
-      case 'Salad':
-        return <Salad className="w-5 h-5 text-[#22C55E]" />;
       case 'Egg':
         return <Egg className="w-5 h-5 text-[#006A4E]" />;
-      case 'Coffee':
-        return <Coffee className="w-5 h-5 text-[#006A4E]" />;
+      case 'CookingPot':
+        return <CookingPot className="w-5 h-5 text-[#006A4E]" />;
       case 'Cookie':
         return <Cookie className="w-5 h-5 text-[#F59E0B]" />;
       default:
@@ -169,17 +182,17 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4">
-          {categories.map((cat) => (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {displayCategories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => onNavigateToMenu(cat.slug)}
-              className="p-5 rounded-3xl glass-card glass-card-hover text-center transition-all group flex flex-col items-center gap-3 cursor-pointer"
+              className="p-6 rounded-3xl glass-card glass-card-hover text-center transition-all group flex flex-col items-center gap-3 cursor-pointer"
             >
-              <div className="w-12 h-12 rounded-2xl bg-white/80 border border-slate-200/80 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
+              <div className="w-14 h-14 rounded-2xl bg-white/80 border border-slate-200/80 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
                 {getCategoryIcon(cat.icon)}
               </div>
-              <span className="font-extrabold text-sm text-slate-900 group-hover:text-[#006A4E]">
+              <span className="font-extrabold text-base text-slate-900 group-hover:text-[#006A4E]">
                 {cat.name}
               </span>
             </button>
@@ -201,16 +214,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {specials.map((food) => (
-            <FoodCard
-              key={food.id}
-              food={food}
-              onSelect={onSelectFood}
-              onQuickAdd={onQuickAdd}
-            />
-          ))}
-        </div>
+        {specials.length === 0 ? (
+          <div className="glass-panel rounded-3xl p-8 text-center space-y-3">
+            <p className="font-extrabold text-slate-800 text-sm">No daily specials added yet</p>
+            <p className="text-xs text-slate-500 font-medium">
+              Check back soon or explore the full menu to see all available meals.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {specials.map((food) => (
+              <FoodCard
+                key={food.id}
+                food={food}
+                onSelect={onSelectFood}
+                onQuickAdd={onQuickAdd}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* How Smart Café Works - 3-Step Feature Cards */}
@@ -271,16 +293,25 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {populars.slice(0, 4).map((food) => (
-            <FoodCard
-              key={food.id}
-              food={food}
-              onSelect={onSelectFood}
-              onQuickAdd={onQuickAdd}
-            />
-          ))}
-        </div>
+        {populars.length === 0 ? (
+          <div className="glass-panel rounded-3xl p-8 text-center space-y-3">
+            <p className="font-extrabold text-slate-800 text-sm">No campus favorites currently available</p>
+            <p className="text-xs text-slate-500 font-medium">
+              Admin added food items will appear here as soon as they are published.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {populars.slice(0, 4).map((food) => (
+              <FoodCard
+                key={food.id}
+                food={food}
+                onSelect={onSelectFood}
+                onQuickAdd={onQuickAdd}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Student Testimonials Banner */}
