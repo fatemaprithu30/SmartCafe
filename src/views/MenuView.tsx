@@ -1,12 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import {
   Search,
-  Filter,
-  Sparkles,
   Flame,
   Clock,
   SlidersHorizontal,
-  X,
   Check,
   Utensils,
   Egg,
@@ -95,26 +92,26 @@ export const MenuView: React.FC<MenuViewProps> = ({
     {
       slug: 'breakfast',
       name: 'Breakfast',
-      description: 'Morning quick bites, oats, parathas, eggs & hot drinks (8:30 AM – 10:00 AM)',
+      description: 'Morning quick bites, oats, parathas, eggs & hot drinks (8:00 AM – 10:00 AM)',
       icon: Egg,
-      color: 'from-amber-500/10 to-orange-500/10 border-amber-200 text-amber-700',
-      badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
+      color: 'from-[#006A4E]/10 to-[#22C55E]/10 border-[#006A4E]/30 text-[#006A4E]',
+      badgeColor: 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/30',
     },
     {
       slug: 'lunch',
       name: 'Lunch',
       description: 'Hearty rice bowls, biryanis, curries & balanced entrees (12:00 PM – 3:00 PM)',
       icon: CookingPot,
-      color: 'from-blue-500/10 to-indigo-500/10 border-blue-200 text-blue-700',
-      badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
+      color: 'from-[#006A4E]/10 to-teal-500/10 border-[#006A4E]/30 text-[#006A4E]',
+      badgeColor: 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/30',
     },
     {
       slug: 'snacks',
       name: 'Snacks',
       description: 'Burgers, wraps, samosas & tea-time snacks (10:00 AM–12:00 PM & 3:00 PM–4:30 PM)',
       icon: Cookie,
-      color: 'from-emerald-500/10 to-teal-500/10 border-emerald-200 text-emerald-700',
-      badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+      color: 'from-[#F59E0B]/10 to-orange-500/10 border-[#F59E0B]/30 text-[#F59E0B]',
+      badgeColor: 'bg-[#F59E0B]/15 text-[#F59E0B] border-[#F59E0B]/30',
     },
   ];
 
@@ -142,18 +139,18 @@ export const MenuView: React.FC<MenuViewProps> = ({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800 text-white shadow-md">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 glass-modal p-8 rounded-3xl text-slate-900 shadow-xl">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white">University Cafeteria Menu</h1>
-          <p className="text-xs sm:text-sm text-slate-300 mt-1">
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900">University Cafeteria Menu</h1>
+          <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1">
             Browse all hot meals, wraps, salads, breakfast & cold brews. Pre-order in advance.
           </p>
         </div>
         <button
           onClick={() => setShowCalculatorTab((prev) => !prev)}
-          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-stone-950 font-black text-xs transition-all shadow-md flex items-center justify-center gap-2 shrink-0"
+          className="px-5 py-3 rounded-2xl glass-button font-black text-xs transition-all shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 shrink-0 cursor-pointer"
         >
-          <Flame className="w-4 h-4 fill-stone-950" />
+          <Flame className="w-4 h-4 text-[#F59E0B]" />
           <span>{showCalculatorTab ? 'Hide Nutrition Calculator' : 'Open Nutrition Calculator'}</span>
         </button>
       </div>
@@ -173,10 +170,10 @@ export const MenuView: React.FC<MenuViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Filters Sidebar */}
         <aside className="lg:col-span-1 space-y-6">
-          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-6 sticky top-24 shadow-sm">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <span className="font-bold text-sm text-slate-900 flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-blue-600" />
+          <div className="glass-panel rounded-3xl p-6 space-y-6 sticky top-24">
+            <div className="flex items-center justify-between border-b border-slate-200/60 pb-4">
+              <span className="font-black text-sm text-slate-900 flex items-center gap-2">
+                <SlidersHorizontal className="w-4 h-4 text-[#006A4E]" />
                 Menu Filters
               </span>
               {(activeCategory !== 'all' || searchQuery || maxPrice !== 1000 || maxCalories !== 2000 || maxPrepMinutes !== 30) && (
@@ -188,7 +185,7 @@ export const MenuView: React.FC<MenuViewProps> = ({
                     setMaxPrice(1000);
                     setMaxCalories(2000);
                   }}
-                  className="text-[11px] text-blue-600 hover:underline font-semibold"
+                  className="text-[11px] text-[#006A4E] hover:underline font-bold cursor-pointer"
                 >
                   Reset
                 </button>
@@ -197,22 +194,22 @@ export const MenuView: React.FC<MenuViewProps> = ({
 
             {/* Search Input */}
             <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="enter the food you like"
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                className="w-full glass-input rounded-2xl pl-10 pr-3.5 py-2.5 text-xs text-slate-900 font-medium placeholder-slate-400"
               />
             </div>
 
             {/* Categories Filter */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+              <label className="text-xs font-black text-slate-900 uppercase tracking-wider block">
                 Categories
               </label>
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {[
                   { slug: 'all', name: 'All Categories' },
                   { slug: 'breakfast', name: 'Breakfast' },
@@ -225,16 +222,16 @@ export const MenuView: React.FC<MenuViewProps> = ({
                       key={cat.slug}
                       type="button"
                       onClick={() => setActiveCategory(cat.slug)}
-                      className={`w-full flex items-center justify-between p-2 rounded-lg text-xs transition-colors border ${
+                      className={`w-full flex items-center justify-between p-3 rounded-2xl text-xs transition-all border cursor-pointer ${
                         isActive
-                          ? 'bg-blue-50 border-blue-300 text-blue-700 font-semibold'
-                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-slate-900'
+                          ? 'bg-[#006A4E]/10 border-[#006A4E] text-[#006A4E] font-extrabold shadow-sm'
+                          : 'bg-white/60 border-slate-200/80 text-slate-700 hover:bg-white'
                       }`}
                     >
                       <span>{cat.name}</span>
                       <div
                         className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                          isActive ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300'
+                          isActive ? 'bg-[#006A4E] border-[#006A4E] text-white' : 'border-slate-300'
                         }`}
                       >
                         {isActive && <Check className="w-3 h-3 stroke-[3]" />}
@@ -247,11 +244,11 @@ export const MenuView: React.FC<MenuViewProps> = ({
 
             {/* Prep Time Slider */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-slate-700 flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-blue-600" /> Max Kitchen Time
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-slate-800 flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-[#006A4E]" /> Max Kitchen Time
                 </span>
-                <span className="font-bold text-blue-600">{maxPrepMinutes} Mins</span>
+                <span className="text-[#006A4E]">{maxPrepMinutes} Mins</span>
               </div>
               <input
                 type="range"
@@ -260,15 +257,15 @@ export const MenuView: React.FC<MenuViewProps> = ({
                 step={1}
                 value={maxPrepMinutes}
                 onChange={(e) => setMaxPrepMinutes(Number(e.target.value))}
-                className="w-full accent-blue-600 bg-slate-200 rounded-lg cursor-pointer h-2"
+                className="w-full accent-[#006A4E] bg-slate-200/80 rounded-lg cursor-pointer h-2"
               />
             </div>
 
             {/* Max Price Slider */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-slate-700">Max Budget Price</span>
-                <span className="font-bold text-blue-600">৳{maxPrice.toFixed(0)}</span>
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-slate-800">Max Budget Price</span>
+                <span className="text-[#006A4E]">৳{maxPrice.toFixed(0)}</span>
               </div>
               <input
                 type="range"
@@ -277,17 +274,17 @@ export const MenuView: React.FC<MenuViewProps> = ({
                 step={10}
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
-                className="w-full accent-blue-600 bg-slate-200 rounded-lg cursor-pointer h-2"
+                className="w-full accent-[#006A4E] bg-slate-200/80 rounded-lg cursor-pointer h-2"
               />
             </div>
 
             {/* Calorie-based Filter Slider */}
             <div className="space-y-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-slate-700 flex items-center gap-1">
-                  <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> Max Calories
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="text-slate-800 flex items-center gap-1">
+                  <Flame className="w-3.5 h-3.5 text-[#F59E0B]" /> Max Calories
                 </span>
-                <span className="font-bold text-amber-600">{maxCalories} kcal</span>
+                <span className="text-[#F59E0B]">{maxCalories} kcal</span>
               </div>
               <input
                 type="range"
@@ -296,7 +293,7 @@ export const MenuView: React.FC<MenuViewProps> = ({
                 step={25}
                 value={maxCalories}
                 onChange={(e) => setMaxCalories(Number(e.target.value))}
-                className="w-full accent-amber-500 bg-slate-200 rounded-lg cursor-pointer h-2"
+                className="w-full accent-[#F59E0B] bg-slate-200/80 rounded-lg cursor-pointer h-2"
               />
             </div>
           </div>
@@ -305,18 +302,18 @@ export const MenuView: React.FC<MenuViewProps> = ({
         {/* Menu Items Grid */}
         <main className="lg:col-span-3 space-y-6">
           {/* Results Info & Sort Selector Bar */}
-          <div className="flex items-center justify-between gap-4 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-            <span className="text-xs text-slate-500">
-              Showing <strong className="text-slate-900 font-bold">{filteredFoods.length}</strong> menu items
+          <div className="flex items-center justify-between gap-4 glass-card p-4 rounded-2xl">
+            <span className="text-xs text-slate-600 font-medium">
+              Showing <strong className="text-slate-900 font-black">{filteredFoods.length}</strong> menu items
             </span>
 
             {/* Sort Selector */}
             <div className="flex items-center gap-2 shrink-0 text-xs">
-              <span className="text-slate-500 font-medium">Sort:</span>
+              <span className="text-slate-600 font-bold">Sort:</span>
               <select
                 value={sortBy}
                 onChange={(e: any) => setSortBy(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-xs text-blue-600 font-semibold focus:outline-none"
+                className="glass-input rounded-xl p-2 text-xs text-[#006A4E] font-bold focus:outline-none"
               >
                 <option value="popular">Most Popular</option>
                 <option value="rating">Highest Rated ★</option>
@@ -329,13 +326,13 @@ export const MenuView: React.FC<MenuViewProps> = ({
 
           {/* Categorized Food Sections */}
           {filteredFoods.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-xl p-12 text-center space-y-4 shadow-sm">
-              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
-                <Utensils className="w-8 h-8" />
+            <div className="glass-modal rounded-3xl p-12 text-center space-y-4 shadow-lg">
+              <div className="w-16 h-16 rounded-3xl glass-card flex items-center justify-center mx-auto text-slate-400">
+                <Utensils className="w-8 h-8 text-[#006A4E]" />
               </div>
-              <h3 className="font-bold text-slate-900 text-base">No items match your filters</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Try resetting your dietary options, increasing max prep time, or searching for a different keyword.
+              <h3 className="font-black text-slate-900 text-lg">No items match your filters</h3>
+              <p className="text-xs text-slate-600 max-w-sm mx-auto font-medium">
+                Try resetting your search query, increasing max prep time, or adjusting price limits.
               </p>
             </div>
           ) : (
@@ -345,29 +342,29 @@ export const MenuView: React.FC<MenuViewProps> = ({
                 .map((section) => {
                   const Icon = section.icon;
                   return (
-                    <section key={section.slug} className="space-y-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <section key={section.slug} className="space-y-4 glass-panel p-6 rounded-3xl">
                       {/* Section Header Card */}
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 pb-4">
                         <div className="flex items-start sm:items-center gap-3">
-                          <div className={`p-3 rounded-xl bg-gradient-to-br ${section.color} border shadow-xs`}>
+                          <div className={`p-3 rounded-2xl bg-gradient-to-br ${section.color} border shadow-xs`}>
                             <Icon className="w-6 h-6" />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <h2 className="text-xl font-extrabold text-slate-900">{section.name}</h2>
-                              <span className={`px-2.5 py-0.5 text-xs font-bold rounded-full border ${section.badgeColor}`}>
+                              <h2 className="text-2xl font-black text-slate-900">{section.name}</h2>
+                              <span className={`px-3 py-0.5 text-xs font-bold rounded-full border ${section.badgeColor}`}>
                                 {section.items.length} {section.items.length === 1 ? 'item' : 'items'}
                               </span>
                             </div>
-                            <p className="text-xs text-slate-500 mt-0.5">{section.description}</p>
+                            <p className="text-xs text-slate-600 mt-0.5 font-medium">{section.description}</p>
                           </div>
                         </div>
                       </div>
 
                       {/* Items Grid for this Category Section */}
                       {section.items.length === 0 ? (
-                        <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                          <p className="text-xs text-slate-400 font-medium">
+                        <div className="p-8 text-center glass-card rounded-2xl border-dashed">
+                          <p className="text-xs text-slate-500 font-medium">
                             No {section.name.toLowerCase()} items match your current filter criteria.
                           </p>
                         </div>

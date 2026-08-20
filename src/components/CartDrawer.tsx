@@ -85,49 +85,51 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md bg-stone-900 border-l border-stone-800 text-stone-100 h-full flex flex-col shadow-2xl">
+    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/40 backdrop-blur-md animate-fade-in">
+      <div className="w-full max-w-md glass-modal border-l border-white/80 text-slate-900 h-full flex flex-col shadow-2xl">
         {/* Drawer Header */}
-        <div className="p-4 bg-stone-950 border-b border-stone-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-amber-400" />
-            <h2 className="font-bold text-base text-white">Your Pre-Order Tray</h2>
-            <span className="text-xs bg-stone-800 px-2 py-0.5 rounded-full font-bold text-amber-400">
+        <div className="p-5 bg-white/70 border-b border-slate-200/60 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[#006A4E] flex items-center justify-center text-white shadow-sm">
+              <ShoppingBag className="w-4 h-4 text-white" />
+            </div>
+            <h2 className="font-black text-base text-slate-900">Your Pre-Order Tray</h2>
+            <span className="text-xs bg-[#006A4E] px-2.5 py-0.5 rounded-full font-black text-white">
               {cartItems.length}
             </span>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-stone-400 hover:text-white hover:bg-stone-800 transition-colors"
+            className="p-2 rounded-full glass-card text-slate-700 hover:text-slate-900 transition-all cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Drawer Body - Items */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {cartItems.length === 0 ? (
-            <div className="text-center py-12 space-y-3">
-              <div className="w-16 h-16 rounded-full bg-stone-800 flex items-center justify-center mx-auto text-stone-500">
+            <div className="text-center py-16 space-y-3">
+              <div className="w-16 h-16 rounded-3xl glass-card flex items-center justify-center mx-auto text-[#006A4E]">
                 <ShoppingBag className="w-8 h-8" />
               </div>
-              <p className="text-stone-300 font-semibold text-sm">Your tray is empty</p>
-              <p className="text-xs text-stone-500 max-w-xs mx-auto">
+              <p className="text-slate-900 font-extrabold text-base">Your tray is empty</p>
+              <p className="text-xs text-slate-600 max-w-xs mx-auto font-medium">
                 Browse our menu to pre-order fresh cafeteria meals and skip the GUB lunch line.
               </p>
             </div>
           ) : (
             <>
               {/* Pickup Time Slot Picker */}
-              <div className="bg-stone-950 p-3.5 rounded-xl border border-stone-800 space-y-2">
-                <label className="text-xs font-bold text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
-                  <Clock className="w-4 h-4 text-amber-400" />
+              <div className="glass-panel p-4 rounded-2xl space-y-2">
+                <label className="text-xs font-black text-[#006A4E] flex items-center gap-1.5 uppercase tracking-wider">
+                  <Clock className="w-4 h-4 text-[#006A4E]" />
                   Select Cafeteria Pickup Time Slot
                 </label>
                 <select
                   value={selectedPickupSlot}
                   onChange={(e) => onSelectPickupSlot(e.target.value)}
-                  className="w-full bg-stone-900 border border-stone-700 rounded-lg p-2.5 text-xs text-stone-100 font-semibold focus:border-amber-500 focus:outline-none"
+                  className="w-full glass-input rounded-xl p-3 text-xs text-slate-900 font-bold"
                 >
                   {timeSlots.map((slot) => (
                     <option key={slot} value={slot}>
@@ -135,27 +137,27 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                     </option>
                   ))}
                 </select>
-                <p className="text-[10px] text-stone-500">
+                <p className="text-[10px] text-slate-500 font-medium">
                   ⚡ Pre-ordering guarantees your meal is hot & packaged when you arrive.
                 </p>
               </div>
 
               {/* Total Calories Progress Bar */}
-              <div className="bg-stone-950 p-3.5 rounded-xl border border-stone-800 space-y-2">
+              <div className="glass-panel p-4 rounded-2xl space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-bold text-stone-300 flex items-center gap-1.5 uppercase tracking-wider">
-                    <Flame className="w-4 h-4 text-orange-500" />
+                  <span className="font-extrabold text-slate-900 flex items-center gap-1.5 uppercase tracking-wider">
+                    <Flame className="w-4 h-4 text-[#F59E0B]" />
                     Total Calories in Cart
                   </span>
-                  <span className="font-bold text-amber-400">{totalCalories} / {dailyCalorieTarget} kcal</span>
+                  <span className="font-black text-[#006A4E]">{totalCalories} / {dailyCalorieTarget} kcal</span>
                 </div>
-                <div className="w-full bg-stone-800 h-2.5 rounded-full overflow-hidden">
+                <div className="w-full bg-slate-200/80 h-3 rounded-full overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-orange-500 to-red-500 h-full transition-all duration-300"
+                    className="bg-gradient-to-r from-[#22C55E] via-[#F59E0B] to-red-500 h-full transition-all duration-300"
                     style={{ width: `${caloriePercentage}%` }}
                   />
                 </div>
-                <p className="text-[10px] text-stone-500">
+                <p className="text-[10px] text-slate-500 font-medium">
                   Daily calorie budget tracking computed on chosen menu item specs.
                 </p>
               </div>
@@ -165,53 +167,53 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 {cartItems.map((item) => (
                   <div
                     key={item.id}
-                    className="p-3 bg-stone-950/70 rounded-xl border border-stone-800/80 flex gap-3 items-start"
+                    className="p-3.5 glass-card rounded-2xl flex gap-3.5 items-start"
                   >
                     <img
                       src={item.food.imageUrl}
                       alt={item.food.name}
-                      className="w-16 h-16 object-cover rounded-lg bg-stone-800 shrink-0"
+                      className="w-16 h-16 object-cover rounded-xl bg-slate-100 shrink-0"
                     />
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-1">
-                        <h4 className="font-bold text-xs text-stone-100 truncate">{item.food.name}</h4>
+                        <h4 className="font-extrabold text-xs text-slate-900 truncate">{item.food.name}</h4>
                         <button
                           onClick={() => onRemoveItem(item.id)}
-                          className="text-stone-500 hover:text-red-400 transition-colors p-0.5"
+                          className="text-slate-400 hover:text-red-600 transition-colors p-1 cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
 
                       {item.selectedOptions && item.selectedOptions.length > 0 && (
-                        <p className="text-[10px] text-stone-400 line-clamp-1 mt-0.5">
+                        <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5 font-medium">
                           {item.selectedOptions.map((o) => `${o.optionName} (+৳${o.price})`).join(', ')}
                         </p>
                       )}
 
                       {item.specialInstructions && (
-                        <p className="text-[10px] text-amber-400/80 italic line-clamp-1 mt-0.5">
+                        <p className="text-[10px] text-[#006A4E] italic line-clamp-1 mt-0.5 font-semibold">
                           "{item.specialInstructions}"
                         </p>
                       )}
 
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="font-extrabold text-amber-400 text-xs">
+                      <div className="flex items-center justify-between mt-2.5">
+                        <span className="font-black text-[#006A4E] text-xs">
                           ৳{item.totalPrice.toFixed(2)}
                         </span>
 
-                        <div className="flex items-center border border-stone-800 bg-stone-900 rounded-lg">
+                        <div className="flex items-center border border-slate-200/80 bg-white/80 rounded-xl">
                           <button
                             onClick={() => onUpdateQuantity(item.id, item.quantity - 1)}
-                            className="w-6 h-6 rounded-l-lg bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs flex items-center justify-center"
+                            className="w-6 h-6 rounded-l-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center transition-colors cursor-pointer"
                           >
                             -
                           </button>
-                          <span className="w-6 text-center text-xs font-bold">{item.quantity}</span>
+                          <span className="w-6 text-center text-xs font-black">{item.quantity}</span>
                           <button
                             onClick={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                            className="w-6 h-6 rounded-r-lg bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold text-xs flex items-center justify-center"
+                            className="w-6 h-6 rounded-r-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center transition-colors cursor-pointer"
                           >
                             +
                           </button>
@@ -223,21 +225,21 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
               </div>
 
               {/* Coupon Box */}
-              <div className="bg-stone-950 p-3 rounded-xl border border-stone-800 space-y-2">
-                <span className="text-xs font-bold text-stone-300 flex items-center gap-1.5">
-                  <Ticket className="w-4 h-4 text-amber-400" />
+              <div className="glass-panel p-3.5 rounded-2xl space-y-2">
+                <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
+                  <Ticket className="w-4 h-4 text-[#F59E0B]" />
                   Have a Promo Code? (Try: WELCOME10)
                 </span>
 
                 {appliedCoupon ? (
-                  <div className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/30 p-2 rounded-lg text-xs">
-                    <span className="text-emerald-300 font-bold flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
+                  <div className="flex items-center justify-between bg-[#22C55E]/15 border border-[#22C55E]/30 p-2.5 rounded-xl text-xs">
+                    <span className="text-[#006A4E] font-extrabold flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#22C55E]" />
                       Code: {appliedCoupon.code} (-৳{appliedCoupon.discountAmount.toFixed(2)})
                     </span>
                     <button
                       onClick={onRemoveCoupon}
-                      className="text-xs text-stone-400 hover:text-red-400 underline font-medium"
+                      className="text-xs text-slate-500 hover:text-red-600 underline font-bold cursor-pointer"
                     >
                       Remove
                     </button>
@@ -249,20 +251,20 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                       value={couponInput}
                       onChange={(e) => setCouponInput(e.target.value)}
                       placeholder="e.g. WELCOME10"
-                      className="flex-1 bg-stone-900 border border-stone-800 rounded-lg px-3 py-1.5 text-xs text-stone-100 uppercase focus:border-amber-500 focus:outline-none"
+                      className="flex-1 glass-input rounded-xl px-3 py-2 text-xs text-slate-900 font-bold uppercase"
                     />
                     <button
                       type="submit"
                       disabled={isApplyingCoupon}
-                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs rounded-lg transition-colors"
+                      className="px-4 py-2 glass-button font-bold text-xs rounded-xl cursor-pointer"
                     >
                       Apply
                     </button>
                   </form>
                 )}
 
-                {couponError && <p className="text-[11px] text-red-400">{couponError}</p>}
-                {couponSuccess && <p className="text-[11px] text-emerald-400">{couponSuccess}</p>}
+                {couponError && <p className="text-[11px] text-red-600 font-medium">{couponError}</p>}
+                {couponSuccess && <p className="text-[11px] text-[#006A4E] font-extrabold">{couponSuccess}</p>}
               </div>
             </>
           )}
@@ -270,21 +272,21 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
         {/* Drawer Footer Summary */}
         {cartItems.length > 0 && (
-          <div className="p-4 bg-stone-950 border-t border-stone-800 space-y-3">
-            <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between text-stone-400">
+          <div className="p-5 bg-white/70 border-t border-slate-200/60 space-y-3.5">
+            <div className="space-y-1.5 text-xs font-medium">
+              <div className="flex justify-between text-slate-600">
                 <span>Subtotal</span>
-                <span>৳{subtotal.toFixed(2)}</span>
+                <span className="font-bold text-slate-900">৳{subtotal.toFixed(2)}</span>
               </div>
               {discount > 0 && (
-                <div className="flex justify-between text-emerald-400 font-semibold">
+                <div className="flex justify-between text-[#006A4E] font-extrabold">
                   <span>Student Coupon Discount</span>
                   <span>-৳{discount.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-stone-100 font-black text-base pt-2 border-t border-stone-800">
+              <div className="flex justify-between text-slate-900 font-black text-base pt-2 border-t border-slate-200/60">
                 <span>Total Pre-Order</span>
-                <span className="text-amber-400">৳{total.toFixed(2)}</span>
+                <span className="text-[#006A4E]">৳{total.toFixed(2)}</span>
               </div>
             </div>
 
@@ -293,7 +295,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 onClose();
                 onProceedToCheckout();
               }}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-stone-950 font-extrabold text-sm rounded-xl transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+              className="w-full py-3.5 glass-button font-black text-sm rounded-2xl shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Proceed to Payment</span>
               <ArrowRight className="w-4 h-4" />
