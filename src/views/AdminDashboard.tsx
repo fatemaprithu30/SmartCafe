@@ -86,7 +86,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [showFoodModal, setShowFoodModal] = useState(false);
   const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
   const [foodName, setFoodName] = useState('');
-  const [foodCategory, setFoodCategory] = useState(categories[0]?.id || 'cat_rice_bowls');
+  const [foodCategory, setFoodCategory] = useState(categories[0]?.id || 'cat_breakfast');
   const [foodPrice, setFoodPrice] = useState('240.00');
   const [foodPrepTime, setFoodPrepTime] = useState('10');
   const [foodImage, setFoodImage] = useState('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=80');
@@ -170,7 +170,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const payload = {
       name: foodName,
       categoryId: foodCategory,
-      categoryName: categories.find((c) => c.id === foodCategory)?.name || 'Mains',
+      categoryName: categories.find((c) => c.id === foodCategory)?.name || 'Breakfast',
       price: Number(foodPrice),
       prepTimeMinutes: Number(foodPrepTime),
       imageUrl: foodImage,
