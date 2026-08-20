@@ -754,8 +754,10 @@ export default function App() {
       const { dbService } = await import('./services/dbService');
       const created = await dbService.addFood(newFood);
       setFoods((prev) => [created, ...prev]);
+      return created;
     } catch (err) {
-      console.error(err);
+      console.error('handleAddFood error:', err);
+      throw err;
     }
   };
 
@@ -766,9 +768,8 @@ export default function App() {
       const camelFood = await dbService.getFoods();
       setFoods(camelFood);
     } catch (err) {
-      setFoods((prev) =>
-        prev.map((f) => (f.id === foodId ? { ...f, ...updatedFields } : f))
-      );
+      console.error('handleEditFood error:', err);
+      throw err;
     }
   };
 

@@ -49,7 +49,45 @@ export const dbService = {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '') + '-' + Math.random().toString(36).substring(2, 7);
-    const foodWithSlug = { ...food, slug: generatedSlug };
+
+    let resolvedCategoryId = food.categoryId;
+    let resolvedCategoryName = food.categoryName;
+
+    // Check if categoryId is a valid UUID
+    const isUuid = resolvedCategoryId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedCategoryId);
+
+    if (!isUuid) {
+      try {
+        const categories = await dbService.getCategories();
+        const match = categories.find(c =>
+          c.id === resolvedCategoryId ||
+          c.slug.toLowerCase() === String(resolvedCategoryId).toLowerCase() ||
+          c.name.toLowerCase() === String(resolvedCategoryId).toLowerCase() ||
+          (resolvedCategoryName && c.name.toLowerCase() === resolvedCategoryName.toLowerCase())
+        );
+
+        if (match) {
+          resolvedCategoryId = match.id;
+          resolvedCategoryName = match.name;
+        } else {
+          resolvedCategoryId = undefined;
+        }
+      } catch (err) {
+        console.error('Failed to resolve category UUID:', err);
+        resolvedCategoryId = undefined;
+      }
+    }
+
+    if (!resolvedCategoryName) {
+      resolvedCategoryName = 'General';
+    }
+
+    const foodWithSlug = {
+      ...food,
+      slug: generatedSlug,
+      categoryId: resolvedCategoryId,
+      categoryName: resolvedCategoryName,
+    };
     const dbFood = toSnake(foodWithSlug);
     const { data, error } = await supabase
       .from('menu_items')
@@ -100,7 +138,41 @@ export const dbService = {
   },
 
   async updateFood(id: string, food: Partial<FoodItem>): Promise<FoodItem> {
-    const dbFood = toSnake(food);
+    let resolvedCategoryId = food.categoryId;
+    let resolvedCategoryName = food.categoryName;
+
+    if (resolvedCategoryId) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedCategoryId);
+      if (!isUuid) {
+        try {
+          const categories = await dbService.getCategories();
+          const match = categories.find(c =>
+            c.id === resolvedCategoryId ||
+            c.slug.toLowerCase() === String(resolvedCategoryId).toLowerCase() ||
+            c.name.toLowerCase() === String(resolvedCategoryId).toLowerCase() ||
+            (resolvedCategoryName && c.name.toLowerCase() === resolvedCategoryName.toLowerCase())
+          );
+
+          if (match) {
+            resolvedCategoryId = match.id;
+            resolvedCategoryName = match.name;
+          } else {
+            resolvedCategoryId = undefined;
+          }
+        } catch (err) {
+          console.error('Failed to resolve category UUID:', err);
+          resolvedCategoryId = undefined;
+        }
+      }
+    }
+
+    const updatedPayload = {
+      ...food,
+      ...(resolvedCategoryId !== undefined && { categoryId: resolvedCategoryId }),
+      ...(resolvedCategoryName !== undefined && { categoryName: resolvedCategoryName }),
+    };
+
+    const dbFood = toSnake(updatedPayload);
     const { data, error } = await supabase
       .from('menu_items')
       .update(dbFood)
