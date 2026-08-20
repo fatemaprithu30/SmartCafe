@@ -105,6 +105,7 @@ export default function App() {
 
   // Track previous order statuses to trigger sound and toast alerts
   const prevOrderStatusesRef = React.useRef<{ [orderId: string]: string }>({});
+  const notificationsTableAvailableRef = React.useRef<boolean>(true);
 
   // Web Audio API Audio Chime Synthesizer
   const playAudioChime = (type: 'preparing' | 'ready') => {
@@ -271,6 +272,7 @@ export default function App() {
 
   // Fetch unread and read notifications for current authenticated user
   const fetchUserNotifications = async (userId: string) => {
+    if (!notificationsTableAvailableRef.current) return;
     try {
       const { supabase } = await import('./supabaseClient');
       const { data, error } = await supabase
@@ -279,7 +281,14 @@ export default function App() {
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST205' || error.message?.includes('notifications')) {
+          notificationsTableAvailableRef.current = false;
+          console.warn("Table 'public.notifications' is missing in database. Using local notification state.");
+          return;
+        }
+        throw error;
+      }
       if (data) {
         const mappedNotifs: AppNotification[] = data.map((n: any) => ({
           id: n.id,
@@ -293,7 +302,7 @@ export default function App() {
         setNotifications(mappedNotifs);
       }
     } catch (err) {
-      console.error('Failed to load user notifications: ', err);
+      // silent fallback
     }
   };
 
@@ -520,25 +529,27 @@ export default function App() {
         })
         .subscribe();
 
-      notifSubscription = supabase
-        .channel('user-notifs')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
-          if (!payload.new) return;
-          const camelNotif = toCamel(payload.new) as AppNotification;
-          if (camelNotif.userId === currentUser.id) {
-            setNotifications((prev) => {
-              if (prev.some((n) => n.id === camelNotif.id)) return prev;
-              return [camelNotif, ...prev];
-            });
-          }
-        })
-        .subscribe();
+      if (notificationsTableAvailableRef.current) {
+        notifSubscription = supabase
+          .channel('user-notifs')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, (payload) => {
+            if (!payload.new) return;
+            const camelNotif = toCamel(payload.new) as AppNotification;
+            if (camelNotif.userId === currentUser.id) {
+              setNotifications((prev) => {
+                if (prev.some((n) => n.id === camelNotif.id)) return prev;
+                return [camelNotif, ...prev];
+              });
+            }
+          })
+          .subscribe();
+      }
 
       pollInterval = setInterval(async () => {
         try {
           const freshOrders = await dbService.getOrders();
           setOrders(freshOrders);
-          if (currentUser?.id) {
+          if (currentUser?.id && notificationsTableAvailableRef.current) {
             fetchUserNotifications(currentUser.id);
           }
         } catch (err) {
@@ -655,20 +666,37 @@ export default function App() {
   };
 
   const sendNotification = async (userId: string, title: string, message: string) => {
+    const localNotif: AppNotification = {
+      id: `notif_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      userId,
+      title,
+      message,
+      type: 'order_status',
+      read: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    setNotifications((prev) => [localNotif, ...prev]);
+
+    if (!notificationsTableAvailableRef.current) return;
+
     try {
       const { supabase } = await import('./supabaseClient');
-      await supabase.from('notifications').insert([{
+      const { error } = await supabase.from('notifications').insert([{
         user_id: userId,
         title,
         message,
         type: 'order_status',
         read: false,
       }]);
-      if (currentUser?.id === userId) {
-        fetchUserNotifications(userId);
+
+      if (error) {
+        if (error.code === 'PGRST205' || error.message?.includes('notifications')) {
+          notificationsTableAvailableRef.current = false;
+        }
       }
     } catch (err) {
-      console.error('Failed to send notification:', err);
+      // silent fallback
     }
   };
 

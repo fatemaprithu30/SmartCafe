@@ -18,6 +18,11 @@ export function toCamel(obj: any): any {
   return obj;
 }
 
+export function isValidUuid(id: string | null | undefined): boolean {
+  if (!id) return false;
+  return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+}
+
 // Helper to convert camelCase object to snake_case
 export function toSnake(obj: any): any {
   if (obj === undefined || obj === null) return obj;
@@ -76,20 +81,24 @@ export const dbService = {
       normalizedCategoryName = 'Snack';
     }
 
-    let resolvedCategoryId: string | undefined = undefined;
+    let resolvedCategoryId: string | null = null;
 
-    try {
-      const categories = await dbService.getCategories();
-      const match = categories.find(c =>
-        c.name.toLowerCase() === normalizedCategoryName.toLowerCase() ||
-        c.slug.toLowerCase() === normalizedCategoryName.toLowerCase()
-      );
+    if (food.categoryId && isValidUuid(food.categoryId)) {
+      resolvedCategoryId = food.categoryId;
+    } else {
+      try {
+        const categories = await dbService.getCategories();
+        const match = categories.find(c =>
+          c.name.toLowerCase() === normalizedCategoryName.toLowerCase() ||
+          c.slug.toLowerCase() === normalizedCategoryName.toLowerCase()
+        );
 
-      if (match) {
-        resolvedCategoryId = match.id;
+        if (match && isValidUuid(match.id)) {
+          resolvedCategoryId = match.id;
+        }
+      } catch (err) {
+        console.error('Failed to resolve category UUID:', err);
       }
-    } catch (err) {
-      console.error('Failed to resolve category UUID:', err);
     }
 
     const foodWithSlug = {
@@ -149,7 +158,7 @@ export const dbService = {
 
   async updateFood(id: string, food: Partial<FoodItem>): Promise<FoodItem> {
     let normalizedCategoryName: string | undefined = undefined;
-    let resolvedCategoryId: string | undefined = undefined;
+    let resolvedCategoryId: string | null | undefined = undefined;
 
     if (food.categoryName || food.categoryId) {
       let rawCategory = (food.categoryName || food.categoryId || '').toString().trim();
@@ -161,18 +170,25 @@ export const dbService = {
         normalizedCategoryName = 'Snack';
       }
 
-      try {
-        const categories = await dbService.getCategories();
-        const match = categories.find(c =>
-          c.name.toLowerCase() === normalizedCategoryName!.toLowerCase() ||
-          c.slug.toLowerCase() === normalizedCategoryName!.toLowerCase()
-        );
+      if (food.categoryId && isValidUuid(food.categoryId)) {
+        resolvedCategoryId = food.categoryId;
+      } else {
+        try {
+          const categories = await dbService.getCategories();
+          const match = categories.find(c =>
+            c.name.toLowerCase() === normalizedCategoryName!.toLowerCase() ||
+            c.slug.toLowerCase() === normalizedCategoryName!.toLowerCase()
+          );
 
-        if (match) {
-          resolvedCategoryId = match.id;
+          if (match && isValidUuid(match.id)) {
+            resolvedCategoryId = match.id;
+          } else {
+            resolvedCategoryId = null;
+          }
+        } catch (err) {
+          console.error('Failed to resolve category UUID:', err);
+          resolvedCategoryId = null;
         }
-      } catch (err) {
-        console.error('Failed to resolve category UUID:', err);
       }
     }
 
@@ -414,12 +430,23 @@ export const dbService = {
 
   // Notifications
   async getNotifications(): Promise<AppNotification[]> {
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (error) throw error;
-    return toCamel(data || []) as AppNotification[];
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (error.code === 'PGRST205' || error.message?.includes('notifications')) {
+          console.warn("Table 'public.notifications' is missing in Supabase schema cache.");
+          return [];
+        }
+        throw error;
+      }
+      return toCamel(data || []) as AppNotification[];
+    } catch (err) {
+      return [];
+    }
   },
 
   // Settings
@@ -428,38 +455,86 @@ export const dbService = {
       .from('settings')
       .select('*')
       .eq('id', 'cafeteria')
-      .single();
-    if (error) throw error;
-    return toCamel(data) as CafeteriaSettings;
+      .maybeSingle();
+
+    if (error) {
+      console.warn('Could not query cafeteria settings from Supabase:', error.message);
+    }
+
+    if (data) {
+      return toCamel(data) as CafeteriaSettings;
+    }
+
+    // Attempt to seed default cafeteria settings if row is missing
+    const defaultSettingsPayload = {
+      id: 'cafeteria',
+      is_accepting_orders: true,
+      opening_time: '07:30 AM',
+      closing_time: '08:30 PM',
+      slot_interval_minutes: 10,
+      max_orders_per_slot: 20,
+      tax_rate_percent: 0.00,
+      student_discount_percent: 5.00,
+      announcement_banner: 'Welcome to GUB Smart Café!'
+    };
+
+    try {
+      const { data: insertedData } = await supabase
+        .from('settings')
+        .upsert([defaultSettingsPayload], { onConflict: 'id' })
+        .select()
+        .maybeSingle();
+
+      if (insertedData) {
+        return toCamel(insertedData) as CafeteriaSettings;
+      }
+    } catch (seedErr) {
+      console.warn('Auto-seed of cafeteria settings row failed:', seedErr);
+    }
+
+    return toCamel(defaultSettingsPayload) as CafeteriaSettings;
   },
 
   async updateSettings(settings: Partial<CafeteriaSettings>): Promise<CafeteriaSettings> {
-    const dbSettings = toSnake(settings);
+    const dbSettings = {
+      id: 'cafeteria',
+      ...toSnake(settings)
+    };
     const { data, error } = await supabase
       .from('settings')
-      .update(dbSettings)
-      .eq('id', 'cafeteria')
+      .upsert([dbSettings], { onConflict: 'id' })
       .select()
-      .single();
+      .maybeSingle();
+
     if (error) throw error;
-    return toCamel(data) as CafeteriaSettings;
+    if (data) return toCamel(data) as CafeteriaSettings;
+
+    return toCamel({ id: 'cafeteria', ...settings }) as CafeteriaSettings;
   },
 
   // Notifications
   async markNotificationAsRead(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('id', id);
-    if (error) throw error;
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', id);
+      if (error && error.code !== 'PGRST205') throw error;
+    } catch (err) {
+      // Fallback
+    }
   },
 
   async markAllNotificationsAsRead(userId: string): Promise<void> {
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('user_id', userId);
-    if (error) throw error;
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', userId);
+      if (error && error.code !== 'PGRST205') throw error;
+    } catch (err) {
+      // Fallback
+    }
   },
 
   // User Profile Dietary Preferences & Calorie Target
