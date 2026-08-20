@@ -170,16 +170,16 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                   'Breakfast: 08:30 AM - 09:00 AM',
                   'Breakfast: 09:00 AM - 09:30 AM',
                   'Breakfast: 09:30 AM - 10:00 AM',
-                  'Snacks: 10:00 AM - 11:00 AM',
-                  'Snacks: 11:00 AM - 12:00 PM',
+                  'Snack: 10:00 AM - 11:00 AM',
+                  'Snack: 11:00 AM - 12:00 PM',
                   'Lunch: 12:00 PM - 12:30 PM',
                   'Lunch: 12:30 PM - 01:00 PM',
                   'Lunch: 01:00 PM - 01:30 PM',
                   'Lunch: 01:30 PM - 02:00 PM',
                   'Lunch: 02:00 PM - 02:30 PM',
                   'Lunch: 02:30 PM - 03:00 PM',
-                  'Snacks: 03:00 PM - 03:45 PM',
-                  'Snacks: 03:45 PM - 04:30 PM',
+                  'Snack: 03:00 PM - 03:45 PM',
+                  'Snack: 03:45 PM - 04:30 PM',
                 ].map((slot) => (
                   <option key={slot} value={slot}>
                     {slot} (Express Pickup Counter)

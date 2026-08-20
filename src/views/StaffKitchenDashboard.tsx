@@ -8,8 +8,11 @@ import {
   QrCode,
   Flame,
   Search,
+  Plus,
+  Edit2,
+  Trash2,
 } from 'lucide-react';
-import { Order, OrderStatus, FoodItem } from '../types';
+import { Order, OrderStatus, FoodItem, FoodCategory } from '../types';
 
 interface StaffKitchenDashboardProps {
   orders: Order[];
@@ -23,6 +26,9 @@ interface StaffKitchenDashboardProps {
   ) => void;
   onUpdateStock: (foodId: string, isAvailable: boolean, stockQuantity?: number) => void;
   onLogOut: () => void;
+  onAddFood?: (food: Partial<FoodItem>) => Promise<any> | void;
+  onEditFood?: (foodId: string, food: Partial<FoodItem>) => Promise<any> | void;
+  onDeleteFood?: (id: string) => Promise<any> | void;
 }
 
 export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
@@ -32,12 +38,127 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
   onUpdateOrderStatus,
   onUpdateStock,
   onLogOut,
+  onAddFood,
+  onEditFood,
+  onDeleteFood,
 }) => {
   const [activeTab, setActiveTab] = useState<'queue' | 'inventory' | 'feedback'>('queue');
   const [chimeEnabled, setChimeEnabled] = useState(true);
   const [inventorySearch, setInventorySearch] = useState('');
   const [prepTimes, setPrepTimes] = useState<{ [orderId: string]: number }>({});
   const [selectedStations, setSelectedStations] = useState<{ [orderId: string]: string }>({});
+
+  // Toast banner state
+  const [toastNotification, setToastNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Modal state for Staff Add/Edit Food
+  const [showFoodModal, setShowFoodModal] = useState(false);
+  const [editingFoodId, setEditingFoodId] = useState<string | null>(null);
+  const [foodName, setFoodName] = useState('');
+  const [foodCategory, setFoodCategory] = useState('');
+  const [foodPrice, setFoodPrice] = useState('240.00');
+  const [foodPrepTime, setFoodPrepTime] = useState('10');
+  const [foodImage, setFoodImage] = useState('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=80');
+  const [foodDesc, setFoodDesc] = useState('');
+  const [foodCalories, setFoodCalories] = useState('500');
+  const [foodProtein, setFoodProtein] = useState('35');
+  const [foodCarbs, setFoodCarbs] = useState('50');
+  const [foodFats, setFoodFats] = useState('15');
+  const [foodSodium, setFoodSodium] = useState('250');
+  const [foodStock, setFoodStock] = useState('50');
+  const [foodMinAlert, setFoodMinAlert] = useState('10');
+  const [foodIsSpecial, setFoodIsSpecial] = useState(false);
+
+  const availableCategories: FoodCategory[] = [
+    { id: 'cat_breakfast', name: 'Breakfast', slug: 'breakfast', description: '', icon: 'Egg', image: '' },
+    { id: 'cat_lunch', name: 'Lunch', slug: 'lunch', description: '', icon: 'CookingPot', image: '' },
+    { id: 'cat_snack', name: 'Snack', slug: 'snack', description: '', icon: 'Cookie', image: '' },
+  ];
+
+  const handleOpenAddFood = () => {
+    setEditingFoodId(null);
+    setFoodName('');
+    setFoodCategory('');
+    setFoodPrice('240.00');
+    setFoodPrepTime('10');
+    setFoodImage('https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=80');
+    setFoodDesc('');
+    setFoodCalories('500');
+    setFoodProtein('35');
+    setFoodCarbs('50');
+    setFoodFats('15');
+    setFoodSodium('250');
+    setFoodStock('50');
+    setFoodMinAlert('10');
+    setFoodIsSpecial(false);
+    setShowFoodModal(true);
+  };
+
+  const handleOpenEditFood = (food: FoodItem) => {
+    setEditingFoodId(food.id);
+    setFoodName(food.name);
+    setFoodCategory(food.categoryId);
+    setFoodPrice(food.price.toString());
+    setFoodPrepTime(food.prepTimeMinutes.toString());
+    setFoodImage(food.imageUrl);
+    setFoodDesc(food.description);
+    setFoodCalories(food.nutrition?.calories?.toString() || '0');
+    setFoodProtein(food.nutrition?.proteinGrams?.toString() || '0');
+    setFoodCarbs(food.nutrition?.carbsGrams?.toString() || '0');
+    setFoodFats(food.nutrition?.fatGrams?.toString() || '0');
+    setFoodSodium(food.nutrition?.sodiumMg?.toString() || '0');
+    setFoodStock(food.stockQuantity.toString());
+    setFoodMinAlert(food.minStockAlert.toString());
+    setFoodIsSpecial(!!food.isSpecial);
+    setShowFoodModal(true);
+  };
+
+  const handleCreateOrUpdateFood = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!foodCategory) {
+      setToastNotification({ type: 'error', message: 'Please select a category (Breakfast, Lunch, or Snack).' });
+      return;
+    }
+    const selectedCatObj = availableCategories.find((c) => c.id === foodCategory || c.slug.toLowerCase() === foodCategory.toLowerCase() || c.name.toLowerCase() === foodCategory.toLowerCase());
+    const payload = {
+      name: foodName,
+      categoryId: selectedCatObj?.id || foodCategory,
+      categoryName: selectedCatObj?.name || 'Snack',
+      price: Number(foodPrice),
+      prepTimeMinutes: Number(foodPrepTime),
+      imageUrl: foodImage,
+      description: foodDesc,
+      isAvailable: true,
+      isSpecial: foodIsSpecial,
+      isPopular: true,
+      dietaryTags: ['High Protein'],
+      allergens: [],
+      nutrition: {
+        calories: Number(foodCalories),
+        proteinGrams: Number(foodProtein),
+        carbsGrams: Number(foodCarbs),
+        fatGrams: Number(foodFats),
+        sodiumMg: Number(foodSodium),
+      },
+      stockQuantity: Number(foodStock),
+      minStockAlert: Number(foodMinAlert),
+    };
+
+    try {
+      if (editingFoodId && onEditFood) {
+        await onEditFood(editingFoodId, payload);
+        setToastNotification({ type: 'success', message: `"${foodName}" updated successfully in database!` });
+      } else if (onAddFood) {
+        await onAddFood(payload);
+        setToastNotification({ type: 'success', message: `"${foodName}" created successfully and added to menu database!` });
+      }
+      setShowFoodModal(false);
+      setTimeout(() => setToastNotification(null), 5000);
+    } catch (err: any) {
+      setToastNotification({ type: 'error', message: `Error saving food item: ${err?.message || 'Failed to save food item to database.'}` });
+      setTimeout(() => setToastNotification(null), 6000);
+    }
+  };
 
   // Live ticker for independent cooking timers
   const [now, setNow] = React.useState(Date.now());
@@ -75,6 +196,25 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Toast Notification Banner */}
+      {toastNotification && (
+        <div
+          className={`p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-lg border ${
+            toastNotification.type === 'success'
+              ? 'bg-emerald-500/15 border-emerald-500/30 text-[#006A4E]'
+              : 'bg-red-500/15 border-red-500/30 text-red-700'
+          }`}
+        >
+          <span>{toastNotification.message}</span>
+          <button
+            onClick={() => setToastNotification(null)}
+            className="text-slate-500 hover:text-slate-800 font-black ml-4 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Kitchen Bump Bar Header */}
       <div className="glass-modal p-8 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
         <div className="flex items-center gap-3.5">
@@ -421,15 +561,27 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
               </p>
             </div>
 
-            <div className="relative w-full sm:w-64">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-              <input
-                type="text"
-                value={inventorySearch}
-                onChange={(e) => setInventorySearch(e.target.value)}
-                placeholder="Search food item..."
-                className="w-full glass-input rounded-2xl pl-10 p-2.5 text-xs text-slate-900 font-medium"
-              />
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <input
+                  type="text"
+                  value={inventorySearch}
+                  onChange={(e) => setInventorySearch(e.target.value)}
+                  placeholder="Search food item..."
+                  className="w-full glass-input rounded-2xl pl-10 p-2.5 text-xs text-slate-900 font-medium"
+                />
+              </div>
+
+              {onAddFood && (
+                <button
+                  onClick={handleOpenAddFood}
+                  className="px-4 py-2.5 glass-button font-bold text-xs rounded-2xl flex items-center gap-1.5 cursor-pointer shadow-md shrink-0"
+                >
+                  <Plus className="w-4 h-4 stroke-[3]" />
+                  <span>Add Food Item</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -451,18 +603,212 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
                   </div>
                 </div>
 
-                <button
-                  onClick={() => onUpdateStock(food.id, !food.isAvailable)}
-                  className={`px-3.5 py-2 rounded-xl font-bold text-xs transition-all shrink-0 cursor-pointer ${
-                    food.isAvailable
-                      ? 'bg-[#22C55E]/15 text-[#006A4E] border border-[#22C55E]/30'
-                      : 'bg-red-500/10 text-red-600 border border-red-500/20'
-                  }`}
-                >
-                  {food.isAvailable ? 'In Stock' : 'Sold Out'}
-                </button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {onEditFood && (
+                    <button
+                      onClick={() => handleOpenEditFood(food)}
+                      className="p-2 text-slate-500 hover:text-[#006A4E] rounded-lg hover:bg-white cursor-pointer"
+                      title="Edit Details"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                  )}
+                  {onDeleteFood && (
+                    <button
+                      onClick={() => onDeleteFood(food.id)}
+                      className="p-2 text-slate-400 hover:text-red-600 rounded-lg hover:bg-white cursor-pointer"
+                      title="Delete Item"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => onUpdateStock(food.id, !food.isAvailable)}
+                    className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                      food.isAvailable
+                        ? 'bg-[#22C55E]/15 text-[#006A4E] border border-[#22C55E]/30'
+                        : 'bg-red-500/10 text-red-600 border border-red-500/20'
+                    }`}
+                  >
+                    {food.isAvailable ? 'In Stock' : 'Sold Out'}
+                  </button>
+                </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Staff Add/Edit Food Modal */}
+      {showFoodModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md overflow-y-auto">
+          <div className="w-full max-w-xl glass-modal rounded-3xl p-6 sm:p-8 space-y-4 text-xs my-8 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 className="font-black text-slate-900 text-lg">
+              {editingFoodId ? 'Edit Menu Item Details' : 'Add New Menu Item'}
+            </h3>
+            <form onSubmit={handleCreateOrUpdateFood} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Food Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={foodName}
+                    onChange={(e) => setFoodName(e.target.value)}
+                    placeholder="e.g. Grilled Chicken Wrap"
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Category</label>
+                  <select
+                    value={foodCategory}
+                    onChange={(e) => setFoodCategory(e.target.value)}
+                    required
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-bold"
+                  >
+                    <option value="">Select Category</option>
+                    {availableCategories.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Price (৳)</label>
+                  <input
+                    type="number"
+                    step="5"
+                    value={foodPrice}
+                    onChange={(e) => setFoodPrice(e.target.value)}
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Prep Time (Mins)</label>
+                  <input
+                    type="number"
+                    value={foodPrepTime}
+                    onChange={(e) => setFoodPrepTime(e.target.value)}
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Image URL</label>
+                  <input
+                    type="text"
+                    value={foodImage}
+                    onChange={(e) => setFoodImage(e.target.value)}
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-mono text-[11px]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Description</label>
+                <textarea
+                  rows={2}
+                  value={foodDesc}
+                  onChange={(e) => setFoodDesc(e.target.value)}
+                  placeholder="Describe ingredients, cooking style, etc."
+                  className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-medium"
+                />
+              </div>
+
+              {/* Nutrition details */}
+              <div className="glass-panel p-4 rounded-2xl space-y-3">
+                <span className="font-extrabold text-[#006A4E] uppercase tracking-wider block">Nutrition Details</span>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  <div>
+                    <label className="block text-slate-500 text-[10px] font-bold mb-1">Calories (kcal)</label>
+                    <input
+                      type="number"
+                      value={foodCalories}
+                      onChange={(e) => setFoodCalories(e.target.value)}
+                      className="w-full glass-input rounded-lg p-1.5 text-center text-slate-900 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-500 text-[10px] font-bold mb-1">Protein (g)</label>
+                    <input
+                      type="number"
+                      value={foodProtein}
+                      onChange={(e) => setFoodProtein(e.target.value)}
+                      className="w-full glass-input rounded-lg p-1.5 text-center text-slate-900 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-500 text-[10px] font-bold mb-1">Carbs (g)</label>
+                    <input
+                      type="number"
+                      value={foodCarbs}
+                      onChange={(e) => setFoodCarbs(e.target.value)}
+                      className="w-full glass-input rounded-lg p-1.5 text-center text-slate-900 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-500 text-[10px] font-bold mb-1">Fats (g)</label>
+                    <input
+                      type="number"
+                      value={foodFats}
+                      onChange={(e) => setFoodFats(e.target.value)}
+                      className="w-full glass-input rounded-lg p-1.5 text-center text-slate-900 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-slate-500 text-[10px] font-bold mb-1">Sodium (mg)</label>
+                    <input
+                      type="number"
+                      value={foodSodium}
+                      onChange={(e) => setFoodSodium(e.target.value)}
+                      className="w-full glass-input rounded-lg p-1.5 text-center text-slate-900 font-bold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Initial stock and alert level */}
+              <div className="grid grid-cols-2 gap-3 glass-panel p-4 rounded-2xl">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Stock Quantity</label>
+                  <input
+                    type="number"
+                    value={foodStock}
+                    onChange={(e) => setFoodStock(e.target.value)}
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Low Stock Alert Quantity</label>
+                  <input
+                    type="number"
+                    value={foodMinAlert}
+                    onChange={(e) => setFoodMinAlert(e.target.value)}
+                    className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  className="flex-1 py-3 glass-button font-black rounded-xl cursor-pointer"
+                >
+                  Save Item Details
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowFoodModal(false)}
+                  className="px-5 py-3 bg-white/80 border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-white cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

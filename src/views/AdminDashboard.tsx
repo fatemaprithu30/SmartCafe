@@ -125,10 +125,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     { hour: '3 PM', count: 28 },
   ];
 
-  const availableCategories = categories && categories.length > 0 ? categories : [
-    { id: 'cat_breakfast', name: 'Breakfast', slug: 'breakfast', description: '', icon: '', image: '' },
-    { id: 'cat_lunch', name: 'Lunch', slug: 'lunch', description: '', icon: '', image: '' },
-    { id: 'cat_snacks', name: 'Snacks', slug: 'snacks', description: '', icon: '', image: '' },
+  const [toastNotification, setToastNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const availableCategories: FoodCategory[] = [
+    { id: 'cat_breakfast', name: 'Breakfast', slug: 'breakfast', description: '', icon: 'Egg', image: '' },
+    { id: 'cat_lunch', name: 'Lunch', slug: 'lunch', description: '', icon: 'CookingPot', image: '' },
+    { id: 'cat_snack', name: 'Snack', slug: 'snack', description: '', icon: 'Cookie', image: '' },
   ];
 
   const handleOpenAddFood = () => {
@@ -172,14 +174,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const handleCreateOrUpdateFood = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!foodCategory) {
-      alert('Please select a category');
+      setToastNotification({ type: 'error', message: 'Please select a category (Breakfast, Lunch, or Snack).' });
       return;
     }
     const selectedCatObj = availableCategories.find((c) => c.id === foodCategory || c.slug.toLowerCase() === foodCategory.toLowerCase() || c.name.toLowerCase() === foodCategory.toLowerCase());
     const payload = {
       name: foodName,
       categoryId: selectedCatObj?.id || foodCategory,
-      categoryName: selectedCatObj?.name || (foodCategory ? foodCategory.charAt(0).toUpperCase() + foodCategory.slice(1) : ''),
+      categoryName: selectedCatObj?.name || 'Snack',
       price: Number(foodPrice),
       prepTimeMinutes: Number(foodPrepTime),
       imageUrl: foodImage,
@@ -203,12 +205,16 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     try {
       if (editingFoodId) {
         await onEditFood(editingFoodId, payload);
+        setToastNotification({ type: 'success', message: `"${foodName}" updated successfully in database!` });
       } else {
         await onAddFood(payload);
+        setToastNotification({ type: 'success', message: `"${foodName}" created successfully and added to menu database!` });
       }
       setShowFoodModal(false);
+      setTimeout(() => setToastNotification(null), 5000);
     } catch (err: any) {
-      alert(`Error saving food item: ${err?.message || 'Failed to save food item to database.'}`);
+      setToastNotification({ type: 'error', message: `Error saving food item: ${err?.message || 'Failed to save food item to database.'}` });
+      setTimeout(() => setToastNotification(null), 6000);
     }
   };
 
@@ -283,6 +289,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Toast Banner Notification */}
+      {toastNotification && (
+        <div
+          className={`p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-lg border ${
+            toastNotification.type === 'success'
+              ? 'bg-emerald-500/15 border-emerald-500/30 text-[#006A4E]'
+              : 'bg-red-500/15 border-red-500/30 text-red-700'
+          }`}
+        >
+          <span>{toastNotification.message}</span>
+          <button
+            onClick={() => setToastNotification(null)}
+            className="text-slate-500 hover:text-slate-800 font-black ml-4 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Admin Panel Header */}
       <div className="glass-modal p-8 rounded-3xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
         <div>

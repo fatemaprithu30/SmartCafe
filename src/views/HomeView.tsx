@@ -53,9 +53,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
       icon: 'CookingPot',
     },
     {
-      id: 'cat_snacks',
-      name: 'Snacks',
-      slug: 'snacks',
+      id: 'cat_snack',
+      name: 'Snack',
+      slug: 'snack',
       icon: 'Cookie',
     },
   ];
@@ -134,7 +134,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
                 <span className="font-extrabold text-slate-900">8:00 AM – 10:00 AM</span>
               </div>
               <div className="bg-white/70 p-2.5 rounded-2xl border border-white/80">
-                <span className="text-slate-500 block text-[10px] font-bold">Snacks</span>
+                <span className="text-slate-500 block text-[10px] font-bold">Snack</span>
                 <span className="font-extrabold text-slate-900">10:00 AM – 12:00 PM<br/>&amp; 3:00 PM – 4:30 PM</span>
               </div>
               <div className="bg-white/70 p-2.5 rounded-2xl border border-white/80">
