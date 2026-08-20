@@ -41,7 +41,23 @@ export const dbService = {
       .select('*')
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return toCamel(data || []) as FoodItem[];
+    const foods = toCamel(data || []) as FoodItem[];
+
+    return foods.map(f => {
+      let rawCat = (f.categoryName || f.categoryId || 'Snack').toString().trim();
+      let normalizedCat = 'Snack';
+      if (rawCat.toLowerCase().includes('breakfast')) {
+        normalizedCat = 'Breakfast';
+      } else if (rawCat.toLowerCase().includes('lunch')) {
+        normalizedCat = 'Lunch';
+      } else {
+        normalizedCat = 'Snack';
+      }
+      return {
+        ...f,
+        categoryName: normalizedCat
+      };
+    });
   },
 
   async addFood(food: Partial<FoodItem>): Promise<FoodItem> {
@@ -50,43 +66,37 @@ export const dbService = {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)+/g, '') + '-' + Math.random().toString(36).substring(2, 7);
 
-    let resolvedCategoryId = food.categoryId;
-    let resolvedCategoryName = food.categoryName;
-
-    // Check if categoryId is a valid UUID
-    const isUuid = resolvedCategoryId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedCategoryId);
-
-    if (!isUuid) {
-      try {
-        const categories = await dbService.getCategories();
-        const match = categories.find(c =>
-          c.id === resolvedCategoryId ||
-          c.slug.toLowerCase() === String(resolvedCategoryId).toLowerCase() ||
-          c.name.toLowerCase() === String(resolvedCategoryId).toLowerCase() ||
-          (resolvedCategoryName && c.name.toLowerCase() === resolvedCategoryName.toLowerCase())
-        );
-
-        if (match) {
-          resolvedCategoryId = match.id;
-          resolvedCategoryName = match.name;
-        } else {
-          resolvedCategoryId = undefined;
-        }
-      } catch (err) {
-        console.error('Failed to resolve category UUID:', err);
-        resolvedCategoryId = undefined;
-      }
+    let rawCategory = (food.categoryName || food.categoryId || 'Snack').toString().trim();
+    let normalizedCategoryName = 'Snack';
+    if (rawCategory.toLowerCase().includes('breakfast')) {
+      normalizedCategoryName = 'Breakfast';
+    } else if (rawCategory.toLowerCase().includes('lunch')) {
+      normalizedCategoryName = 'Lunch';
+    } else {
+      normalizedCategoryName = 'Snack';
     }
 
-    if (!resolvedCategoryName) {
-      resolvedCategoryName = 'General';
+    let resolvedCategoryId: string | undefined = undefined;
+
+    try {
+      const categories = await dbService.getCategories();
+      const match = categories.find(c =>
+        c.name.toLowerCase() === normalizedCategoryName.toLowerCase() ||
+        c.slug.toLowerCase() === normalizedCategoryName.toLowerCase()
+      );
+
+      if (match) {
+        resolvedCategoryId = match.id;
+      }
+    } catch (err) {
+      console.error('Failed to resolve category UUID:', err);
     }
 
     const foodWithSlug = {
       ...food,
       slug: generatedSlug,
       categoryId: resolvedCategoryId,
-      categoryName: resolvedCategoryName,
+      categoryName: normalizedCategoryName,
     };
     const dbFood = toSnake(foodWithSlug);
     const { data, error } = await supabase
@@ -138,38 +148,38 @@ export const dbService = {
   },
 
   async updateFood(id: string, food: Partial<FoodItem>): Promise<FoodItem> {
-    let resolvedCategoryId = food.categoryId;
-    let resolvedCategoryName = food.categoryName;
+    let normalizedCategoryName: string | undefined = undefined;
+    let resolvedCategoryId: string | undefined = undefined;
 
-    if (resolvedCategoryId) {
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedCategoryId);
-      if (!isUuid) {
-        try {
-          const categories = await dbService.getCategories();
-          const match = categories.find(c =>
-            c.id === resolvedCategoryId ||
-            c.slug.toLowerCase() === String(resolvedCategoryId).toLowerCase() ||
-            c.name.toLowerCase() === String(resolvedCategoryId).toLowerCase() ||
-            (resolvedCategoryName && c.name.toLowerCase() === resolvedCategoryName.toLowerCase())
-          );
+    if (food.categoryName || food.categoryId) {
+      let rawCategory = (food.categoryName || food.categoryId || '').toString().trim();
+      if (rawCategory.toLowerCase().includes('breakfast')) {
+        normalizedCategoryName = 'Breakfast';
+      } else if (rawCategory.toLowerCase().includes('lunch')) {
+        normalizedCategoryName = 'Lunch';
+      } else {
+        normalizedCategoryName = 'Snack';
+      }
 
-          if (match) {
-            resolvedCategoryId = match.id;
-            resolvedCategoryName = match.name;
-          } else {
-            resolvedCategoryId = undefined;
-          }
-        } catch (err) {
-          console.error('Failed to resolve category UUID:', err);
-          resolvedCategoryId = undefined;
+      try {
+        const categories = await dbService.getCategories();
+        const match = categories.find(c =>
+          c.name.toLowerCase() === normalizedCategoryName!.toLowerCase() ||
+          c.slug.toLowerCase() === normalizedCategoryName!.toLowerCase()
+        );
+
+        if (match) {
+          resolvedCategoryId = match.id;
         }
+      } catch (err) {
+        console.error('Failed to resolve category UUID:', err);
       }
     }
 
     const updatedPayload = {
       ...food,
       ...(resolvedCategoryId !== undefined && { categoryId: resolvedCategoryId }),
-      ...(resolvedCategoryName !== undefined && { categoryName: resolvedCategoryName }),
+      ...(normalizedCategoryName !== undefined && { categoryName: normalizedCategoryName }),
     };
 
     const dbFood = toSnake(updatedPayload);
@@ -200,7 +210,54 @@ export const dbService = {
       .from('categories')
       .select('*');
     if (error) throw error;
-    return toCamel(data || []) as FoodCategory[];
+    const cats = toCamel(data || []) as FoodCategory[];
+
+    const requiredCats = [
+      { name: 'Breakfast', slug: 'breakfast', description: 'Morning quick bites, oats, parathas, eggs & hot drinks (8:00 AM – 10:00 AM)', icon: 'Egg', image: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Lunch', slug: 'lunch', description: 'Hearty rice bowls, biryanis, curries & balanced entrees (12:00 PM – 3:00 PM)', icon: 'CookingPot', image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=600&auto=format&fit=crop&q=80' },
+      { name: 'Snack', slug: 'snack', description: 'Burgers, wraps, samosas & tea-time snacks (10:00 AM–12:00 PM & 3:00 PM–4:30 PM)', icon: 'Cookie', image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600&auto=format&fit=crop&q=80' },
+    ];
+
+    // Remove any categories that are not Breakfast, Lunch, or Snack
+    const extraCategories = cats.filter(c => !requiredCats.some(r => r.slug === c.slug.toLowerCase() || r.name.toLowerCase() === c.name.toLowerCase()));
+    if (extraCategories.length > 0) {
+      for (const extra of extraCategories) {
+        try {
+          await supabase.from('categories').delete().eq('id', extra.id);
+        } catch (e) {
+          console.error('Failed to delete extra category:', extra.name, e);
+        }
+      }
+    }
+
+    // Insert missing required categories or rename "Snacks" to "Snack"
+    for (const req of requiredCats) {
+      const existing = cats.find(c => c.slug.toLowerCase() === req.slug || c.name.toLowerCase() === req.name.toLowerCase() || (req.slug === 'snack' && c.name.toLowerCase() === 'snacks'));
+      if (existing) {
+        if (existing.name !== req.name || existing.slug !== req.slug) {
+          try {
+            await supabase.from('categories').update({ name: req.name, slug: req.slug }).eq('id', existing.id);
+          } catch (e) {
+            console.error('Failed to rename category:', e);
+          }
+        }
+      } else {
+        try {
+          await supabase.from('categories').insert([{
+            name: req.name,
+            slug: req.slug,
+            description: req.description,
+            icon: req.icon,
+            image: req.image
+          }]);
+        } catch (e) {
+          console.error('Failed to seed category:', req.name, e);
+        }
+      }
+    }
+
+    const { data: updatedData } = await supabase.from('categories').select('*');
+    return toCamel(updatedData || []) as FoodCategory[];
   },
 
   async seedCategories(categoriesList: Partial<FoodCategory>[]): Promise<FoodCategory[]> {

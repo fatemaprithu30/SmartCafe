@@ -69,7 +69,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 <span className="text-slate-900 font-bold">12:00 PM - 03:00 PM</span>
               </li>
               <li className="flex items-center justify-between">
-                <span className="text-slate-600">Snacks Window:</span>
+                <span className="text-slate-600">Snack Window:</span>
                 <span className="text-slate-900 font-bold">03:00 PM - 04:30 PM</span>
               </li>
               <li className="text-[11px] text-[#006A4E] pt-1 font-bold">

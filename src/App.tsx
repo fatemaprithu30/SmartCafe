@@ -1241,6 +1241,9 @@ export default function App() {
             onUpdateOrderStatus={handleUpdateOrderStatus}
             onUpdateStock={handleUpdateStock}
             onLogOut={handleLogOut}
+            onAddFood={handleAddFood}
+            onEditFood={handleEditFood}
+            onDeleteFood={handleDeleteFood}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center p-4">

@@ -106,8 +106,8 @@ export const MenuView: React.FC<MenuViewProps> = ({
       badgeColor: 'bg-[#006A4E]/10 text-[#006A4E] border-[#006A4E]/30',
     },
     {
-      slug: 'snacks',
-      name: 'Snacks',
+      slug: 'snack',
+      name: 'Snack',
       description: 'Burgers, wraps, samosas & tea-time snacks (10:00 AM–12:00 PM & 3:00 PM–4:30 PM)',
       icon: Cookie,
       color: 'from-[#F59E0B]/10 to-orange-500/10 border-[#F59E0B]/30 text-[#F59E0B]',
@@ -214,7 +214,7 @@ export const MenuView: React.FC<MenuViewProps> = ({
                   { slug: 'all', name: 'All Categories' },
                   { slug: 'breakfast', name: 'Breakfast' },
                   { slug: 'lunch', name: 'Lunch' },
-                  { slug: 'snacks', name: 'Snacks' },
+                  { slug: 'snack', name: 'Snack' },
                 ].map((cat) => {
                   const isActive = activeCategory === cat.slug;
                   return (
