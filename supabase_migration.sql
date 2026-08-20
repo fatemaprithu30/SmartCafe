@@ -58,8 +58,14 @@ create table if not exists public.menu_items (
   customization_groups jsonb default '[]'::jsonb,
   stock_quantity integer not null default 50,
   min_stock_alert integer not null default 10,
+  order_count integer not null default 0,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Schema Update Migration snippet (Run this on existing Supabase DB):
+ALTER TABLE public.menu_items ADD COLUMN IF NOT EXISTS order_count integer NOT NULL DEFAULT 0;
+UPDATE public.menu_items SET order_count = 0 WHERE order_count IS NULL;
+UPDATE public.menu_items SET is_special = false WHERE is_special IS NULL;
 
 alter table public.menu_items enable row level security;
 

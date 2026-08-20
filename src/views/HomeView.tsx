@@ -37,7 +37,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
 
   const specials = foods.filter((f) => f.isSpecial);
-  const populars = foods.filter((f) => f.isPopular);
+  const populars = [...foods].sort((a, b) => (b.orderCount || 0) - (a.orderCount || 0)).slice(0, 4);
 
   const displayCategories = [
     {
@@ -302,7 +302,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {populars.slice(0, 4).map((food) => (
+            {populars.map((food) => (
               <FoodCard
                 key={food.id}
                 food={food}

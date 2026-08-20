@@ -76,6 +76,7 @@ export interface FoodItem {
   customizationGroups?: CustomizationGroup[];
   stockQuantity: number;
   minStockAlert: number;
+  orderCount?: number;
 }
 
 export interface CartItemOption {

@@ -45,6 +45,7 @@ interface AdminDashboardProps {
   onStaffCreated?: () => void;
   onToggleSuspendUser?: (userId: string, isActive: boolean) => void;
   onDeleteUser?: (userId: string) => void;
+  onToggleSpecial?: (foodId: string, isSpecial: boolean) => void;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
@@ -70,6 +71,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onStaffCreated,
   onToggleSuspendUser,
   onDeleteUser,
+  onToggleSpecial,
 }) => {
   const [activeTab, setActiveTab] = useState<
     'analytics' | 'foods' | 'approvals' | 'inventory' | 'coupons' | 'users' | 'feedback' | 'audit' | 'settings'
@@ -91,6 +93,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [foodSodium, setFoodSodium] = useState('250');
   const [foodStock, setFoodStock] = useState('50');
   const [foodMinAlert, setFoodMinAlert] = useState('10');
+  const [foodIsSpecial, setFoodIsSpecial] = useState(false);
 
   // Add Coupon Modal state
   const [showAddCouponModal, setShowAddCouponModal] = useState(false);
@@ -143,6 +146,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setFoodSodium('250');
     setFoodStock('50');
     setFoodMinAlert('10');
+    setFoodIsSpecial(false);
     setShowFoodModal(true);
   };
 
@@ -161,6 +165,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     setFoodSodium(food.nutrition?.sodiumMg?.toString() || '0');
     setFoodStock(food.stockQuantity.toString());
     setFoodMinAlert(food.minStockAlert.toString());
+    setFoodIsSpecial(!!food.isSpecial);
     setShowFoodModal(true);
   };
 
@@ -180,7 +185,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       imageUrl: foodImage,
       description: foodDesc,
       isAvailable: true,
-      isSpecial: false,
+      isSpecial: foodIsSpecial,
       isPopular: true,
       dietaryTags: ['High Protein'],
       allergens: [],
@@ -452,6 +457,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <th className="p-4">Price</th>
                   <th className="p-4">Prep Time</th>
                   <th className="p-4">Stock</th>
+                  <th className="p-4 text-center">Today Special</th>
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -481,6 +487,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <td className="p-4 font-black text-[#006A4E]">৳{food.price.toFixed(2)}</td>
                       <td className="p-4 font-medium">{food.prepTimeMinutes} mins</td>
                       <td className="p-4 font-bold">{food.stockQuantity}</td>
+                      <td className="p-4 text-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onToggleSpecial) {
+                              onToggleSpecial(food.id, !food.isSpecial);
+                            }
+                          }}
+                          className={`px-3 py-1 rounded-xl text-[11px] font-extrabold transition-all cursor-pointer border ${
+                            food.isSpecial
+                              ? 'bg-[#F59E0B] text-slate-900 border-[#F59E0B] shadow-xs'
+                              : 'bg-white/80 text-slate-500 border-slate-200/80 hover:bg-white hover:text-slate-800'
+                          }`}
+                        >
+                          {food.isSpecial ? '★ Special' : '+ Tag Special'}
+                        </button>
+                      </td>
                       <td className="p-4 text-right flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleOpenEditFood(food)}
@@ -966,6 +989,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Today Special Tag Toggle */}
+              <div className="glass-panel p-4 rounded-2xl flex items-center justify-between">
+                <div>
+                  <span className="font-extrabold text-slate-900 block">Chef's Today Special</span>
+                  <span className="text-[11px] text-slate-500 font-medium">Tag item to showcase in "Chef's Today Specials" homepage section</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={foodIsSpecial}
+                    onChange={(e) => setFoodIsSpecial(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#006A4E]"></div>
+                </label>
               </div>
 
               {/* Initial stock and alert level */}
