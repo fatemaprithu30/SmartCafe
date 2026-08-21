@@ -267,7 +267,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 required
                 value={studentIdInput}
                 onChange={(e) => setStudentIdInput(e.target.value)}
-                placeholder="232002030"
+                placeholder="Enter your Student ID"
                 className="w-full glass-input rounded-2xl p-3.5 text-xs text-slate-900 font-medium"
               />
             </div>
