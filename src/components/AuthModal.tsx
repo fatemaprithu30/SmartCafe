@@ -242,7 +242,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 required
                 value={studentIdInput}
                 onChange={(e) => setStudentIdInput(e.target.value)}
-                placeholder="e.g. UG-2024-8842"
+                placeholder="Enter Student ID"
                 className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-xs text-white focus:border-blue-500 focus:outline-none"
               />
             </div>
@@ -269,7 +269,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   required
                   value={studentIdInput}
                   onChange={(e) => setStudentIdInput(e.target.value)}
-                  placeholder="e.g. UG-2024-8842"
+                  placeholder="Enter Student ID"
                   className="w-full bg-stone-950 border border-stone-800 rounded-xl p-2.5 text-xs text-white focus:border-blue-500 focus:outline-none"
                 />
               </div>
