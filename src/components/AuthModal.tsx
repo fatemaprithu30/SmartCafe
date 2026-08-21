@@ -349,7 +349,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Enter Password"
                 className="w-full glass-input rounded-2xl pl-10 p-3.5 text-xs text-slate-900 font-medium"
               />
             </div>
