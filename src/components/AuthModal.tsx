@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Key, Mail, Search } from 'lucide-react';
+import { X, Key, Mail } from 'lucide-react';
 import { UserProfile } from '../types';
 
 interface AuthModalProps {
@@ -22,7 +22,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [studentIdInput, setStudentIdInput] = useState('');
   const [phoneInput, setPhoneInput] = useState('');
   const [departmentInput, setDepartmentInput] = useState('');
-  const [smartCafeSearch, setSmartCafeSearch] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -56,17 +55,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           </div>
 
-          {/* GUB SmartCafe Integrated Search Bar */}
-          <div className="relative max-w-md mx-auto pt-2">
-            <Search className="w-4 h-4 text-[#006A4E] absolute left-3.5 top-4.5" />
-            <input
-              type="text"
-              value={smartCafeSearch}
-              onChange={(e) => setSmartCafeSearch(e.target.value)}
-              placeholder="Search GUB SmartCafe meals, menu, or portal info..."
-              className="w-full glass-input rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-900 placeholder-slate-400 font-medium"
-            />
-          </div>
         </div>
 
         <div className="text-center space-y-1">
