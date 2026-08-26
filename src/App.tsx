@@ -69,6 +69,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [activeRole, setActiveRole] = useState<UserRole>('student');
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+  const [pendingCheckoutAfterAuth, setPendingCheckoutAfterAuth] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('home');
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string | undefined>(undefined);
 
@@ -514,6 +515,25 @@ export default function App() {
     };
     checkSession();
 
+    let authListener: any;
+    const setupAuthListener = async () => {
+      try {
+        const { supabase } = await import('./supabaseClient');
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            checkSession();
+          } else if (event === 'SIGNED_OUT') {
+            setCurrentUser(null);
+            setIsAuthLoading(false);
+          }
+        });
+        authListener = subscription;
+      } catch (e) {
+        console.error('Failed to attach auth state listener:', e);
+      }
+    };
+    setupAuthListener();
+
     let orderSubscription: any;
     let notifSubscription: any;
     let pollInterval: any;
@@ -585,6 +605,7 @@ export default function App() {
     initializeRealtime();
 
     return () => {
+      if (authListener) authListener.unsubscribe();
       if (orderSubscription) orderSubscription.unsubscribe();
       if (notifSubscription) notifSubscription.unsubscribe();
       if (pollInterval) clearInterval(pollInterval);
@@ -1501,7 +1522,10 @@ export default function App() {
               <h2 className="text-xl font-black text-slate-900">Authentication Required</h2>
               <p className="text-xs text-slate-600 font-medium">Please sign in to place an order and proceed to checkout.</p>
               <button
-                onClick={() => setIsAuthOpen(true)}
+                onClick={() => {
+                  setPendingCheckoutAfterAuth(true);
+                  setIsAuthOpen(true);
+                }}
                 className="w-full py-3.5 glass-button font-bold text-xs rounded-2xl shadow-md transition-all cursor-pointer"
               >
                 Sign In / Login
@@ -1558,6 +1582,7 @@ export default function App() {
         onRemoveCoupon={handleRemoveCoupon}
         onProceedToCheckout={() => {
           if (!currentUser) {
+            setPendingCheckoutAfterAuth(true);
             setIsCartOpen(false);
             setIsAuthOpen(true);
             return;
@@ -1575,7 +1600,13 @@ export default function App() {
         onSelectUser={(user) => {
           setCurrentUser(user);
           setActiveRole('student');
-          setActiveTab('home');
+          setIsAuthLoading(false);
+          if (pendingCheckoutAfterAuth) {
+            setActiveTab('checkout');
+            setPendingCheckoutAfterAuth(false);
+          } else {
+            setActiveTab('home');
+          }
         }}
       />
 
