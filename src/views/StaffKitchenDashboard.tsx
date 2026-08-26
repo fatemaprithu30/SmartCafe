@@ -196,7 +196,9 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
   // Auto-transition orders when cooking timer reaches 0
   React.useEffect(() => {
     preparingOrders.forEach((ord) => {
-      const startTime = ord.cookingStartedAt ? new Date(ord.cookingStartedAt).getTime() : new Date(ord.createdAt).getTime();
+      if (!ord.cookingStartedAt) return;
+      const startTime = new Date(ord.cookingStartedAt).getTime();
+      if (isNaN(startTime)) return;
       const prepMin = ord.prepDurationMinutes || 15;
       const totalSec = prepMin * 60;
       const elapsedSec = Math.floor((now - startTime) / 1000);
@@ -430,7 +432,7 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
                 <p className="text-xs text-slate-500 text-center py-8 font-medium">No orders cooking currently</p>
               ) : (
                 preparingOrders.map((ord) => {
-                  const startTime = ord.cookingStartedAt ? new Date(ord.cookingStartedAt).getTime() : new Date(ord.createdAt).getTime();
+                  const startTime = ord.cookingStartedAt ? new Date(ord.cookingStartedAt).getTime() : now;
                   const prepMin = ord.prepDurationMinutes || 15;
                   const totalSec = prepMin * 60;
                   const elapsedSec = Math.floor((now - startTime) / 1000);

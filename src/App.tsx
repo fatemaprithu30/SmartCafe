@@ -513,13 +513,22 @@ export default function App() {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
           if (!payload.new) return;
           const camelPayload = toCamel(payload.new) as Order;
+          const storedMetaStr = typeof localStorage !== 'undefined' ? localStorage.getItem(`cooking_meta_${camelPayload.id}`) : null;
+          const meta = storedMetaStr ? JSON.parse(storedMetaStr) : {};
+
+          const enrichedPayload: Order = {
+            ...camelPayload,
+            cookingStation: camelPayload.cookingStation || meta.cookingStation,
+            cookingStartedAt: camelPayload.cookingStartedAt || meta.cookingStartedAt,
+            prepDurationMinutes: camelPayload.prepDurationMinutes || meta.prepDurationMinutes,
+          };
 
           setOrders((prev) => {
-            const exists = prev.some((o) => o.id === camelPayload.id);
+            const exists = prev.some((o) => o.id === enrichedPayload.id);
             if (exists) {
-              return prev.map((o) => (o.id === camelPayload.id ? { ...o, ...camelPayload, items: o.items || camelPayload.items || [] } : o));
+              return prev.map((o) => (o.id === enrichedPayload.id ? { ...o, ...enrichedPayload, items: o.items || enrichedPayload.items || [] } : o));
             } else {
-              return [camelPayload, ...prev];
+              return [enrichedPayload, ...prev];
             }
           });
 
@@ -732,36 +741,57 @@ export default function App() {
     notes?: string,
     extraFields?: { cookingStation?: string; cookingStartedAt?: string; prepDurationMinutes?: number }
   ) => {
+    let targetStudentId: string | undefined;
+    let targetOrderNumber: string | undefined;
+
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (o.id === orderId) {
+          targetStudentId = o.studentId;
+          targetOrderNumber = o.orderNumber;
+          return {
+            ...o,
+            orderStatus: status,
+            kitchenNotes: notes !== undefined ? notes : o.kitchenNotes,
+            ...(extraFields?.cookingStation ? { cookingStation: extraFields.cookingStation } : {}),
+            ...(extraFields?.cookingStartedAt ? { cookingStartedAt: extraFields.cookingStartedAt } : {}),
+            ...(extraFields?.prepDurationMinutes ? { prepDurationMinutes: extraFields.prepDurationMinutes } : {}),
+          };
+        }
+        return o;
+      })
+    );
+
+    // Send notifications to student user
+    if (targetStudentId) {
+      const orderNumDisplay = targetOrderNumber ? `#${targetOrderNumber}` : '';
+      if (status === 'preparing') {
+        sendNotification(
+          targetStudentId,
+          `Order ${orderNumDisplay} Accepted & Cooking 🍳`,
+          `Your food is currently being prepared on ${extraFields?.cookingStation || 'Stove Station 1'}. ${notes ? `(${notes})` : ''}`
+        );
+      } else if (status === 'ready') {
+        sendNotification(
+          targetStudentId,
+          `Order ${orderNumDisplay} Ready for Pickup 🎉`,
+          `Your food is ready for pickup at Express Counter 1! Show your QR code.`
+        );
+      } else if (status === 'confirmed') {
+        sendNotification(
+          targetStudentId,
+          `Order ${orderNumDisplay} Confirmed`,
+          `Staff has accepted your order.`
+        );
+      }
+    }
+
     try {
       const { dbService } = await import('./services/dbService');
       const updated = await dbService.updateOrderStatus(orderId, status, notes, extraFields);
-      setOrders((prev) => prev.map((o) => (o.id === orderId ? updated : o)));
-
-      if (updated.studentId) {
-        if (status === 'preparing') {
-          sendNotification(
-            updated.studentId,
-            `Order #${updated.orderNumber} Accepted & Cooking`,
-            `Your food is currently being prepared/cooked. ${notes ? `(${notes})` : ''}`
-          );
-        } else if (status === 'ready') {
-          sendNotification(
-            updated.studentId,
-            `Order #${updated.orderNumber} Ready for Pickup`,
-            `Your food is ready for pickup. Please collect your food from FoodZone.`
-          );
-        } else if (status === 'confirmed') {
-          sendNotification(
-            updated.studentId,
-            `Order #${updated.orderNumber} Confirmed`,
-            `Staff has accepted your order.`
-          );
-        }
-      }
+      setOrders((prev) => prev.map((o) => (o.id === orderId ? { ...o, ...updated } : o)));
     } catch (err) {
-      setOrders((prev) =>
-        prev.map((o) => (o.id === orderId ? { ...o, orderStatus: status } : o))
-      );
+      console.error('Failed to update order status in backend:', err);
     }
   };
 
