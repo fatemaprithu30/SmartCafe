@@ -67,7 +67,7 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, onSelect, onQuickAdd }
             {food.description}
           </p>
 
-          {/* Dietary Tags */}
+          {/* Dietary Tags & Days Tag */}
           <div className="flex flex-wrap gap-1.5 mb-4">
             {food.dietaryTags.slice(0, 3).map((tag, idx) => (
               <span
@@ -77,6 +77,11 @@ export const FoodCard: React.FC<FoodCardProps> = ({ food, onSelect, onQuickAdd }
                 {tag}
               </span>
             ))}
+            {food.availableDays && food.availableDays.length > 0 && (
+              <span className="px-2.5 py-0.5 rounded-lg bg-[#006A4E]/10 text-[10px] font-extrabold text-[#006A4E] border border-[#006A4E]/20">
+                📅 {food.availableDays.map(d => d.slice(0, 3)).join(', ')}
+              </span>
+            )}
           </div>
 
           {/* Nutrition Info Row */}

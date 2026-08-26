@@ -9,6 +9,7 @@ import {
   Egg,
   CookingPot,
   Cookie,
+  Calendar,
 } from 'lucide-react';
 import { FoodCategory, FoodItem, UserProfile } from '../types';
 import { FoodCard } from '../components/FoodCard';
@@ -39,7 +40,14 @@ export const MenuView: React.FC<MenuViewProps> = ({
   onAddToCart,
   onOpenAuth,
 }) => {
+  const WEEK_DAYS = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const todayDayName = useMemo(() => {
+    const map = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return map[new Date().getDay()];
+  }, []);
+
   const [activeCategory, setActiveCategory] = useState<string>(selectedCategorySlug || 'all');
+  const [selectedDay, setSelectedDay] = useState<string>(todayDayName); // Default to today's day
   const [showCalculatorTab, setShowCalculatorTab] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [maxPrepMinutes, setMaxPrepMinutes] = useState<number>(30);
@@ -65,6 +73,16 @@ export const MenuView: React.FC<MenuViewProps> = ({
           (food.categoryName && food.categoryName.toLowerCase() === activeCategory.toLowerCase()) ||
           (food.categoryId && food.categoryId.toLowerCase().includes(activeCategory.toLowerCase()));
         if (!matchCat) return false;
+      }
+
+      // Day filter
+      if (selectedDay !== 'All Days') {
+        if (food.availableDays && food.availableDays.length > 0) {
+          const matchesDay = food.availableDays.some(
+            (d) => d.toLowerCase() === selectedDay.toLowerCase()
+          );
+          if (!matchesDay) return false;
+        }
       }
 
       // Prep time filter
@@ -176,10 +194,11 @@ export const MenuView: React.FC<MenuViewProps> = ({
                 <SlidersHorizontal className="w-4 h-4 text-[#006A4E]" />
                 Menu Filters
               </span>
-              {(activeCategory !== 'all' || searchQuery || maxPrice !== 1000 || maxCalories !== 2000 || maxPrepMinutes !== 30) && (
+              {(activeCategory !== 'all' || selectedDay !== 'All Days' || searchQuery || maxPrice !== 1000 || maxCalories !== 2000 || maxPrepMinutes !== 30) && (
                 <button
                   onClick={() => {
                     setActiveCategory('all');
+                    setSelectedDay('All Days');
                     setSearchQuery('');
                     setMaxPrepMinutes(30);
                     setMaxPrice(1000);
@@ -202,6 +221,57 @@ export const MenuView: React.FC<MenuViewProps> = ({
                 placeholder="enter the food you like"
                 className="w-full glass-input rounded-2xl pl-10 pr-3.5 py-2.5 text-xs text-slate-900 font-medium placeholder-slate-400"
               />
+            </div>
+
+            {/* Day Filter Sidebar */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-[#006A4E]" />
+                  Day-Wise Menu
+                </label>
+                {selectedDay === todayDayName && (
+                  <span className="text-[10px] font-black bg-[#22C55E]/15 text-[#006A4E] px-2 py-0.5 rounded-full border border-[#22C55E]/30">
+                    Today
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setSelectedDay('All Days')}
+                  className={`p-2 rounded-xl text-xs font-extrabold transition-all border text-center cursor-pointer ${
+                    selectedDay === 'All Days'
+                      ? 'bg-[#006A4E] text-white border-[#006A4E] shadow-xs'
+                      : 'bg-white/60 border-slate-200/80 text-slate-700 hover:bg-white'
+                  }`}
+                >
+                  All Days
+                </button>
+                {WEEK_DAYS.map((day) => {
+                  const isSelected = selectedDay.toLowerCase() === day.toLowerCase();
+                  const isToday = todayDayName.toLowerCase() === day.toLowerCase();
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => setSelectedDay(day)}
+                      className={`p-2 rounded-xl text-xs transition-all border text-center cursor-pointer flex items-center justify-between ${
+                        isSelected
+                          ? 'bg-[#006A4E] text-white font-black border-[#006A4E] shadow-xs'
+                          : 'bg-white/60 border-slate-200/80 text-slate-700 font-bold hover:bg-white'
+                      }`}
+                    >
+                      <span>{day.slice(0, 3)}</span>
+                      {isToday && (
+                        <span className={`text-[9px] px-1 rounded-md font-black ${isSelected ? 'bg-white/30 text-white' : 'bg-[#006A4E]/10 text-[#006A4E]'}`}>
+                          ★
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Categories Filter */}
@@ -301,10 +371,64 @@ export const MenuView: React.FC<MenuViewProps> = ({
 
         {/* Menu Items Grid */}
         <main className="lg:col-span-3 space-y-6">
+          {/* Day Navigation Bar Header */}
+          <div className="glass-panel p-4 rounded-3xl space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-3">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-[#006A4E]" />
+                <h3 className="font-black text-slate-900 text-sm">
+                  Filter Menu by Schedule: <span className="text-[#006A4E]">{selectedDay}</span>
+                </h3>
+              </div>
+              <span className="text-[11px] text-slate-500 font-medium">
+                Today is <strong className="text-[#006A4E] font-black">{todayDayName}</strong>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+              <button
+                onClick={() => setSelectedDay('All Days')}
+                className={`px-4 py-2 rounded-2xl font-extrabold whitespace-nowrap transition-all border cursor-pointer ${
+                  selectedDay === 'All Days'
+                    ? 'bg-[#006A4E] text-white border-[#006A4E] shadow-md'
+                    : 'bg-white/80 border-slate-200 text-slate-700 hover:bg-white'
+                }`}
+              >
+                Full Menu (All Days)
+              </button>
+
+              <button
+                onClick={() => setSelectedDay(todayDayName)}
+                className={`px-4 py-2 rounded-2xl font-extrabold whitespace-nowrap transition-all border cursor-pointer flex items-center gap-1.5 ${
+                  selectedDay.toLowerCase() === todayDayName.toLowerCase()
+                    ? 'bg-[#006A4E] text-white border-[#006A4E] shadow-md'
+                    : 'bg-emerald-500/10 border-emerald-500/30 text-[#006A4E] hover:bg-emerald-500/20'
+                }`}
+              >
+                <span>Today's Menu ({todayDayName})</span>
+                <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
+              </button>
+
+              {WEEK_DAYS.filter((d) => d.toLowerCase() !== todayDayName.toLowerCase()).map((day) => (
+                <button
+                  key={day}
+                  onClick={() => setSelectedDay(day)}
+                  className={`px-3.5 py-2 rounded-2xl font-bold whitespace-nowrap transition-all border cursor-pointer ${
+                    selectedDay.toLowerCase() === day.toLowerCase()
+                      ? 'bg-[#006A4E] text-white border-[#006A4E] shadow-md'
+                      : 'bg-white/80 border-slate-200 text-slate-700 hover:bg-white'
+                  }`}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Results Info & Sort Selector Bar */}
           <div className="flex items-center justify-between gap-4 glass-card p-4 rounded-2xl">
             <span className="text-xs text-slate-600 font-medium">
-              Showing <strong className="text-slate-900 font-black">{filteredFoods.length}</strong> menu items
+              Showing <strong className="text-slate-900 font-black">{filteredFoods.length}</strong> items for <strong className="text-[#006A4E] font-black">{selectedDay}</strong>
             </span>
 
             {/* Sort Selector */}
