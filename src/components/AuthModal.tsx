@@ -116,40 +116,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               if (activeTab === 'login') {
                 const inputVal = studentIdInput.trim();
                 if (!inputVal) {
-                  setErrorMessage('Please enter your GUB Student ID or Email Address.');
+                  setErrorMessage('Please enter your GUB Student ID.');
                   return;
                 }
 
-                let loginEmail = inputVal;
+                // Search profiles strictly by student_id
+                const { data: dbProfiles, error: pQueryErr } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('student_id', inputVal);
 
-                // If inputVal is not an email, search profiles by student_id
-                if (!inputVal.includes('@')) {
-                  const { data: dbProfiles, error: pQueryErr } = await supabase
-                    .from('profiles')
-                    .select('email, is_active, role')
-                    .eq('student_id', inputVal);
-
-                  if (pQueryErr) {
-                    console.error('Error querying profiles by student_id:', pQueryErr);
-                  }
-
-                  if (!dbProfiles || dbProfiles.length === 0) {
-                    setErrorMessage('Invalid Student ID. No registered student profile was found for this ID.');
-                    return;
-                  }
-
-                  const profileDetails = dbProfiles[0];
-                  if (profileDetails.role !== 'student') {
-                    setErrorMessage('This login portal is strictly reserved for GUB students. Please use the appropriate URL to log in.');
-                    return;
-                  }
-
-                  if (profileDetails.is_active === false) {
-                    setErrorMessage('Your student registration is pending administrator approval. Please wait for the GUB Dining Office to review and accept your account.');
-                    return;
-                  }
-                  loginEmail = profileDetails.email;
+                if (pQueryErr) {
+                  console.error('Error querying profiles by student_id:', pQueryErr);
                 }
+
+                if (!dbProfiles || dbProfiles.length === 0) {
+                  setErrorMessage('Invalid Student ID. No registered student profile was found for this ID.');
+                  return;
+                }
+
+                const profileDetails = dbProfiles[0];
+                if (profileDetails.role !== 'student') {
+                  setErrorMessage('This login portal is strictly reserved for GUB students.');
+                  return;
+                }
+
+                if (profileDetails.is_active === false) {
+                  setErrorMessage('Your student account is pending administrator approval.');
+                  return;
+                }
+
+                const loginEmail = profileDetails.email;
 
                 const { data, error } = await supabase.auth.signInWithPassword({
                   email: loginEmail,
@@ -158,7 +155,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
                 if (error) {
                   if (error.message && error.message.toLowerCase().includes('invalid login credentials')) {
-                    setErrorMessage('Incorrect Student ID/Email or Password. Please check your credentials and try again.');
+                    setErrorMessage('Incorrect Password. Please check your credentials and try again.');
                   } else {
                     setErrorMessage(error.message || 'Login failed.');
                   }
@@ -177,56 +174,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   .eq('id', data.user.id)
                   .maybeSingle();
 
-                if (profile) {
-                  if (profile.role !== 'student') {
-                    await supabase.auth.signOut();
-                    setErrorMessage('This portal is strictly reserved for GUB students.');
-                    return;
-                  }
+                const activeProfile = profile || profileDetails;
 
-                  if (profile.is_active === false) {
-                    await supabase.auth.signOut();
-                    setErrorMessage('Your student account is pending administrator approval.');
-                    return;
+                onSelectUser({
+                  id: activeProfile.id || data.user.id,
+                  name: activeProfile.name || data.user.user_metadata?.name || 'Student',
+                  email: activeProfile.email || data.user.email || loginEmail,
+                  role: 'student',
+                  studentId: activeProfile.student_id || inputVal,
+                  phone: activeProfile.phone || '+880',
+                  department: activeProfile.department || 'GUB Campus',
+                  walletBalance: activeProfile.wallet_balance || 0,
+                  dietaryPreferences: activeProfile.dietary_preferences || {
+                    allergens: [],
+                    isVegetarian: false,
+                    isNonVegetarian: false,
+                    isHighProtein: false,
+                    dailyCalorieTarget: 2000
                   }
-
-                  onSelectUser({
-                    id: profile.id,
-                    name: profile.name,
-                    email: profile.email,
-                    role: profile.role,
-                    studentId: profile.student_id,
-                    phone: profile.phone,
-                    department: profile.department,
-                    walletBalance: profile.wallet_balance || 0,
-                    dietaryPreferences: profile.dietary_preferences || {
-                      allergens: [],
-                      isVegetarian: false,
-                      isNonVegetarian: false,
-                      isHighProtein: false,
-                      dailyCalorieTarget: 2000
-                    }
-                  });
-                } else {
-                  // Fallback in-memory profile if profiles row is not created yet
-                  onSelectUser({
-                    id: data.user.id,
-                    name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || 'Student',
-                    email: data.user.email || '',
-                    role: 'student',
-                    studentId: inputVal,
-                    phone: '+880',
-                    department: 'GUB Campus',
-                    walletBalance: 0,
-                    dietaryPreferences: {
-                      allergens: [],
-                      isVegetarian: false,
-                      isNonVegetarian: false,
-                      isHighProtein: false,
-                      dailyCalorieTarget: 2000
-                    }
-                  });
-                }
+                });
                 onClose();
               } else {
                 const { data: dupCheck, error: dupErr } = await supabase
@@ -249,7 +215,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   }
                 }
 
-                const { data, error } = await supabase.auth.signUp({ email, password });
+                const { data, error } = await supabase.auth.signUp({
+                  email,
+                  password,
+                  options: {
+                    data: {
+                      name: fullName,
+                      student_id: studentIdInput,
+                      phone: phoneInput,
+                      department: departmentInput,
+                      role: 'student'
+                    }
+                  }
+                });
                 if (error) throw error;
                 if (data.user) {
                   const { error: insertErr } = await supabase.from('profiles').insert([{
