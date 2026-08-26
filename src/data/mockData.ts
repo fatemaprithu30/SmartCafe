@@ -4,7 +4,6 @@ import {
   UserProfile,
   Order,
   Review,
-  Coupon,
   AuditLog,
   AppNotification,
   CafeteriaSettings,
@@ -43,7 +42,6 @@ export const CATEGORIES: FoodCategory[] = DEFAULT_CATEGORIES;
 export const INITIAL_FOODS: FoodItem[] = DEFAULT_FOODS;
 export const INITIAL_ORDERS: Order[] = [];
 export const INITIAL_REVIEWS: Review[] = [];
-export const INITIAL_COUPONS: Coupon[] = [];
 export const INITIAL_NOTIFICATIONS: AppNotification[] = [];
 export const INITIAL_AUDIT_LOGS: AuditLog[] = [];
 

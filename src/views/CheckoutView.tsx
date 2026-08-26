@@ -16,7 +16,6 @@ interface CheckoutViewProps {
   cartItems: CartItem[];
   selectedPickupSlot: string;
   onSelectPickupSlot: (slot: string) => void;
-  appliedCoupon: { code: string; discountAmount: number } | null;
   onBackToMenu: () => void;
   onOrderPlaced: (order: Order) => void;
   onRequireLogin?: () => void;
@@ -27,7 +26,6 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   cartItems,
   selectedPickupSlot,
   onSelectPickupSlot,
-  appliedCoupon,
   onBackToMenu,
   onOrderPlaced,
   onRequireLogin,
@@ -42,8 +40,8 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   const [mfsMerchantNum, setMfsMerchantNum] = useState('017XXXXXXXX (Merchant)');
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.totalPrice, 0);
-  const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-  const total = Math.max(0, subtotal - discount);
+  const discount = 0;
+  const total = subtotal;
 
   const handleConfirmOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,8 +118,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
           specialInstructions: item.specialInstructions,
         })),
         subtotal,
-        discount,
-        couponCode: appliedCoupon?.code,
+        discount: 0,
         total,
         paymentMethod,
         paymentStatus: 'paid',
@@ -354,12 +351,6 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
                 <span>Subtotal</span>
                 <span className="font-bold text-slate-900">৳{subtotal.toFixed(2)}</span>
               </div>
-              {discount > 0 && (
-                <div className="flex justify-between text-[#006A4E] font-extrabold">
-                  <span>Discount</span>
-                  <span>-৳{discount.toFixed(2)}</span>
-                </div>
-              )}
               <div className="flex justify-between text-slate-900 font-black text-base pt-2 border-t border-slate-200/60">
                 <span>Total Due</span>
                 <span className="text-[#006A4E]">৳{total.toFixed(2)}</span>

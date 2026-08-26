@@ -123,7 +123,6 @@ export interface Order {
   items: OrderItem[];
   subtotal: number;
   discount: number;
-  couponCode?: string;
   total: number;
   paymentMethod: PaymentMethod;
   paymentStatus: 'paid' | 'unpaid' | 'refunded';
@@ -150,17 +149,6 @@ export interface Review {
   createdAt: string;
 }
 
-export interface Coupon {
-  id: string;
-  code: string;
-  discountType: 'percentage' | 'fixed';
-  discountValue: number; // e.g. 15 for 15% or 2 for $2
-  minOrderValue: number;
-  maxDiscount?: number;
-  validUntil: string;
-  isActive: boolean;
-  usageCount: number;
-}
 
 export interface AuditLog {
   id: string;

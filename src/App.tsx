@@ -26,7 +26,6 @@ import {
   Order,
   OrderStatus,
   Review,
-  Coupon,
   AuditLog,
   AppNotification,
   CafeteriaSettings,
@@ -37,7 +36,6 @@ import {
   INITIAL_FOODS,
   INITIAL_ORDERS,
   INITIAL_REVIEWS,
-  INITIAL_COUPONS,
   INITIAL_NOTIFICATIONS,
   INITIAL_AUDIT_LOGS,
   DEFAULT_CAFETERIA_SETTINGS,
@@ -85,7 +83,6 @@ export default function App() {
   const [categories, setCategories] = useState<FoodCategory[]>(CATEGORIES);
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
   const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
-  const [coupons, setCoupons] = useState<Coupon[]>(INITIAL_COUPONS);
   const [notifications, setNotifications] = useState<AppNotification[]>(INITIAL_NOTIFICATIONS);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(INITIAL_AUDIT_LOGS);
   const [settings, setSettings] = useState<CafeteriaSettings>(DEFAULT_CAFETERIA_SETTINGS);
@@ -96,7 +93,6 @@ export default function App() {
   // Cart State
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedPickupSlot, setSelectedPickupSlot] = useState<string>('Lunch: 12:00 PM - 12:30 PM');
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
 
   // Modal Toggles & Toast Banner
   const [selectedFoodForDetail, setSelectedFoodForDetail] = useState<FoodItem | null>(null);
@@ -676,39 +672,6 @@ export default function App() {
     setCartItems((prev) => prev.filter((item) => item.id !== cartItemId));
   };
 
-  // Apply Coupon
-  const handleApplyCoupon = async (code: string) => {
-    const subtotal = cartItems.reduce((acc, item) => acc + item.totalPrice, 0);
-    try {
-      const { dbService } = await import('./services/dbService');
-      const allCoupons = await dbService.getCoupons();
-      const match = allCoupons.find((c) => c.code.toUpperCase() === code.toUpperCase() && c.isActive);
-
-      if (match) {
-        let disc = 0;
-        if (match.discountType === 'percentage') {
-          disc = (subtotal * match.discountValue) / 100;
-        } else {
-          disc = match.discountValue;
-        }
-        setAppliedCoupon({ code: match.code, discountAmount: disc });
-        return { success: true, message: `Applied code ${match.code}! Saved ৳${disc.toFixed(2)}` };
-      } else {
-        throw new Error('No active coupon matching this code was found.');
-      }
-    } catch (err) {
-      if (code.toUpperCase() === 'WELCOME10') {
-        const disc = subtotal * 0.1;
-        setAppliedCoupon({ code: 'WELCOME10', discountAmount: disc });
-        return { success: true, message: `Applied WELCOME10! Saved ৳${disc.toFixed(2)}` };
-      }
-      return { success: false, message: 'Invalid promo code' };
-    }
-  };
-
-  const handleRemoveCoupon = () => {
-    setAppliedCoupon(null);
-  };
 
   const sendNotification = async (userId: string, title: string, message: string) => {
     const localNotif: AppNotification = {
@@ -748,7 +711,6 @@ export default function App() {
   const handleOrderPlaced = (newOrder: Order) => {
     setOrders((prev) => [newOrder, ...prev]);
     setCartItems([]);
-    setAppliedCoupon(null);
     setActiveTab('student-orders');
     setStudentDashboardTab('orders');
 
@@ -877,18 +839,6 @@ export default function App() {
     }
   };
 
-  const handleAddCoupon = async (newCoupon: Partial<Coupon>) => {
-    try {
-      const { supabase } = await import('./supabaseClient');
-      const { toSnake, toCamel } = await import('./services/dbService');
-      const dbCoupon = toSnake(newCoupon);
-      const { data, error } = await supabase.from('coupons').insert([dbCoupon]).select().single();
-      if (error) throw error;
-      setCoupons((prev) => [toCamel(data), ...prev]);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const handleUpdateUserRole = async (userId: string, role: UserRole) => {
     try {
@@ -1232,7 +1182,6 @@ export default function App() {
           <AdminDashboard
             foods={foods}
             categories={categories}
-            coupons={coupons}
             auditLogs={auditLogs}
             users={dbUsers}
             orders={orders}
@@ -1241,7 +1190,6 @@ export default function App() {
             onAddFood={handleAddFood}
             onEditFood={handleEditFood}
             onDeleteFood={handleDeleteFood}
-            onAddCoupon={handleAddCoupon}
             onUpdateUserRole={handleUpdateUserRole}
             onCreditWallet={() => {}}
             onUpdateSettings={handleUpdateSettings}
@@ -1512,7 +1460,6 @@ export default function App() {
               cartItems={cartItems}
               selectedPickupSlot={selectedPickupSlot}
               onSelectPickupSlot={setSelectedPickupSlot}
-              appliedCoupon={appliedCoupon}
               onBackToMenu={() => setActiveTab('menu')}
               onOrderPlaced={handleOrderPlaced}
               onRequireLogin={() => setIsAuthOpen(true)}
@@ -1577,9 +1524,6 @@ export default function App() {
         onRemoveItem={handleRemoveCartItem}
         selectedPickupSlot={selectedPickupSlot}
         onSelectPickupSlot={setSelectedPickupSlot}
-        appliedCoupon={appliedCoupon}
-        onApplyCoupon={handleApplyCoupon}
-        onRemoveCoupon={handleRemoveCoupon}
         onProceedToCheckout={() => {
           if (!currentUser) {
             setPendingCheckoutAfterAuth(true);
