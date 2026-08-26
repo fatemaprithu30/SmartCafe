@@ -60,7 +60,10 @@ export const dbService = {
       }
       return {
         ...f,
-        categoryName: normalizedCat
+        categoryName: normalizedCat,
+        availableDays: Array.isArray(f.availableDays)
+          ? f.availableDays
+          : (Array.isArray((f as any).available_days) ? (f as any).available_days : []),
       };
     });
   },

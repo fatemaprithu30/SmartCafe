@@ -68,6 +68,8 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
   const [foodStock, setFoodStock] = useState('50');
   const [foodMinAlert, setFoodMinAlert] = useState('10');
   const [foodIsSpecial, setFoodIsSpecial] = useState(false);
+  const ALL_WEEK_DAYS = ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const [foodAvailableDays, setFoodAvailableDays] = useState<string[]>([]);
 
   const availableCategories: FoodCategory[] = [
     { id: 'cat_breakfast', name: 'Breakfast', slug: 'breakfast', description: '', icon: 'Egg', image: '' },
@@ -91,6 +93,7 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
     setFoodStock('50');
     setFoodMinAlert('10');
     setFoodIsSpecial(false);
+    setFoodAvailableDays([]);
     setShowFoodModal(true);
   };
 
@@ -110,6 +113,7 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
     setFoodStock(food.stockQuantity.toString());
     setFoodMinAlert(food.minStockAlert.toString());
     setFoodIsSpecial(!!food.isSpecial);
+    setFoodAvailableDays(food.availableDays || []);
     setShowFoodModal(true);
   };
 
@@ -142,6 +146,7 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
       },
       stockQuantity: Number(foodStock),
       minStockAlert: Number(foodMinAlert),
+      availableDays: foodAvailableDays,
     };
 
     try {
@@ -792,6 +797,58 @@ export const StaffKitchenDashboard: React.FC<StaffKitchenDashboardProps> = ({
                       className="w-full glass-input rounded-lg p-1.5 text-center text-slate-900 font-bold"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Day-Wise Tagging */}
+              <div className="glass-panel p-4 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="font-extrabold text-slate-900 block">Available Days (Day-Wise Menu)</span>
+                    <span className="text-[11px] text-slate-500 font-medium">Select specific days or leave unselected for all days</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFoodAvailableDays([...ALL_WEEK_DAYS])}
+                      className="text-[11px] text-[#006A4E] hover:underline font-bold cursor-pointer"
+                    >
+                      Select All
+                    </button>
+                    <span className="text-slate-300">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setFoodAvailableDays([])}
+                      className="text-[11px] text-slate-500 hover:underline font-bold cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {ALL_WEEK_DAYS.map((day) => {
+                    const isSelected = foodAvailableDays.includes(day);
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setFoodAvailableDays(foodAvailableDays.filter((d) => d !== day));
+                          } else {
+                            setFoodAvailableDays([...foodAvailableDays, day]);
+                          }
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#006A4E] text-white border-[#006A4E] shadow-xs'
+                            : 'bg-white/80 border-slate-200 text-slate-700 hover:bg-white'
+                        }`}
+                      >
+                        {isSelected ? `✓ ${day}` : day}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

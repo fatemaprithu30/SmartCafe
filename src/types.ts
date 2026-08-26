@@ -77,6 +77,7 @@ export interface FoodItem {
   stockQuantity: number;
   minStockAlert: number;
   orderCount?: number;
+  availableDays?: string[]; // e.g. ['Saturday', 'Sunday', 'Monday']
 }
 
 export interface CartItemOption {
