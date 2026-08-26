@@ -300,10 +300,17 @@ export const dbService = {
       .order('created_at', { ascending: false });
     if (error) throw error;
     const camelOrders = toCamel(data || []) as any[];
-    return camelOrders.map(ord => ({
-      ...ord,
-      items: ord.orderItems || []
-    })) as Order[];
+    return camelOrders.map(ord => {
+      const storedMetaStr = typeof localStorage !== 'undefined' ? localStorage.getItem(`cooking_meta_${ord.id}`) : null;
+      const meta = storedMetaStr ? JSON.parse(storedMetaStr) : {};
+      return {
+        ...ord,
+        cookingStation: ord.cookingStation || meta.cookingStation || (ord.orderStatus === 'preparing' ? 'Stove Station 1' : undefined),
+        cookingStartedAt: ord.cookingStartedAt || meta.cookingStartedAt || (ord.orderStatus === 'preparing' ? ord.createdAt : undefined),
+        prepDurationMinutes: ord.prepDurationMinutes || meta.prepDurationMinutes || (ord.orderStatus === 'preparing' ? 15 : undefined),
+        items: ord.orderItems || ord.items || []
+      };
+    }) as Order[];
   },
 
   async addOrder(order: Partial<Order> & { items: any[] }): Promise<Order> {
@@ -380,17 +387,36 @@ export const dbService = {
     notes?: string,
     extraFields?: { cookingStation?: string; cookingStartedAt?: string; prepDurationMinutes?: number }
   ): Promise<Order> {
+    if (extraFields && typeof localStorage !== 'undefined') {
+      try {
+        const stored = localStorage.getItem(`cooking_meta_${id}`);
+        const existing = stored ? JSON.parse(stored) : {};
+        localStorage.setItem(`cooking_meta_${id}`, JSON.stringify({ ...existing, ...extraFields }));
+      } catch (e) {
+        // ignore storage errors
+      }
+    }
+
     const updatePayload: any = { order_status: status, kitchen_notes: notes };
     if (extraFields?.cookingStation !== undefined) updatePayload.cooking_station = extraFields.cookingStation;
     if (extraFields?.cookingStartedAt !== undefined) updatePayload.cooking_started_at = extraFields.cookingStartedAt;
     if (extraFields?.prepDurationMinutes !== undefined) updatePayload.prep_duration_minutes = extraFields.prepDurationMinutes;
 
-    const { data, error } = await supabase
-      .from('orders')
-      .update(updatePayload)
-      .eq('id', id)
-      .select('*, order_items(*)')
-      .single();
+    let data: any = null;
+    let error: any = null;
+
+    try {
+      const res = await supabase
+        .from('orders')
+        .update(updatePayload)
+        .eq('id', id)
+        .select('*, order_items(*)')
+        .single();
+      data = res.data;
+      error = res.error;
+    } catch (e) {
+      error = e;
+    }
 
     if (error) {
       // If table missing dynamic columns on fallback DB, perform update without custom station columns
@@ -401,21 +427,38 @@ export const dbService = {
         .select('*, order_items(*)')
         .single();
 
-      if (fallbackErr) throw fallbackErr;
+      const storedMetaStr = typeof localStorage !== 'undefined' ? localStorage.getItem(`cooking_meta_${id}`) : null;
+      const meta = storedMetaStr ? JSON.parse(storedMetaStr) : {};
+
+      if (fallbackErr) {
+        return {
+          id,
+          orderStatus: status as OrderStatus,
+          kitchenNotes: notes || '',
+          cookingStation: extraFields?.cookingStation || meta.cookingStation || 'Stove Station 1',
+          cookingStartedAt: extraFields?.cookingStartedAt || meta.cookingStartedAt || new Date().toISOString(),
+          prepDurationMinutes: extraFields?.prepDurationMinutes || meta.prepDurationMinutes || 15,
+        } as any;
+      }
       const camelFallback = toCamel(fallbackData) as any;
       return {
         ...camelFallback,
-        cookingStation: extraFields?.cookingStation || camelFallback.cookingStation,
-        cookingStartedAt: extraFields?.cookingStartedAt || camelFallback.cookingStartedAt,
-        prepDurationMinutes: extraFields?.prepDurationMinutes || camelFallback.prepDurationMinutes,
-        items: camelFallback.orderItems || []
+        cookingStation: extraFields?.cookingStation || camelFallback.cookingStation || meta.cookingStation,
+        cookingStartedAt: extraFields?.cookingStartedAt || camelFallback.cookingStartedAt || meta.cookingStartedAt,
+        prepDurationMinutes: extraFields?.prepDurationMinutes || camelFallback.prepDurationMinutes || meta.prepDurationMinutes,
+        items: camelFallback.orderItems || camelFallback.items || []
       } as Order;
     }
 
+    const storedMetaStr = typeof localStorage !== 'undefined' ? localStorage.getItem(`cooking_meta_${id}`) : null;
+    const meta = storedMetaStr ? JSON.parse(storedMetaStr) : {};
     const camelOrder = toCamel(data) as any;
     return {
       ...camelOrder,
-      items: camelOrder.orderItems || []
+      cookingStation: extraFields?.cookingStation || camelOrder.cookingStation || meta.cookingStation,
+      cookingStartedAt: extraFields?.cookingStartedAt || camelOrder.cookingStartedAt || meta.cookingStartedAt,
+      prepDurationMinutes: extraFields?.prepDurationMinutes || camelOrder.prepDurationMinutes || meta.prepDurationMinutes,
+      items: camelOrder.orderItems || camelOrder.items || []
     } as Order;
   },
 
