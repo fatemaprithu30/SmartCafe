@@ -55,22 +55,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     'Snack: 03:45 PM - 04:30 PM',
   ];
 
-  const handleApplyCoupon = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!couponInput.trim()) return;
-    setIsApplyingCoupon(true);
-    setCouponError('');
-    setCouponSuccess('');
-
-    const res = await onApplyCoupon(couponInput.trim());
-    setIsApplyingCoupon(false);
-    if (res.success) {
-      setCouponSuccess(res.message);
-      setCouponInput('');
-    } else {
-      setCouponError(res.message);
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/40 backdrop-blur-md animate-fade-in">
