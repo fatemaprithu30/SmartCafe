@@ -541,11 +541,6 @@ export default function App() {
               setIsAuthLoading(false);
               return;
             }
-            if (window.location.pathname === '/' && profile.role !== 'student') {
-              await supabase.auth.signOut();
-              setIsAuthLoading(false);
-              return;
-            }
 
             setCurrentUser(mappedUser);
             setActiveRole(profile.role);
@@ -589,8 +584,9 @@ export default function App() {
       const { supabase } = await import('./supabaseClient');
       const { toCamel, dbService } = await import('./services/dbService');
 
+      const channelName = `order-status-bumps-${currentUser.id}`;
       orderSubscription = supabase
-        .channel('order-status-bumps')
+        .channel(channelName)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
           if (!payload.new) return;
           const camelPayload = toCamel(payload.new) as Order;
