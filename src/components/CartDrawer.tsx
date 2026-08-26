@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Trash2, Clock, Ticket, ShoppingBag, ArrowRight, CheckCircle2, Flame } from 'lucide-react';
+import React from 'react';
+import { X, Trash2, Clock, ShoppingBag, ArrowRight, Flame } from 'lucide-react';
 import { CartItem } from '../types';
 
 interface CartDrawerProps {
@@ -10,9 +10,6 @@ interface CartDrawerProps {
   onRemoveItem: (cartItemId: string) => void;
   selectedPickupSlot: string;
   onSelectPickupSlot: (slot: string) => void;
-  appliedCoupon: { code: string; discountAmount: number } | null;
-  onApplyCoupon: (code: string) => Promise<{ success: boolean; message: string }>;
-  onRemoveCoupon: () => void;
   onProceedToCheckout: () => void;
   dailyCalorieTarget?: number;
 }
@@ -25,22 +22,13 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onRemoveItem,
   selectedPickupSlot,
   onSelectPickupSlot,
-  appliedCoupon,
-  onApplyCoupon,
-  onRemoveCoupon,
   onProceedToCheckout,
   dailyCalorieTarget = 2000,
 }) => {
-  const [couponInput, setCouponInput] = useState('');
-  const [couponError, setCouponError] = useState('');
-  const [couponSuccess, setCouponSuccess] = useState('');
-  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
-
   if (!isOpen) return null;
 
   const subtotal = cartItems.reduce((acc, item) => acc + item.totalPrice, 0);
-  const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-  const total = Math.max(0, subtotal - discount);
+  const total = subtotal;
 
   // Total Calories calculation
   const totalCalories = cartItems.reduce((acc, item) => {
@@ -224,48 +212,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 ))}
               </div>
 
-              {/* Coupon Box */}
-              <div className="glass-panel p-3.5 rounded-2xl space-y-2">
-                <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1.5">
-                  <Ticket className="w-4 h-4 text-[#F59E0B]" />
-                  Have a Promo Code? (Try: WELCOME10)
-                </span>
-
-                {appliedCoupon ? (
-                  <div className="flex items-center justify-between bg-[#22C55E]/15 border border-[#22C55E]/30 p-2.5 rounded-xl text-xs">
-                    <span className="text-[#006A4E] font-extrabold flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#22C55E]" />
-                      Code: {appliedCoupon.code} (-৳{appliedCoupon.discountAmount.toFixed(2)})
-                    </span>
-                    <button
-                      onClick={onRemoveCoupon}
-                      className="text-xs text-slate-500 hover:text-red-600 underline font-bold cursor-pointer"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                    <input
-                      type="text"
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value)}
-                      placeholder="e.g. WELCOME10"
-                      className="flex-1 glass-input rounded-xl px-3 py-2 text-xs text-slate-900 font-bold uppercase"
-                    />
-                    <button
-                      type="submit"
-                      disabled={isApplyingCoupon}
-                      className="px-4 py-2 glass-button font-bold text-xs rounded-xl cursor-pointer"
-                    >
-                      Apply
-                    </button>
-                  </form>
-                )}
-
-                {couponError && <p className="text-[11px] text-red-600 font-medium">{couponError}</p>}
-                {couponSuccess && <p className="text-[11px] text-[#006A4E] font-extrabold">{couponSuccess}</p>}
-              </div>
             </>
           )}
         </div>
@@ -278,12 +224,6 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <span>Subtotal</span>
                 <span className="font-bold text-slate-900">৳{subtotal.toFixed(2)}</span>
               </div>
-              {discount > 0 && (
-                <div className="flex justify-between text-[#006A4E] font-extrabold">
-                  <span>Student Coupon Discount</span>
-                  <span>-৳{discount.toFixed(2)}</span>
-                </div>
-              )}
               <div className="flex justify-between text-slate-900 font-black text-base pt-2 border-t border-slate-200/60">
                 <span>Total Pre-Order</span>
                 <span className="text-[#006A4E]">৳{total.toFixed(2)}</span>

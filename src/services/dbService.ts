@@ -1,5 +1,5 @@
 import { supabase } from '../supabaseClient';
-import { FoodItem, FoodCategory, Order, Coupon, AppNotification, CafeteriaSettings, AuditLog, UserProfile } from '../types';
+import { FoodItem, FoodCategory, Order, AppNotification, CafeteriaSettings, AuditLog, UserProfile } from '../types';
 
 // Helper to convert snake_case object to camelCase
 export function toCamel(obj: any): any {
@@ -327,7 +327,6 @@ export const dbService = {
       studentIdCardNumber: order.studentIdCardNumber,
       subtotal: order.subtotal,
       discount: order.discount,
-      couponCode: order.couponCode,
       total: order.total,
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus || 'paid',
@@ -460,15 +459,6 @@ export const dbService = {
       prepDurationMinutes: extraFields?.prepDurationMinutes || camelOrder.prepDurationMinutes || meta.prepDurationMinutes,
       items: camelOrder.orderItems || camelOrder.items || []
     } as Order;
-  },
-
-  // Coupons
-  async getCoupons(): Promise<Coupon[]> {
-    const { data, error } = await supabase
-      .from('coupons')
-      .select('*');
-    if (error) throw error;
-    return toCamel(data || []) as Coupon[];
   },
 
   // Notifications

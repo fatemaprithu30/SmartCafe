@@ -3,7 +3,6 @@ import {
   BarChart3,
   Utensils,
   Boxes,
-  Ticket,
   Users,
   FileText,
   Settings,
@@ -20,12 +19,11 @@ import {
   YAxis,
   Tooltip,
 } from 'recharts';
-import { FoodItem, FoodCategory, Coupon, AuditLog, UserProfile, Order, CafeteriaSettings } from '../types';
+import { FoodItem, FoodCategory, AuditLog, UserProfile, Order, CafeteriaSettings } from '../types';
 
 interface AdminDashboardProps {
   foods: FoodItem[];
   categories: FoodCategory[];
-  coupons: Coupon[];
   auditLogs: AuditLog[];
   users: UserProfile[];
   orders: Order[];
@@ -34,7 +32,6 @@ interface AdminDashboardProps {
   onAddFood: (food: Partial<FoodItem>) => void;
   onEditFood: (foodId: string, food: Partial<FoodItem>) => void;
   onDeleteFood: (id: string) => void;
-  onAddCoupon: (coupon: Partial<Coupon>) => void;
   onUpdateUserRole: (userId: string, role: any) => void;
   onCreditWallet: (userId: string, amount: number) => void;
   onUpdateSettings: (newSettings: Partial<CafeteriaSettings>) => void;
@@ -51,7 +48,6 @@ interface AdminDashboardProps {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   foods,
   categories,
-  coupons,
   auditLogs,
   users,
   orders,
@@ -60,7 +56,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onAddFood,
   onEditFood,
   onDeleteFood,
-  onAddCoupon,
   onUpdateUserRole,
   onCreditWallet,
   onUpdateSettings,
@@ -74,7 +69,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onToggleSpecial,
 }) => {
   const [activeTab, setActiveTab] = useState<
-    'analytics' | 'foods' | 'approvals' | 'inventory' | 'coupons' | 'users' | 'feedback' | 'audit' | 'settings'
+    'analytics' | 'foods' | 'approvals' | 'inventory' | 'users' | 'feedback' | 'audit' | 'settings'
   >('analytics');
 
   // Add/Edit Food Modal state
@@ -95,10 +90,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [foodMinAlert, setFoodMinAlert] = useState('10');
   const [foodIsSpecial, setFoodIsSpecial] = useState(false);
 
-  // Add Coupon Modal state
-  const [showAddCouponModal, setShowAddCouponModal] = useState(false);
-  const [couponCode, setCouponCode] = useState('');
-  const [couponValue, setCouponValue] = useState('10');
 
   // Settings state
   const [announcementInput, setAnnouncementInput] = useState(settings.announcementBanner || '');
@@ -238,19 +229,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  const handleCreateCoupon = (e: React.FormEvent) => {
-    e.preventDefault();
-    onAddCoupon({
-      code: couponCode.toUpperCase(),
-      discountType: 'percentage',
-      discountValue: Number(couponValue),
-      minOrderValue: 200.0,
-      validUntil: '2026-12-31',
-      isActive: true,
-    });
-    setShowAddCouponModal(false);
-    setCouponCode('');
-  };
 
   const handleCreateStaff = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -390,15 +368,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <span>Stock & Inventory</span>
         </button>
 
-        <button
-          onClick={() => setActiveTab('coupons')}
-          className={`px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-            activeTab === 'coupons' ? 'bg-[#006A4E] text-white shadow-md' : 'text-slate-700 hover:text-slate-900 hover:bg-white/60'
-          }`}
-        >
-          <Ticket className="w-4 h-4" />
-          <span>Coupons</span>
-        </button>
 
         <button
           onClick={() => setActiveTab('users')}
@@ -682,33 +651,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* Tab 4: Coupons */}
-      {activeTab === 'coupons' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="font-black text-xl text-slate-900">Active Student Coupons</h2>
-            <button
-              onClick={() => setShowAddCouponModal(true)}
-              className="px-5 py-2.5 glass-button font-bold text-xs rounded-2xl flex items-center gap-1.5 cursor-pointer shadow-md"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>Create Coupon</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {coupons.map((c) => (
-              <div key={c.id} className="glass-panel p-5 rounded-3xl space-y-2">
-                <span className="font-black text-[#006A4E] text-lg block">{c.code}</span>
-                <p className="text-xs text-slate-700 font-medium">
-                  {c.discountValue}% Off on orders above ৳{c.minOrderValue.toFixed(2)}
-                </p>
-                <span className="text-[10px] text-slate-500 font-bold block">Used {c.usageCount} times</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Tab 5: Users / Role and Staff Management */}
       {activeTab === 'users' && (
@@ -1152,51 +1094,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* Add Coupon Modal */}
-      {showAddCouponModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md">
-          <div className="w-full max-w-sm glass-modal rounded-3xl p-6 space-y-4 text-xs shadow-2xl">
-            <h3 className="font-black text-slate-900 text-base">Create Student Promo Coupon</h3>
-            <form onSubmit={handleCreateCoupon} className="space-y-3">
-              <div>
-                <label className="block text-slate-700 font-bold mb-1">Coupon Code</label>
-                <input
-                  type="text"
-                  required
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value)}
-                  placeholder="e.g. MIDTERM15"
-                  className="w-full glass-input rounded-xl p-2.5 text-slate-900 uppercase font-bold"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-700 font-bold mb-1">Discount %</label>
-                <input
-                  type="number"
-                  value={couponValue}
-                  onChange={(e) => setCouponValue(e.target.value)}
-                  className="w-full glass-input rounded-xl p-2.5 text-slate-900 font-bold"
-                />
-              </div>
-              <div className="flex gap-2 pt-2">
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 glass-button font-bold rounded-xl cursor-pointer"
-                >
-                  Create
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAddCouponModal(false)}
-                  className="px-4 py-2.5 bg-white/80 border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-white cursor-pointer"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
