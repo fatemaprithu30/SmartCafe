@@ -68,6 +68,7 @@ export default function App() {
   // Auth & Roles State
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [activeRole, setActiveRole] = useState<UserRole>('student');
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>('home');
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string | undefined>(undefined);
 
@@ -352,8 +353,14 @@ export default function App() {
     // Check active Supabase Auth session on load
     const checkSession = async () => {
       try {
+        setIsAuthLoading(true);
         const { supabase } = await import('./supabaseClient');
         const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          setCurrentUser(null);
+          setIsAuthLoading(false);
+          return;
+        }
         if (session?.user) {
           const adminEmailEnv = (import.meta as any).env?.VITE_ADMIN_EMAIL || 'admin@green.edu.bd';
           const kitchenEmailEnv = (import.meta as any).env?.VITE_KITCHEN_EMAIL || 'kitchen@green.edu.bd';
@@ -454,6 +461,7 @@ export default function App() {
             if (profile.is_active === false) {
               await supabase.auth.signOut();
               setCurrentUser(null);
+              setIsAuthLoading(false);
               return;
             }
 
@@ -478,23 +486,30 @@ export default function App() {
 
             if (window.location.pathname === '/admin' && profile.role !== 'admin') {
               await supabase.auth.signOut();
+              setIsAuthLoading(false);
               return;
             }
             if ((window.location.pathname === '/kitchenstaff' || window.location.pathname === '/kitchenstuff') && profile.role !== 'staff') {
               await supabase.auth.signOut();
+              setIsAuthLoading(false);
               return;
             }
             if (window.location.pathname === '/' && profile.role !== 'student') {
               await supabase.auth.signOut();
+              setIsAuthLoading(false);
               return;
             }
 
             setCurrentUser(mappedUser);
             setActiveRole(profile.role);
           }
+        } else {
+          setCurrentUser(null);
         }
       } catch (err) {
         console.log('Session restore bypassed...');
+      } finally {
+        setIsAuthLoading(false);
       }
     };
     checkSession();
@@ -1465,7 +1480,12 @@ export default function App() {
         {activeTab === 'faq' && <FAQView />}
 
         {activeTab === 'checkout' && (
-          currentUser ? (
+          isAuthLoading ? (
+            <div className="max-w-md mx-auto my-16 p-8 glass-modal rounded-3xl text-center space-y-4 shadow-xl">
+              <div className="w-8 h-8 border-3 border-[#006A4E] border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs text-slate-600 font-medium">Verifying authentication session...</p>
+            </div>
+          ) : currentUser ? (
             <CheckoutView
               currentUser={currentUser}
               cartItems={cartItems}
@@ -1474,6 +1494,7 @@ export default function App() {
               appliedCoupon={appliedCoupon}
               onBackToMenu={() => setActiveTab('menu')}
               onOrderPlaced={handleOrderPlaced}
+              onRequireLogin={() => setIsAuthOpen(true)}
             />
           ) : (
             <div className="max-w-md mx-auto my-16 p-8 glass-modal rounded-3xl text-center space-y-4 shadow-xl">

@@ -19,6 +19,7 @@ interface CheckoutViewProps {
   appliedCoupon: { code: string; discountAmount: number } | null;
   onBackToMenu: () => void;
   onOrderPlaced: (order: Order) => void;
+  onRequireLogin?: () => void;
 }
 
 export const CheckoutView: React.FC<CheckoutViewProps> = ({
@@ -29,6 +30,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
   appliedCoupon,
   onBackToMenu,
   onOrderPlaced,
+  onRequireLogin,
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('bkash_nagad');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,6 +68,24 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
     setIsSubmitting(true);
 
     try {
+      const { supabase } = await import('../supabaseClient');
+
+      // Verify active Supabase Auth session before inserting order
+      let { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        // Attempt to refresh stale session
+        const refreshRes = await supabase.auth.refreshSession();
+        session = refreshRes.data.session;
+      }
+
+      if (!session || !session.user) {
+        setErrorMessage('Your session has expired or is invalid. Please log in again to complete your order.');
+        if (onRequireLogin) onRequireLogin();
+        setIsSubmitting(false);
+        return;
+      }
+
       if (paymentMethod === 'bkash_nagad') {
         const cleanNumber = mobileWalletNumber.trim();
         const bdPhoneRegex = /^01[3-9]\d{8}$/;
@@ -84,7 +104,7 @@ export const CheckoutView: React.FC<CheckoutViewProps> = ({
       let simulatedTxId = 'TXN_' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
       const orderPayload = {
-        studentId: currentUser.id,
+        studentId: session.user.id,
         studentName: currentUser.name,
         studentEmail: currentUser.email,
         studentPhone: currentUser.phone,
