@@ -198,6 +198,33 @@ export default function App() {
     window.history.pushState({}, '', path);
   };
 
+  // 10-Minute Safety Inactivity Auto-Logout Timer for Admin
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'admin') return;
+
+    const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes in milliseconds
+    let timer: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        handleLogOut();
+        alert('You have been automatically logged out after 10 minutes of inactivity for security reasons.');
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    const events = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    events.forEach((evt) => window.addEventListener(evt, resetTimer));
+
+    // Start initial timer
+    resetTimer();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      events.forEach((evt) => window.removeEventListener(evt, resetTimer));
+    };
+  }, [currentUser]);
+
   // Fetch initial data using migrated live database services
   const fetchBackendData = async () => {
     try {
@@ -369,7 +396,7 @@ export default function App() {
               .from('profiles')
               .select('*')
               .eq('id', session.user.id)
-              .single();
+              .maybeSingle();
             if (!error && data) {
               profile = data;
             }
@@ -452,6 +479,29 @@ export default function App() {
               profile.role = 'staff';
               profile.is_active = true;
             }
+          }
+
+          // Fallback if profile row is missing or failed query for valid session user
+          if (!profile) {
+            const userMeta = session.user.user_metadata || {};
+            profile = {
+              id: session.user.id,
+              name: userMeta.name || session.user.email?.split('@')[0] || 'Student',
+              email: session.user.email || '',
+              role: userMeta.role || 'student',
+              student_id: userMeta.student_id || 'N/A',
+              phone: userMeta.phone || '+880',
+              department: userMeta.department || 'GUB Campus',
+              wallet_balance: 0,
+              is_active: userMeta.is_active !== undefined ? userMeta.is_active : true,
+              dietary_preferences: {
+                allergens: [],
+                isVegetarian: false,
+                isNonVegetarian: false,
+                isHighProtein: false,
+                dailyCalorieTarget: 2000
+              }
+            };
           }
 
           if (profile) {
@@ -1449,12 +1499,7 @@ export default function App() {
         {activeTab === 'faq' && <FAQView />}
 
         {activeTab === 'checkout' && (
-          isAuthLoading ? (
-            <div className="max-w-md mx-auto my-16 p-8 glass-modal rounded-3xl text-center space-y-4 shadow-xl">
-              <div className="w-8 h-8 border-3 border-[#006A4E] border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs text-slate-600 font-medium">Verifying authentication session...</p>
-            </div>
-          ) : currentUser ? (
+          currentUser ? (
             <CheckoutView
               currentUser={currentUser}
               cartItems={cartItems}
@@ -1464,6 +1509,11 @@ export default function App() {
               onOrderPlaced={handleOrderPlaced}
               onRequireLogin={() => setIsAuthOpen(true)}
             />
+          ) : isAuthLoading ? (
+            <div className="max-w-md mx-auto my-16 p-8 glass-modal rounded-3xl text-center space-y-4 shadow-xl">
+              <div className="w-8 h-8 border-3 border-[#006A4E] border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-xs text-slate-600 font-medium">Verifying authentication session...</p>
+            </div>
           ) : (
             <div className="max-w-md mx-auto my-16 p-8 glass-modal rounded-3xl text-center space-y-4 shadow-xl">
               <h2 className="text-xl font-black text-slate-900">Authentication Required</h2>
